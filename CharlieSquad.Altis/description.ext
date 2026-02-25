@@ -1,0 +1,588 @@
+#include "dialogs\squadMenu.hpp"
+// ======================================
+// MISSION INFORMATION
+// ======================================
+briefingName = "Charlie Squad | Breakpoint";
+onLoadName = "Charlie Squad | Breakpoint";
+onLoadMission = "If you want peace, prepare for war.";
+author = "Domo";
+overviewText = "If you want peace, prepare for war.";
+loadScreen = "images\loadscreen.paa";
+class Header {
+    gameType = COOP;
+    minPlayers = 1;
+    maxPlayers = 32;
+};
+
+// ======================================
+// NOTIFICATIONS
+// ======================================
+class CfgNotifications
+{
+    class Default
+    {
+        title = "";
+        iconPicture = "";
+        iconText = "";
+        description = "";
+        color[] = {1, 1, 1, 1};
+        duration = 4;
+        priority = 0;
+        difficulty[] = {};
+        sound = "";
+        soundClose = "";
+    };
+    class SquadCreated { title="SQUAD CREATED"; iconPicture="images\squad_created.paa"; description="%1"; color[]={0.4,0.9,0.4,1}; duration=5; priority=7; sound="taskSucceeded"; };
+    class SquadJoined  { title="SQUAD JOINED";  iconPicture="images\squad_joined.paa"; description="%1"; color[]={0.4,0.9,0.4,1}; duration=4; priority=6; sound="taskSucceeded"; };
+    class SquadLeft    { title="LEFT SQUAD";    iconPicture="images\squad_joined.paa"; description="%1"; color[]={0.7,0.7,0.7,1}; duration=4; priority=5; sound="taskCanceled"; };
+    class SquadDisbanded { title="SQUAD DISBANDED"; iconPicture="images\squad_disbanded.paa"; description="%1"; color[]={0.9,0.4,0.4,1}; duration=5; priority=8; sound="taskFailed"; };
+    class SquadKicked    { title="REMOVED FROM SQUAD"; iconPicture="images\squad_kicked.paa"; description="%1"; color[]={0.9,0.4,0.4,1}; duration=5; priority=8; sound="taskFailed"; };
+    class SquadInvite    { title="SQUAD INVITE"; iconPicture="images\squad_invite_sent.paa"; description="%1"; color[]={0.95,0.8,0.3,1}; duration=8; priority=9; sound="taskCreated"; };
+    class SquadInviteSent { title="INVITE SENT"; iconPicture="images\squad_invite_sent.paa"; description="%1"; color[]={0.6,0.8,0.6,1}; duration=3; priority=4; sound=""; };
+    class SquadPromoted  { title="PROMOTED"; iconPicture="images\squad_promoted.paa"; description="%1"; color[]={0.4,0.9,0.4,1}; duration=5; priority=8; sound="taskSucceeded"; };
+    class SquadActingLeader { title="ACTING LEADER"; iconPicture="images\squad_promoted.paa"; description="%1"; color[]={0.95,0.75,0.2,1}; duration=6; priority=9; sound="taskUpdated"; };
+    class SquadSLActive  { title="SQUAD LEADER ACTIVE"; iconPicture="images\squad_promoted.paa"; description="%1"; color[]={0.4,0.9,0.4,1}; duration=4; priority=7; sound="taskUpdated"; };
+    class SquadMemberJoined { title="MEMBER JOINED"; iconPicture="images\squad_joined.paa"; description="%1"; color[]={0.5,0.8,0.5,1}; duration=4; priority=5; sound=""; };
+    class SquadMemberLeft   { title="MEMBER LEFT"; iconPicture="images\squad_kicked.paa"; description="%1"; color[]={0.7,0.7,0.7,1}; duration=4; priority=5; sound=""; };
+    class SquadMemberKicked { title="MEMBER REMOVED"; iconPicture="images\squad_kicked.paa"; description="%1"; color[]={0.8,0.5,0.5,1}; duration=4; priority=5; sound=""; };
+    class SquadError { title="UNABLE TO COMPLETE"; iconPicture="\A3\ui_f\data\map\markers\military\warning_ca.paa"; description="%1"; color[]={0.8,0.4,0.4,1}; duration=4; priority=6; sound=""; };
+    class RepGain {
+        title = "REPUTATION GAINED";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_med.paa";
+        description = "%1";
+        color[] = {0.4, 0.9, 0.4, 1};
+        duration = 5;
+        priority = 7;
+        sound = "taskSucceeded";
+    };
+    class RepLoss {
+        title = "REPUTATION LOST";
+        iconPicture = "\A3\ui_f\data\map\markers\military\warning_ca.paa";
+        description = "%1";
+        color[] = {0.9, 0.3, 0.3, 1};
+        duration = 5;
+        priority = 8;
+        sound = "taskFailed";
+    };
+    class RepStatus {
+        title = "REPUTATION STATUS";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_hq.paa";
+        description = "%1";
+        color[] = {0.6, 0.8, 1.0, 1};
+        duration = 10;
+        priority = 6;
+        sound = "";
+    };
+    class ShopPurchase {
+        title = "VEHICLE PURCHASED";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_motor_inf.paa";
+        description = "%1";
+        color[] = {0.4, 0.9, 0.4, 1};
+        duration = 5;
+        priority = 7;
+        sound = "taskSucceeded";
+    };
+    class NavalMission {
+        title = "NAVAL MISSION";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_naval.paa";
+        description = "%1";
+        color[] = {0.3, 0.7, 1.0, 1};
+        duration = 8;
+        priority = 7;
+        sound = "taskCreated";
+    };
+    class NavalComplete {
+        title = "NAVAL MISSION COMPLETE";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_naval.paa";
+        description = "%1";
+        color[] = {0.4, 0.9, 0.4, 1};
+        duration = 6;
+        priority = 8;
+        sound = "taskSucceeded";
+    };
+    class NavalFailed {
+        title = "NAVAL MISSION FAILED";
+        iconPicture = "\A3\ui_f\data\map\markers\military\warning_ca.paa";
+        description = "%1";
+        color[] = {0.9, 0.3, 0.3, 1};
+        duration = 6;
+        priority = 8;
+        sound = "taskFailed";
+    };
+    class GroundMission {
+        title = "GROUND MISSION";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_inf.paa";
+        description = "%1";
+        color[] = {0.8, 0.6, 0.2, 1};
+        duration = 8;
+        priority = 7;
+        sound = "taskCreated";
+    };
+    class GroundComplete {
+        title = "GROUND MISSION COMPLETE";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_inf.paa";
+        description = "%1";
+        color[] = {0.4, 0.9, 0.4, 1};
+        duration = 6;
+        priority = 8;
+        sound = "taskSucceeded";
+    };
+    class GroundFailed {
+        title = "GROUND MISSION FAILED";
+        iconPicture = "\A3\ui_f\data\map\markers\military\warning_ca.paa";
+        description = "%1";
+        color[] = {0.9, 0.3, 0.3, 1};
+        duration = 6;
+        priority = 8;
+        sound = "taskFailed";
+    };
+    class TaskUpdated {
+        title = "TASK UPDATED";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_hq.paa";
+        description = "%1";
+        color[] = {0.8, 0.8, 0.3, 1};
+        duration = 6;
+        priority = 6;
+        sound = "taskUpdated";
+    };
+};
+
+// ======================================
+// REMOTE EXEC  (FIXED — added internal BIS task functions + lockTurret)
+// ======================================
+class CfgRemoteExec
+{
+    class Functions
+    {
+        mode = 1;
+        jip = 0;
+
+        class BIS_fnc_showNotification { allowedTargets = 0; };
+
+        // === TASK SYSTEM ===
+        // The top-level functions (taskCreate, taskSetState) internally remoteExec
+        // setTaskLocal, objectVar, and sharedObjectives to each client.
+        // ALL must be whitelisted or tasks silently fail on every client.
+        class BIS_fnc_taskCreate         { allowedTargets = 0; jip = 1; };
+        class BIS_fnc_taskSetState       { allowedTargets = 0; jip = 1; };
+        class BIS_fnc_taskSetDestination { allowedTargets = 0; jip = 1; };
+        class BIS_fnc_setTaskLocal       { allowedTargets = 0; jip = 1; };  // FIX: internal — creates task on each client
+        class BIS_fnc_objectVar          { allowedTargets = 0; jip = 1; };  // FIX: internal — sets task object variables
+        class BIS_fnc_sharedObjectives   { allowedTargets = 0; jip = 1; };  // FIX: internal — syncs objectives to clients
+        class BIS_fnc_deleteTask         { allowedTargets = 0; };           // FIX: propagates task deletion to clients
+
+        // === MEDICAL FACILITY ===
+        class MED_fnc_startHealing { allowedTargets = 0; };
+
+        // === DATA LINK / GPS JAMMER / INTEL LAPTOP ===
+        class DYN_fnc_addDataLinkHoldAction  { allowedTargets = 0; jip = 1; };
+        class DYN_fnc_serverDisableDataLink  { allowedTargets = 2; };
+        class DYN_fnc_addGPSJammerHoldAction { allowedTargets = 0; jip = 1; };
+        class DYN_fnc_disableGPSJammer       { allowedTargets = 2; };
+        class DYN_fnc_addLaptopHoldAction    { allowedTargets = 0; jip = 1; };
+        class DYN_fnc_serverIntelLaptopUsed  { allowedTargets = 2; };
+
+        // === SQUAD SYSTEM ===
+        class DYN_fnc_notifyLocal        { allowedTargets = 1; };
+        class DYN_fnc_receiveInvite      { allowedTargets = 1; };
+        class DYN_fnc_beKickedWithNotify { allowedTargets = 1; };
+        class DYN_fnc_notifyPromotedToSL { allowedTargets = 1; };
+
+        // === REPUTATION / SHOP ===
+        class DYN_fnc_changeReputation      { allowedTargets = 2; };
+        class DYN_fnc_checkReputationLaptop { allowedTargets = 0; jip = 1; };
+        class DYN_fnc_awardHealRep          { allowedTargets = 2; };
+        class DYN_fnc_purchaseVehicle       { allowedTargets = 2; };
+
+        // === NAVAL ===
+        class DYN_fnc_addBlackBoxInteraction { allowedTargets = 0; jip = 1; };
+    };
+
+    class Commands
+    {
+        mode = 1;
+        jip = 0;
+
+        class addAction     { allowedTargets = 0; jip = 1; };
+        class switchMove    { allowedTargets = 0; };
+        class playMove      { allowedTargets = 0; };
+        class playMoveNow   { allowedTargets = 0; };
+        class lockTurret    { allowedTargets = 0; };  // FIX: vehicle turret locking was being blocked
+    };
+};
+
+// ======================================
+// SHOP DIALOG  (ORIGINAL UI — VEHICLE REQUISITION)
+// ======================================
+class DYN_ShopDialog
+{
+    idd = 9600;
+    movingEnable = false;
+    enableSimulation = true;
+    onLoad = "[] spawn DYN_fnc_shopOnLoad;";
+    class ControlsBackground
+    {
+        class MainBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.05; y = 0.02; w = 0.90; h = 0.96;
+            colorBackground[] = {0.13, 0.13, 0.13, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class HeaderBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.05; y = 0.02; w = 0.90; h = 0.12;
+            colorBackground[] = {0.17, 0.17, 0.17, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class LeftPanelBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.06; y = 0.15; w = 0.44; h = 0.72;
+            colorBackground[] = {0.10, 0.10, 0.10, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class RightPanelBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.51; y = 0.15; w = 0.43; h = 0.72;
+            colorBackground[] = {0.10, 0.10, 0.10, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class BottomBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.05; y = 0.88; w = 0.90; h = 0.10;
+            colorBackground[] = {0.15, 0.15, 0.15, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+    };
+    class Controls
+    {
+        class HeaderTitle
+        {
+            idc = -1;
+            type = 0;
+            style = 2;
+            x = 0.05; y = 0.04; w = 0.90; h = 0.07;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.90, 0.90, 0.90, 1};
+            text = "VEHICLE REQUISITION";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.06;
+        };
+        class PointsDisplay
+        {
+            idc = 9610;
+            type = 0;
+            style = 1;
+            x = 0.70; y = 0.895; w = 0.23; h = 0.05;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.4, 0.9, 0.4, 1};
+            text = "Points: 0";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.042;
+        };
+        class CloseBtn
+        {
+            idc = -1;
+            type = 1;
+            style = 2;
+            x = 0.91; y = 0.03; w = 0.035; h = 0.05;
+            colorBackground[] = {0.25, 0.25, 0.25, 1};
+            colorBackgroundActive[] = {0.50, 0.30, 0.30, 1};
+            colorBackgroundDisabled[] = {0.15, 0.15, 0.15, 1};
+            colorText[] = {0.8, 0.8, 0.8, 1};
+            colorFocused[] = {0.25, 0.25, 0.25, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.4, 0.4, 0.4, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "X";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.04;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "closeDialog 0";
+        };
+        class SearchLabel
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.065; y = 0.155; w = 0.10; h = 0.028;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "SEARCH";
+            font = "RobotoCondensed";
+            sizeEx = 0.028;
+        };
+        class SearchBox
+        {
+            idc = 9601;
+            type = 2;
+            style = 0;
+            x = 0.065; y = 0.185; w = 0.33; h = 0.038;
+            colorBackground[] = {0.18, 0.18, 0.18, 1};
+            colorSelection[] = {0.3, 0.5, 0.3, 1};
+            colorText[] = {1, 1, 1, 1};
+            colorDisabled[] = {0.4, 0.4, 0.4, 1};
+            font = "RobotoCondensed";
+            sizeEx = 0.032;
+            text = "";
+            autocomplete = "";
+            shadow = 0;
+        };
+        class SearchBtn
+        {
+            idc = -1;
+            type = 1;
+            style = 2;
+            x = 0.40; y = 0.185; w = 0.09; h = 0.038;
+            colorBackground[] = {0.20, 0.20, 0.20, 1};
+            colorBackgroundActive[] = {0.32, 0.32, 0.32, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[] = {0.78, 0.78, 0.78, 1};
+            colorFocused[] = {0.20, 0.20, 0.20, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "SEARCH";
+            font = "RobotoCondensed";
+            sizeEx = 0.026;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "[] call DYN_fnc_shopSearch;";
+        };
+        class CatCars
+        {
+            idc = 9621;
+            type = 1;
+            style = 2;
+            x = 0.065; y = 0.233; w = 0.082; h = 0.033;
+            colorBackground[] = {0.25, 0.25, 0.25, 1};
+            colorBackgroundActive[] = {0.35, 0.50, 0.35, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[] = {0.8, 0.8, 0.8, 1};
+            colorFocused[] = {0.25, 0.25, 0.25, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "CARS";
+            font = "RobotoCondensed";
+            sizeEx = 0.024;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "['Cars'] call DYN_fnc_shopFilter;";
+        };
+        class CatTrucks: CatCars { idc = 9622; x = 0.152; text = "TRUCKS"; action = "['Trucks'] call DYN_fnc_shopFilter;"; };
+        class CatArmor: CatCars  { idc = 9623; x = 0.239; text = "ARMOR";  action = "['Armor'] call DYN_fnc_shopFilter;"; };
+        class CatHeli: CatCars   { idc = 9624; x = 0.326; text = "HELIS";  action = "['Helicopters'] call DYN_fnc_shopFilter;"; };
+        class CatJets: CatCars   { idc = 9625; x = 0.413; text = "JETS";   action = "['Jets'] call DYN_fnc_shopFilter;"; };
+        class VehicleList
+        {
+            idc = 9603;
+            type = 5;
+            style = 0;
+            x = 0.065; y = 0.275; w = 0.43; h = 0.59;
+            colorBackground[] = {0.07, 0.07, 0.07, 1};
+            colorText[] = {0.80, 0.80, 0.80, 1};
+            colorDisabled[] = {0.4, 0.4, 0.4, 1};
+            colorSelect[] = {1, 1, 1, 1};
+            colorSelect2[] = {1, 1, 1, 1};
+            colorSelectBackground[] = {0.28, 0.28, 0.28, 1};
+            colorSelectBackground2[] = {0.25, 0.25, 0.25, 1};
+            colorScrollbar[] = {0.3, 0.3, 0.3, 1};
+            font = "RobotoCondensed";
+            sizeEx = 0.030;
+            rowHeight = 0.038;
+            columns[] = {0.02, 0.75};
+            onLBSelChanged = "[] call DYN_fnc_shopSelectVehicle;";
+            shadow = 0;
+            maxHistoryDelay = 1;
+            autoScrollSpeed = -1;
+            autoScrollDelay = 5;
+            autoScrollRewind = 0;
+            soundSelect[] = {"", 0.1, 1};
+            period = 0;
+            arrowEmpty = "\A3\ui_f\data\gui\cfg\scrollbar\arrowEmpty_ca.paa";
+            arrowFull = "\A3\ui_f\data\gui\cfg\scrollbar\arrowFull_ca.paa";
+            border = "\A3\ui_f\data\gui\cfg\scrollbar\border_ca.paa";
+            thumb = "\A3\ui_f\data\gui\cfg\scrollbar\thumb_ca.paa";
+            class ListScrollBar
+            {
+                color[] = {1, 1, 1, 0.6};
+                colorActive[] = {1, 1, 1, 1};
+                colorDisabled[] = {1, 1, 1, 0.3};
+                thumb = "\A3\ui_f\data\gui\cfg\scrollbar\thumb_ca.paa";
+                arrowFull = "\A3\ui_f\data\gui\cfg\scrollbar\arrowFull_ca.paa";
+                arrowEmpty = "\A3\ui_f\data\gui\cfg\scrollbar\arrowEmpty_ca.paa";
+                border = "\A3\ui_f\data\gui\cfg\scrollbar\border_ca.paa";
+            };
+        };
+        class DetailLabel
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.515; y = 0.155; w = 0.20; h = 0.030;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "VEHICLE DETAILS";
+            font = "RobotoCondensed";
+            sizeEx = 0.028;
+        };
+        class VehiclePicBG
+        {
+            idc = -1;
+            type = 0;
+            style = 0;
+            x = 0.515; y = 0.19; w = 0.42; h = 0.37;
+            colorBackground[] = {0.07, 0.07, 0.07, 1};
+            colorText[] = {0,0,0,0};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class VehiclePic
+        {
+            idc = 9604;
+            type = 0;
+            style = 48;
+            x = 0.535; y = 0.20; w = 0.38; h = 0.34;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {1, 1, 1, 1};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.03;
+        };
+        class VehicleName
+        {
+            idc = 9605;
+            type = 0;
+            style = 0;
+            x = 0.515; y = 0.57; w = 0.42; h = 0.045;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.95, 0.95, 0.95, 1};
+            text = "Select a vehicle";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.042;
+        };
+        class VehicleCost
+        {
+            idc = 9606;
+            type = 0;
+            style = 0;
+            x = 0.515; y = 0.62; w = 0.42; h = 0.04;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.7, 0.7, 0.7, 1};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.034;
+        };
+        class VehicleAfford
+        {
+            idc = 9607;
+            type = 0;
+            style = 0;
+            x = 0.515; y = 0.66; w = 0.42; h = 0.04;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.7, 0.7, 0.7, 1};
+            text = "";
+            font = "RobotoCondensed";
+            sizeEx = 0.034;
+        };
+        class PurchaseBtn
+        {
+            idc = 9608;
+            type = 1;
+            style = 2;
+            x = 0.515; y = 0.74; w = 0.205; h = 0.055;
+            colorBackground[] = {0.18, 0.28, 0.18, 1};
+            colorBackgroundActive[] = {0.25, 0.42, 0.25, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[] = {0.72, 0.90, 0.72, 1};
+            colorFocused[] = {0.18, 0.28, 0.18, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "PURCHASE";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.038;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "[] call DYN_fnc_shopBuy;";
+        };
+        class CloseBtnBottom
+        {
+            idc = -1;
+            type = 1;
+            style = 2;
+            x = 0.73; y = 0.74; w = 0.205; h = 0.055;
+            colorBackground[] = {0.30, 0.18, 0.18, 1};
+            colorBackgroundActive[] = {0.45, 0.25, 0.25, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[] = {0.85, 0.68, 0.68, 1};
+            colorFocused[] = {0.30, 0.18, 0.18, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "CLOSE";
+            font = "RobotoCondensedBold";
+            sizeEx = 0.038;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "closeDialog 0;";
+        };
+    };
+};
