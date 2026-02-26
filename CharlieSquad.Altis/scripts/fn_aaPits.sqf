@@ -355,25 +355,21 @@ for "_p" from 1 to _pitCount do {
         sleep 0.1;
         _aaVeh setVelocity [0, 0, 0];
 
-        // FIX: Post-settle stabilization — keeps vehicle above terrain for 3 seconds
-        // Also checks if vehicle sank below footprint max and corrects upward
+        // Post-settle stabilization — checks at longer intervals to reduce load
         [_aaVeh, _pitPos, _fwdVec, _upVec, _vehOffset, _fn_getFootprintMaxASL] spawn {
             params ["_v", "_pos", "_fwd", "_up", "_offset", "_fnFootprint"];
-            private _t0 = diag_tickTime;
-            while {(diag_tickTime - _t0) < 3} do {
+            for "_i" from 1 to 6 do {
                 if (isNull _v || !alive _v) exitWith {};
                 _v setVelocity [0, 0, 0];
 
-                // Check if vehicle drifted or sank
                 private _curPos = getPosASL _v;
                 private _expectedZ = ([_pos, 6] call _fnFootprint) + _offset;
 
-                // If sank below expected height or drifted horizontally
                 if (_curPos#2 < (_expectedZ - 0.15) || {(_curPos distance [_pos#0, _pos#1, _curPos#2]) > 1}) then {
                     _v setPosASL [_pos#0, _pos#1, _expectedZ];
                     _v setVectorDirAndUp [_fwd, _up];
                 };
-                sleep 0.1;
+                sleep 0.5;
             };
             sleep 7;
             if (!isNull _v) then { _v allowDamage true; };
@@ -484,21 +480,24 @@ for "_p" from 1 to _pitCount do {
             private _lastTarget = objNull;
 
             while { (missionNamespace getVariable ["DYN_AO_active", true]) && {alive _veh} && {alive _gunner} && {vehicle _gunner == _veh} } do {
-                sleep 1.5;
-                private _airTargets = [];
+                sleep 3;
+
+                // Pre-filter to only air vehicles near this AA
+                private _nearVehs = _veh nearEntities [["Helicopter", "Plane"], _maxRange];
+                private _target = objNull;
+                private _minD = 1e9;
+
                 {
-                    private _v = _x;
-                    if (alive _v && {(_v isKindOf "Helicopter") || (_v isKindOf "Plane")} && {(_v distance _veh) < _maxRange}) then {
-                        if ((getPosATL _v) select 2 > 10) then {
-                            private _cmdr = effectiveCommander _v;
-                            if (!isNull _cmdr && {side (group _cmdr) isEqualTo west}) then {
-                                _airTargets pushBack _v;
-                            };
+                    if (alive _x && {(getPosATL _x) select 2 > 10}) then {
+                        private _cmdr = effectiveCommander _x;
+                        if (!isNull _cmdr && {side (group _cmdr) isEqualTo west}) then {
+                            private _d = _x distance _veh;
+                            if (_d < _minD) then { _minD = _d; _target = _x; };
                         };
                     };
-                } forEach vehicles;
+                } forEach _nearVehs;
 
-                if (_airTargets isEqualTo []) then {
+                if (isNull _target) then {
                     if (!isNull _lastTarget) then {
                         _gunner doTarget objNull;
                         _gunner doWatch objNull;
@@ -507,10 +506,7 @@ for "_p" from 1 to _pitCount do {
                     continue;
                 };
 
-                _airTargets = [_airTargets, [], { _x distance _veh }, "ASCEND"] call BIS_fnc_sortBy;
-                private _target = _airTargets select 0;
                 _lastTarget = _target;
-
                 _gunner reveal [_target, 4];
                 _gunner doWatch _target;
                 _gunner doTarget _target;

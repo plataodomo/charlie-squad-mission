@@ -109,7 +109,7 @@ private _fn_findAheadIdx = {
 // IMPROVED: 12m completion radius — forces vehicles through each curve point instead of cutting corners at 40m
 private _fn_refreshWPs = {
     params ["_grp","_rt","_fromIdx","_bhv","_cbt","_spd"];
-    while {count waypoints _grp > 0} do {deleteWaypoint [_grp,0]};
+    for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
     for "_w" from _fromIdx to ((count _rt)-1) do {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
@@ -136,7 +136,7 @@ private _fn_assignInitialWPs = {
         if (_diff < 120) exitWith {_startIdx = _i; _foundAhead = true};
     };
     if (!_foundAhead) then { _startIdx = (_closest + 2) min ((count _rt)-1) };
-    while {count waypoints _grp > 0} do {deleteWaypoint [_grp,0]};
+    for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
     for "_w" from _startIdx to ((count _rt)-1) do {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
@@ -883,7 +883,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             [_veh] call _fnEject; private _c = false;
             if (behaviour leader _crewGrp == "COMBAT") then {_c=true};
             if (!_c && damage _veh > 0.05) then {_c=true};
-            if (!_c) then { { if (alive _x && isPlayer _x && _x distance2D _veh < 300) exitWith {_c=true} } forEach allPlayers };
+            if (!_c) then { { if (isPlayer _x && alive _x) exitWith {_c=true} } forEach (_veh nearEntities ["Man", 300]) };
             if (!_c) then { { if (alive _x && behaviour _x == "COMBAT") exitWith {_c=true} } forEach units _crewGrp };
             _c
         };
@@ -919,7 +919,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             if (!_inCbt && !isNull _cargoGrp && {count units _cargoGrp > 0}) then { if (behaviour leader _cargoGrp == "COMBAT") then {_inCbt=true} };
             if (!_inCbt) then { { if (alive _x && behaviour _x == "COMBAT") exitWith {_inCbt=true} } forEach (units _crewGrp + units _cargoGrp) };
             private _plrNear = false;
-            if (!_inCbt) then { { if (alive _x && isPlayer _x && _x distance2D (if (!isNull _veh && alive _veh) then {getPos _veh} else {getPos leader _cargoGrp}) < 500) exitWith {_plrNear=true} } forEach allPlayers };
+            if (!_inCbt) then { private _checkPos = if (!isNull _veh && alive _veh) then {_veh} else {leader _cargoGrp}; { if (isPlayer _x && alive _x) exitWith {_plrNear=true} } forEach (_checkPos nearEntities ["Man", 500]) };
             if (!_inCbt && !_plrNear && _hasDismounted) then {
                 private _strandedUnits = (units _cargoGrp) select { alive _x && vehicle _x == _x };
                 if (!isNull _veh && alive _veh && canMove _veh) then {
@@ -963,7 +963,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                             diag_log format ["[GROUND-CONVOY] GAZ loaded %1/%2 troops", _loaded, count _aliveTroops]; sleep 2;
                             { _x params ["_gaz","_gazGrp"];
                                 if (isNull _gaz || !alive _gaz) then {continue}; if (count (crew _gaz) < 2) then {continue};
-                                while {count waypoints _gazGrp > 0} do { deleteWaypoint [_gazGrp, 0] };
+                                for "_wpDel" from (count waypoints _gazGrp - 1) to 0 step -1 do { deleteWaypoint [_gazGrp, _wpDel] };
                                 private _ai = [_gaz, _rt] call _fnAhead;
                                 [_gazGrp, _rt, _ai, "SAFE", "RED", "FULL"] call _fnRefresh;
                                 _gazGrp setBehaviour "SAFE"; _gazGrp setCombatMode "RED"; _gazGrp setSpeedMode "FULL";
@@ -1116,7 +1116,7 @@ if (_objectiveAction == "CAPTURE") then {
             [_ccG, _truck, _cv] spawn { params ["_grp","_target","_veh"];
                 if (!isServer) exitWith {}; private _lastP = getPos _veh; private _sT = 0;
                 while {!isNull _target && alive _target && {count(units _grp select {alive _x}) > 0}} do {
-                    private _tP = getPos _target; while {count waypoints _grp > 0} do {deleteWaypoint [_grp,0]};
+                    private _tP = getPos _target; for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
                     private _wp = _grp addWaypoint [_tP, 30]; _wp setWaypointType "MOVE"; _wp setWaypointSpeed "FULL";
                     _wp setWaypointBehaviour "AWARE"; _wp setWaypointCombatMode "RED"; sleep 10;
                     if (!isNull _veh && alive _veh && canMove _veh) then { private _cP = getPos _veh;
@@ -1185,7 +1185,7 @@ if (_deliveryPos isEqualTo [0,0,0]) then { _deliveryPos = _basePos };
             private _d = driver _objTruck;
             if (!isNull _d && (isPlayer _d || {side group _d == west})) exitWith {_result="SUCCESS"};
             if (isNull _d || !alive _d) then { private _pn = false;
-                { if (alive _x && isPlayer _x && _x distance2D _objTruck < 30) exitWith {_pn=true} } forEach allPlayers;
+                { if (isPlayer _x && alive _x) exitWith {_pn=true} } forEach (_objTruck nearEntities ["Man", 30]);
                 if (_pn) exitWith {_result="SUCCESS"} };
         };
     };

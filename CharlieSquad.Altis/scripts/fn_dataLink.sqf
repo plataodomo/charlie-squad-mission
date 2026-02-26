@@ -107,7 +107,7 @@ if (!isNil "DYN_fnc_refreshOpforAwareness") then {
     call DYN_fnc_refreshOpforAwareness;
 } else {
     if (!isNil "DYN_fnc_boostOpforAwareness") then {
-        { [_x] call DYN_fnc_boostOpforAwareness; } forEach allUnits;
+        { [_x] call DYN_fnc_boostOpforAwareness; } forEach (allUnits select {side (group _x) == east && getPlayerUID _x == ""});
     };
 };
 

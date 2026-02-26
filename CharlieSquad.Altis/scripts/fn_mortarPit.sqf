@@ -374,7 +374,7 @@ private _guardSpots = [
     
     while { DYN_AO_active } do {
         private _dlActive = !(missionNamespace getVariable ["DYN_dataLinkDisabled", true]);
-        sleep (if (_dlActive) then {4} else {6});
+        sleep (if (_dlActive) then {8} else {12});
         
         private _activeMortars = _mortars select {
             !isNull _x
@@ -393,16 +393,18 @@ private _guardSpots = [
         
         if (_players isEqualTo []) then { continue };
         
-        private _spotters = DYN_AO_enemies select {
+        // Only sample up to 30 spotters to cap cost
+        private _spotterCandidates = DYN_AO_enemies select {
             !isNull _x
             && {alive _x}
             && {_x isKindOf "Man"}
-            && {side (group _x) == east}
             && {behaviour _x in ["AWARE","COMBAT"]}
-            && {(_x distance2D _aoPos) < (_aoRadius + 300)}
         };
         
-        if (_spotters isEqualTo []) then { continue };
+        if (_spotterCandidates isEqualTo []) then { continue };
+        private _spotters = if (count _spotterCandidates > 30) then {
+            (_spotterCandidates call BIS_fnc_arrayShuffle) select [0, 30]
+        } else { _spotterCandidates };
         
         private _bestP = objNull;
         private _bestK = 0;
@@ -410,7 +412,7 @@ private _guardSpots = [
         {
             private _p = _x;
             private _k = 0;
-            { _k = _k max (_x knowsAbout _p); } forEach _spotters;
+            { _k = _k max (_x knowsAbout _p); if (_k >= 4) exitWith {}; } forEach _spotters;
             if (_k > _bestK) then { _bestK = _k; _bestP = _p; };
         } forEach _players;
         
@@ -432,6 +434,6 @@ private _guardSpots = [
         
         { _x doArtilleryFire [_tPos, _ammoType, _rounds]; } forEach _pick;
         
-        sleep (if (_dlActive) then { 14 + random 12 } else { 22 + random 18 });
+        sleep (if (_dlActive) then { 18 + random 12 } else { 28 + random 18 });
     };
 };

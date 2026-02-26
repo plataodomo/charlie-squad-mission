@@ -452,7 +452,7 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
             if (alive _dealer && vehicle _dealer == _escapeVeh) then {
                 // Fly to escape point
                 private _grp = group _pilot;
-                while {count waypoints _grp > 0} do { deleteWaypoint [_grp, 0]; };
+                for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
                 private _wp = _grp addWaypoint [[_escapePos select 0, _escapePos select 1, 200], 0];
                 _wp setWaypointType "MOVE";
@@ -521,7 +521,7 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
 
                 // Drive to escape point
                 private _grp = group (driver _escapeVeh);
-                while {count waypoints _grp > 0} do { deleteWaypoint [_grp, 0]; };
+                for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
                 private _wp = _grp addWaypoint [_escapePos, 0];
                 _wp setWaypointType "MOVE";
@@ -566,7 +566,7 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                             while {alive _ev && alive _targetVeh && alive (driver _ev)} do {
                                 private _tPos = getPos _targetVeh;
 
-                                while {count waypoints _eGrp > 0} do { deleteWaypoint [_eGrp, 0]; };
+                                for "_i" from (count waypoints _eGrp - 1) to 0 step -1 do { deleteWaypoint [_eGrp, _i]; };
 
                                 private _wp = _eGrp addWaypoint [_tPos, 0];
                                 _wp setWaypointType "MOVE";
@@ -580,7 +580,7 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
 
                             // Target vehicle stopped/destroyed — drive to escape pos or stop
                             if (alive _ev && alive (driver _ev)) then {
-                                while {count waypoints _eGrp > 0} do { deleteWaypoint [_eGrp, 0]; };
+                                for "_i" from (count waypoints _eGrp - 1) to 0 step -1 do { deleteWaypoint [_eGrp, _i]; };
                                 private _wp = _eGrp addWaypoint [_fallbackPos, 0];
                                 _wp setWaypointType "MOVE";
                                 _wp setWaypointSpeed "FULL";

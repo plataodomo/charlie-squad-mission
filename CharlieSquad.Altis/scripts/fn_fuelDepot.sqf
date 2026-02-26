@@ -306,28 +306,25 @@ private _fn_settleTarget = {
         sleep 2;
         if (isNull _v) exitWith {};
 
-        // Clean slate before enabling sim
+        // Cache hitpoint names once (avoids calling getAllHitPointsDamage repeatedly)
         _v setDamage 0;
         private _hpData = getAllHitPointsDamage _v;
-        if !(_hpData isEqualTo []) then {
-            { _v setHitPointDamage [_x, 0, false]; } forEach (_hpData#0);
+        private _hpNames = if (_hpData isEqualTo []) then { [] } else { _hpData#0 };
+        if !(_hpNames isEqualTo []) then {
+            { _v setHitPointDamage [_x, 0, false]; } forEach _hpNames;
         };
 
         // Enable sim — gravity will settle it the last few cm
         _v enableSimulationGlobal true;
         _v setVelocity [0,0,0];
 
-        // Just zero velocity and wipe hitpoints for 5 seconds
-        // NO REPOSITIONING — let it settle where physics puts it
-        for "_i" from 1 to 20 do {
-            sleep 0.25;
+        // Zero velocity and wipe damage for 5 seconds, reduced to 10 iterations at 0.5s
+        for "_i" from 1 to 10 do {
+            sleep 0.5;
             if (isNull _v) exitWith {};
             _v setVelocity [0,0,0];
             _v setDamage 0;
-            private _hp = getAllHitPointsDamage _v;
-            if !(_hp isEqualTo []) then {
-                { _v setHitPointDamage [_x, 0, false]; } forEach (_hp#0);
-            };
+            { _v setHitPointDamage [_x, 0, false]; } forEach _hpNames;
         };
 
         // Final cleanup
@@ -336,10 +333,7 @@ private _fn_settleTarget = {
 
         _v setVelocity [0,0,0];
         _v setDamage 0;
-        private _hp = getAllHitPointsDamage _v;
-        if !(_hp isEqualTo []) then {
-            { _v setHitPointDamage [_x, 0, false]; } forEach (_hp#0);
-        };
+        { _v setHitPointDamage [_x, 0, false]; } forEach _hpNames;
 
         if (_v isKindOf "LandVehicle") then {
             _v lock 0;

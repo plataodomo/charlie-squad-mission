@@ -17,16 +17,17 @@ diag_log format ["PRISON: system running. DropPos=%1 radius=%2", _dropPos, _radi
 
 private _fn_cellOccupied = {
     params ["_cellPos"];
-    ({ alive _x && (_x getVariable ["DYN_prisonDelivered", false]) && ((_x distance2D _cellPos) < 2) } count allUnits) > 0
+    private _nearUnits = _cellPos nearEntities ["Man", 2];
+    ({ _x getVariable ["DYN_prisonDelivered", false] } count _nearUnits) > 0
 };
 
 while { true } do {
-    sleep 2;
+    sleep 3;
 
     private _cells = nearestObjects [_dropPos, ["Land_HelipadEmpty_F"], _cellSearch];
     if (_cells isEqualTo []) then { continue };
 
-    private _nearUnits = allUnits select { alive _x && ((_x distance2D _dropPos) < (_radius + 15)) };
+    private _nearUnits = _dropPos nearEntities ["Man", _radius + 15];
 
     private _prisoners = _nearUnits select {
         (_x getVariable ["DYN_isPrisoner", false])

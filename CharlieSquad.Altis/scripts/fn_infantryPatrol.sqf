@@ -106,7 +106,7 @@ DYN_fnc_patrolCycle = {
             _dest = _center getPos [_radius * 0.85, _dirToPos];
         };
 
-        while {(count (waypoints _group)) > 0} do { deleteWaypoint ((waypoints _group) select 0); };
+        for "_i" from (count waypoints _group - 1) to 0 step -1 do { deleteWaypoint [_group, _i]; };
         private _wp = _group addWaypoint [_dest, 0];
         _wp setWaypointType "MOVE";
         _wp setWaypointSpeed "LIMITED";
@@ -172,7 +172,9 @@ DYN_fnc_patrolCycle = {
         private _playerPos = if (_nearPlayers isEqualTo []) then {
             _contactPos getPos [50, random 360]
         } else {
-            getPos (([_nearPlayers, [], { _x distance2D _contactPos }, "ASCEND"] call BIS_fnc_sortBy) select 0)
+            private _closest = objNull; private _cDist = 1e9;
+            { private _d = _x distance2D _contactPos; if (_d < _cDist) then { _cDist = _d; _closest = _x; }; } forEach _nearPlayers;
+            getPos _closest
         };
 
         private _contactDir = _playerPos getDir _contactPos;
@@ -187,7 +189,9 @@ DYN_fnc_patrolCycle = {
 
         if (count _availGroups == 0) then { continue; };
 
-        _availGroups = [_availGroups, [], { (leader _x) distance2D _contactPos }, "ASCEND"] call BIS_fnc_sortBy;
+        private _grpDists = _availGroups apply { [(leader _x) distance2D _contactPos, _x] };
+        _grpDists sort true;
+        _availGroups = _grpDists apply { _x#1 };
 
         private _sendCount = (count _availGroups) min 3;
 
@@ -212,7 +216,7 @@ DYN_fnc_patrolCycle = {
             _grp setBehaviour "AWARE";
             _grp setSpeedMode "FULL";
 
-            while {(count (waypoints _grp)) > 0} do { deleteWaypoint ((waypoints _grp) select 0); };
+            for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
             private _wp1 = _grp addWaypoint [_flankPos, 0];
             _wp1 setWaypointType "MOVE";
@@ -237,45 +241,46 @@ DYN_fnc_patrolCycle = {
 [_aoPos, _aoRadius] spawn {
     params ["_pos", "_rad"];
     while { true } do {
-        sleep 8;
+        sleep 15;
 
-        {
-            private _grp = _x;
-            if (side _grp != east) then { continue };
-            if (({alive _x} count units _grp) == 0) then { continue };
-            if (behaviour (leader _grp) != "COMBAT") then { continue };
+        private _combatGroups = DYN_AO_enemyGroups select {
+            (side _x == east) && {({alive _x} count units _x) > 0} && {behaviour (leader _x) == "COMBAT"}
+        };
+        if (_combatGroups isEqualTo []) then { continue };
 
+        private _processCount = (count _combatGroups) min 5;
+        for "_idx" from 0 to (_processCount - 1) do {
+            private _grp = _combatGroups select _idx;
             private _ldr = leader _grp;
             if (isNull _ldr || {!alive _ldr}) then { continue };
 
             _grp setCombatMode "RED";
 
-            private _knownTargets = (_ldr targets [true, 400]) select { alive _x && (side _x == west || side (group _x) == west) };
+            private _knownTargets = (_ldr targets [true, 400]) select { alive _x && (side (group _x) == west) };
             if (_knownTargets isEqualTo []) then { continue };
 
-            _knownTargets = [_knownTargets, [], { _x distance2D _ldr }, "ASCEND"] call BIS_fnc_sortBy;
-            private _primaryTarget = _knownTargets select 0;
+            private _primaryTarget = objNull;
+            private _minDist = 1e9;
+            { private _d = _x distance2D _ldr; if (_d < _minDist) then { _minDist = _d; _primaryTarget = _x; }; } forEach _knownTargets;
+            if (isNull _primaryTarget) then { continue };
+
             private _targetPos = getPos _primaryTarget;
+            private _aliveUnits = (units _grp) select { alive _x };
 
-            { _x reveal [_primaryTarget, 4]; } forEach (units _grp);
+            _ldr reveal [_primaryTarget, 4];
+            { _x doSuppressiveFire _targetPos; } forEach _aliveUnits;
 
-            {
-                if (alive _x) then {
-                    _x doSuppressiveFire _targetPos;
-                };
-            } forEach (units _grp);
-
-            {
-                if (alive _x && {secondaryWeapon _x != ""}) then {
-                    private _vehTargets = _knownTargets select { vehicle _x != _x };
-                    if !(_vehTargets isEqualTo []) then {
-                        _x doTarget (selectRandom _vehTargets);
-                        _x doFire (selectRandom _vehTargets);
+            private _vehTargets = _knownTargets select { vehicle _x != _x };
+            if !(_vehTargets isEqualTo []) then {
+                {
+                    if (secondaryWeapon _x != "") then {
+                        private _vt = selectRandom _vehTargets;
+                        _x doTarget _vt;
+                        _x doFire _vt;
                     };
-                };
-            } forEach (units _grp);
-
-        } forEach DYN_AO_enemyGroups;
+                } forEach _aliveUnits;
+            };
+        };
     };
 };
 
@@ -439,7 +444,7 @@ for "_i" from 1 to _hilltopCount do {
 
             // Pull back if drifted
             if ((_ldr distance2D _holdPos) > 50) then {
-                while {(count (waypoints _grp)) > 0} do { deleteWaypoint ((waypoints _grp) select 0); };
+                for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
                 private _wp = _grp addWaypoint [_holdPos, 0];
                 _wp setWaypointType "MOVE";
                 _wp setWaypointBehaviour "AWARE";
@@ -585,7 +590,7 @@ if ((random 1) < _tankChance && {!(_aoRoads isEqualTo [])}) then {
                     _dest = _center getPos [_rad * 0.8, _d];
                 };
 
-                while {(count (waypoints _grp)) > 0} do { deleteWaypoint ((waypoints _grp) select 0); };
+                for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
                 private _wp = _grp addWaypoint [_dest, 0];
                 _wp setWaypointType "MOVE";
@@ -689,7 +694,7 @@ for "_i" from 1 to _sniperSquadCount do {
 
             _grp setBehaviour "STEALTH";
             _grp setSpeedMode "LIMITED";
-            while {(count (waypoints _grp)) > 0} do { deleteWaypoint ((waypoints _grp) select 0); };
+            for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
             private _wp = _grp addWaypoint [_movePos, 0];
             _wp setWaypointType "MOVE";
@@ -810,7 +815,7 @@ for "_i" from 1 to _loneWolfCount do {
 
             _grp setBehaviour "STEALTH";
             _grp setSpeedMode "LIMITED";
-            while {(count (waypoints _grp)) > 0} do { deleteWaypoint ((waypoints _grp) select 0); };
+            for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
             private _wp = _grp addWaypoint [_newPos, 0];
             _wp setWaypointType "MOVE";

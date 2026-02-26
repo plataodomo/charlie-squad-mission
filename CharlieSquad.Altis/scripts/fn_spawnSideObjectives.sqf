@@ -87,7 +87,7 @@ if (isNil "DYN_fnc_showProgressBar") then {
                 private _b = 0.85 - (_progress * 0.45);
                 _fillCtrl ctrlSetBackgroundColor [_r, _g, _b, 0.9];
 
-                sleep 0.05;
+                sleep 0.15;
             };
 
             if (call _condCheck && {(diag_tickTime - _startTime) >= _duration}) then {

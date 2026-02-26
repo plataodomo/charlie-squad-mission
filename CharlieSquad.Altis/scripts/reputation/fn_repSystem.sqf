@@ -331,22 +331,22 @@ DYN_fnc_spawnWoundedCivilian = {
             diag_log format ["[REP] Vanilla damage %1 applied (no ACE)", _dmg];
         };
 
-        // Keep them lying down until treated
-        for "_i" from 1 to 10 do {
-            sleep 0.5;
+        // Keep them lying down until treated - initial enforcement
+        for "_i" from 1 to 5 do {
+            sleep 1;
             if (isNull _c || !alive _c) exitWith {};
             _c setUnitPos "DOWN";
             [_c, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
         };
 
-        // Long-term animation enforcement
+        // Long-term animation enforcement at reduced frequency
         while {
             !isNull _c
             && alive _c
             && (_c getVariable ["DYN_isWounded", true])
             && !(_c getVariable ["DYN_repAwarded", false])
         } do {
-            sleep 8;
+            sleep 30;
             if (isNull _c || !alive _c) exitWith {};
             if (_c getVariable ["DYN_repAwarded", false]) exitWith {};
             if (!(_c getVariable ["DYN_isWounded", true])) exitWith {};

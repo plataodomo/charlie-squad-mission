@@ -260,7 +260,7 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 sleep 0.3;
                 { if (!isNull _x && alive _x && (vehicle _x != _truck)) then { _x moveInCargo _truck; }; } forEach _infantryUnits;
 
-                while { count waypoints _driverGrp > 0 } do { deleteWaypoint ((waypoints _driverGrp) select 0); };
+                for "_i" from (count waypoints _driverGrp - 1) to 0 step -1 do { deleteWaypoint [_driverGrp, _i]; };
 
                 private _wp1 = _driverGrp addWaypoint [_dismountPos, 0];
                 _wp1 setWaypointType "MOVE";
@@ -328,7 +328,7 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 private _aliveInf = _infantryUnits select { !isNull _x && alive _x && (vehicle _x == _x) };
 
                 if ((count _aliveInf) > 0) then {
-                    while { count waypoints _infantryGrp > 0 } do { deleteWaypoint ((waypoints _infantryGrp) select 0); };
+                    for "_i" from (count waypoints _infantryGrp - 1) to 0 step -1 do { deleteWaypoint [_infantryGrp, _i]; };
 
                     _infantryGrp setBehaviour "COMBAT";
                     _infantryGrp setCombatMode "RED";
@@ -380,7 +380,7 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 private _currentDriver = driver _truck;
 
                 if (!isNull _currentDriver && alive _currentDriver && !isNull _truck && alive _truck) then {
-                    while { count waypoints _driverGrp > 0 } do { deleteWaypoint ((waypoints _driverGrp) select 0); };
+                    for "_i" from (count waypoints _driverGrp - 1) to 0 step -1 do { deleteWaypoint [_driverGrp, _i]; };
 
                     private _retreatDir = _hqPos getDir (getPosATL _truck);
                     private _retreatPos = (getPosATL _truck) getPos [800 + random 400, _retreatDir];

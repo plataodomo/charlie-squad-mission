@@ -219,16 +219,17 @@ if (isNil "DYN_fnc_boostOpforAwareness") then {
     if (isNil "DYN_fnc_refreshOpforAwareness") then {
         DYN_fnc_refreshOpforAwareness = {
             if (!isServer) exitWith {};
-            { [_x] call DYN_fnc_boostOpforAwareness; } forEach allUnits;
+            private _opfor = allUnits select {side (group _x) == east && getPlayerUID _x == ""};
+            { [_x] call DYN_fnc_boostOpforAwareness; } forEach _opfor;
         };
         publicVariable "DYN_fnc_refreshOpforAwareness";
     };
-    
+
     call DYN_fnc_refreshOpforAwareness;
     
     addMissionEventHandler ["EntityCreated", {
         params ["_ent"];
-        if (!isNull _ent && {_ent isKindOf "Man"}) then {
+        if (!isNull _ent && {_ent isKindOf "Man"} && {getPlayerUID _ent == ""} && {side (group _ent) == east}) then {
             [_ent] call DYN_fnc_boostOpforAwareness;
         };
     }];
@@ -396,56 +397,48 @@ if (!isServer) then {} else {
 // =====================================================
 if (isNil "DYN_deadCleanupInit") then {
     DYN_deadCleanupInit = true;
+    DYN_corpseQueue = [];
 
     addMissionEventHandler ["EntityKilled", {
         params ["_killed"];
         if (isNull _killed) exitWith {};
         if !(_killed isKindOf "Man") exitWith {};
-
-        // Never delete prison-flagged units
         if (_killed getVariable ["DYN_keepInPrison", false]) exitWith {};
 
         private _g = group _killed;
         if (isNull _g) exitWith {};
 
         private _unitSide = side _g;
-
-        // --- OPFOR: 8 minutes ---
-        if (_unitSide == east) exitWith {
-            [_killed] spawn {
-                params ["_corpse"];
-                sleep 480;
-                if (!isNull _corpse) then {
-                    deleteVehicle _corpse;
-                    diag_log "[CLEANUP] OPFOR corpse removed";
-                };
-            };
+        private _deleteAt = switch (_unitSide) do {
+            case east: { diag_tickTime + 480 };
+            case west: { diag_tickTime + 300 };
+            case civilian: { diag_tickTime + 120 };
+            default { -1 };
         };
 
-        // --- BLUFOR (player corpses after respawn + AI): 5 minutes ---
-        if (_unitSide == west) exitWith {
-            [_killed] spawn {
-                params ["_corpse"];
-                sleep 300;
-                if (!isNull _corpse) then {
-                    deleteVehicle _corpse;
-                    diag_log "[CLEANUP] BLUFOR corpse removed";
-                };
-            };
-        };
-
-        // --- Civilians: 2 minutes ---
-        if (_unitSide == civilian) exitWith {
-            [_killed] spawn {
-                params ["_corpse"];
-                sleep 120;
-                if (!isNull _corpse) then {
-                    deleteVehicle _corpse;
-                    diag_log "[CLEANUP] Civilian corpse removed";
-                };
-            };
+        if (_deleteAt > 0) then {
+            DYN_corpseQueue pushBack [_killed, _deleteAt];
         };
     }];
+
+    // Single cleanup manager instead of per-corpse spawn threads
+    [] spawn {
+        while {true} do {
+            sleep 30;
+            private _now = diag_tickTime;
+            private _remaining = [];
+            {
+                _x params ["_corpse", "_deleteTime"];
+                if (isNull _corpse) then { continue };
+                if (_now >= _deleteTime) then {
+                    deleteVehicle _corpse;
+                } else {
+                    _remaining pushBack _x;
+                };
+            } forEach DYN_corpseQueue;
+            DYN_corpseQueue = _remaining;
+        };
+    };
 
     diag_log "[CLEANUP] Dead body cleanup initialized (OPFOR=8min BLUFOR=5min CIV=2min)";
 };

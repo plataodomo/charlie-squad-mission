@@ -133,6 +133,7 @@ private _fn_inLane = {
 
 // BLUFOR-ONLY MINES — OPFOR aware and avoids
 private _insideCount = 55;
+private _allMines = [];
 
 for "_iMine" from 1 to _insideCount do {
     private _dir = random 360;
@@ -146,24 +147,47 @@ for "_iMine" from 1 to _insideCount do {
     private _mine = createMine ["APERSBoundingMine", _p, [], 0];
     _mine allowDamage false;
 
-    // FIX: Reveal mine to OPFOR — they path around it and won't trigger it
     east revealMine _mine;
 
     DYN_AO_mines pushBack _mine;
+    _allMines pushBack _mine;
+};
 
-    [_mine] spawn {
-        params ["_mine"];
-        private _radius = 3.2;
+// Single manager thread checks ALL mines instead of 55 individual spawn loops
+[_allMines] spawn {
+    params ["_mines"];
+    private _triggerRadius = 3.2;
 
-        waitUntil {
-            sleep 0.25;
-            isNull _mine
-            || { (_mine nearEntities ["Man", _radius]) findIf { isPlayer _x && alive _x && side (group _x) == west } > -1 }
-        };
+    while {count _mines > 0} do {
+        sleep 0.5;
 
-        if (!isNull _mine) then {
-            _mine allowDamage true;
-            _mine setDamage 1;
-        };
+        private _players = allPlayers select { alive _x && side (group _x) == west };
+        if (_players isEqualTo []) then { continue };
+
+        private _triggered = [];
+
+        {
+            private _mine = _x;
+            if (isNull _mine) then {
+                _triggered pushBack _forEachIndex;
+                continue;
+            };
+
+            private _minePos = getPosATL _mine;
+            private _trip = false;
+            {
+                if ((_x distance2D _minePos) < _triggerRadius) exitWith { _trip = true };
+            } forEach _players;
+
+            if (_trip) then {
+                _mine allowDamage true;
+                _mine setDamage 1;
+                _triggered pushBack _forEachIndex;
+            };
+        } forEach _mines;
+
+        // Remove triggered/null mines in reverse order
+        reverse _triggered;
+        { _mines deleteAt _x } forEach _triggered;
     };
 };

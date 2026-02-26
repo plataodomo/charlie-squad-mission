@@ -22,7 +22,7 @@ private _fn_dlActive = { !(missionNamespace getVariable ["DYN_dataLinkDisabled",
 
 private _fn_clearWPs = {
     params ["_grp"];
-    while { count waypoints _grp > 0 } do { deleteWaypoint ((waypoints _grp) select 0); };
+    for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 };
 
 private _fn_randPosInAO = {
@@ -41,7 +41,7 @@ private _fn_setupHeliWPs = {
     params ["_grp", "_center", "_radius", "_alt", "_dlActive"];
 
     // Inlined: clear all waypoints (was _fn_clearWPs — breaks in spawn scope)
-    while { count waypoints _grp > 0 } do { deleteWaypoint ((waypoints _grp) select 0); };
+    for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
     // Inlined: random position finder (was _fn_randPosInAO — breaks in spawn scope)
     private _fn_rPos = {
@@ -122,26 +122,23 @@ private _fn_spawnHeli = {
 
         while { DYN_AO_active && {alive _heli} } do {
             private _dl = call _fn_dlActive;
-            sleep (if (_dl) then {2} else {4});
+            sleep (if (_dl) then {4} else {8});
 
-            private _targets = [];
-            _targets append (allPlayers select {
+            // Only check players (much smaller list than all vehicles)
+            private _targets = allPlayers select {
                 alive _x && (side (group _x) isEqualTo west) && ((_x distance2D _center) < _radius)
-            });
-            _targets append (vehicles select {
-                alive _x && ((_x distance2D _center) < _radius) && {
-                    private _ec = effectiveCommander _x;
-                    (!isNull _ec) && { side (group _ec) isEqualTo west }
-                }
-            });
+            };
             if (_targets isEqualTo []) then { continue; };
 
-            private _tgt = ([_targets, [], { _x distance2D _heli }, "ASCEND"] call BIS_fnc_sortBy) select 0;
-
-            { _x reveal [_tgt, 4]; } forEach crew _heli;
+            // Find closest without BIS_fnc_sortBy
+            private _tgt = objNull;
+            private _minD = 1e9;
+            { private _d = _x distance2D _heli; if (_d < _minD) then { _minD = _d; _tgt = _x; }; } forEach _targets;
+            if (isNull _tgt) then { continue };
 
             private _gunner = gunner _heli;
             if (!isNull _gunner) then {
+                _gunner reveal [_tgt, 4];
                 _gunner doWatch _tgt;
                 _gunner doTarget _tgt;
                 _gunner doFire _tgt;
