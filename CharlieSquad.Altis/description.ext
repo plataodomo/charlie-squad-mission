@@ -586,3 +586,77 @@ class DYN_ShopDialog
         };
     };
 };
+
+// ======================================
+// TFAR CONNECTION SCREEN
+// Displayed when the player is not connected to TeamSpeak
+// or does not have the Task Force Radio plugin active.
+// ======================================
+class TFR_BlurScreen
+{
+    idd = 9999;
+    movingEnable = false;
+    // Stores the display reference for later script access
+    onLoad = "uiNamespace setVariable ['TFR_Display', _this select 0];";
+    class controls
+    {
+        // Darkened background (50% transparency)
+        class Background: IGUIBack
+        {
+            idc = 2200;
+            x = safezoneX;
+            y = safezoneY;
+            w = safezoneW;
+            h = safezoneH;
+            colorBackground[] = {0, 0, 0, 0.5};
+        };
+
+        // Warning text
+        class WarningText: RscStructuredText
+        {
+            idc = 1100;
+            text = "<t align='center' size='1.6' color='#E53935' font='RobotoCondensedBold'>TEAMSPEAK CONNECTION REQUIRED</t><br/><t align='center' size='1.1'>Please connect to our TeamSpeak server and ensure the Task Force Radio plugin is enabled.</t>";
+            x = 0.25 * safezoneW + safezoneX;
+            y = 0.4 * safezoneH + safezoneY;
+            w = 0.5 * safezoneW;
+            h = 0.12 * safezoneH;
+        };
+
+        // Left button: Installation guide
+        class GuideButton: RscButton
+        {
+            idc = 1600;
+            text = "INSTALLATION GUIDE";
+            x = 0.35 * safezoneW + safezoneX;
+            y = 0.53 * safezoneH + safezoneY;
+            w = 0.14 * safezoneW;
+            h = 0.045 * safezoneH;
+            colorBackground[] = {0.2, 0.2, 0.2, 1};
+            onButtonClick = "copyToClipboard 'https://plataodomo.github.io/CharlieSquad-TFAR-Guide/'; hint 'Guide link copied to clipboard! Use Alt+Tab.';";
+        };
+
+        // Right button: Connect to TS3
+        class JoinTSButton: RscButton
+        {
+            idc = 1601;
+            text = "CONNECT NOW";
+            x = 0.51 * safezoneW + safezoneX;
+            y = 0.53 * safezoneH + safezoneY;
+            w = 0.14 * safezoneW;
+            h = 0.045 * safezoneH;
+            colorBackground[] = {0.05, 0.35, 0.75, 1};
+            onButtonClick = "openURL 'ts3server://CharlieSquad.4npserver.comport=9987';";
+        };
+
+        // Footer hint
+        class FooterText: RscStructuredText
+        {
+            idc = 1101;
+            text = "<t align='center' size='0.8' color='#999999'>This screen will close automatically once you are connected.</t>";
+            x = 0.3 * safezoneW + safezoneX;
+            y = 0.6 * safezoneH + safezoneY;
+            w = 0.4 * safezoneW;
+            h = 0.05 * safezoneH;
+        };
+    };
+};
