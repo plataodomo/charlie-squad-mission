@@ -261,7 +261,7 @@ private _fn_spawnGazPickup = {
     if ((_gaz emptyPositions "gunner") > 0) then {
         private _gGnr = _gazGrp createUnit [selectRandom _infPool, _spawnPos, [], 0, "NONE"];
         _gGnr moveInGunner _gaz; _gGnr allowFleeing 0; _gGnr setSkill 0.55;
-        _gGnr setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _gGnr;
+        _gGnr setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _gGnr;
     };
     if ((_gaz emptyPositions "commander") > 0) then {
         private _gCdr = _gazGrp createUnit [selectRandom _infPool, _spawnPos, [], 0, "NONE"];
@@ -561,7 +561,7 @@ private _zsuD = _zsuGrp createUnit [selectRandom _infPool, getPos _zsu, [], 0, "
 _zsuD moveInDriver _zsu; _zsuD allowFleeing 0; _zsuD setSkill 0.50; DYN_ground_enemies pushBack _zsuD;
 private _zsuG = _zsuGrp createUnit [selectRandom _infPool, getPos _zsu, [], 0, "NONE"];
 _zsuG moveInGunner _zsu; _zsuG allowFleeing 0; _zsuG setSkill 0.55;
-_zsuG setSkill ["aimingAccuracy",0.90]; _zsuG setSkill ["spotDistance",1.0]; DYN_ground_enemies pushBack _zsuG;
+_zsuG setSkill ["aimingAccuracy",0.50]; _zsuG setSkill ["spotDistance",0.60]; DYN_ground_enemies pushBack _zsuG;
 sleep 0.5;
 { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _zsuGrp) select {vehicle _x != _zsu});
 DYN_ground_enemyVehs pushBack _zsu;
@@ -584,7 +584,7 @@ for "_i" from 1 to _frontTigrCount do {
     if ((_tigr emptyPositions "gunner") > 0) then {
         private _tg = _cGrp createUnit [selectRandom _infPool, getPos _tigr, [], 0, "NONE"];
         _tg moveInGunner _tigr; _tg allowFleeing 0; _tg setSkill 0.55;
-        _tg setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _tg;
+        _tg setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _tg;
     };
     private _cgGrp = createGroup east; DYN_ground_enemyGroups pushBack _cgGrp;
     _allCargoGroups pushBack [_cgGrp, _tigr, _cGrp];
@@ -616,7 +616,7 @@ if (_spawnBTR) then {
         if ((_btr emptyPositions "gunner") > 0) then {
             private _bg = _bCG createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
             _bg moveInGunner _btr; _bg allowFleeing 0; _bg setSkill 0.55;
-            _bg setSkill ["aimingAccuracy",0.90]; _bg setSkill ["spotDistance",1.0]; DYN_ground_enemies pushBack _bg;
+            _bg setSkill ["aimingAccuracy",0.50]; _bg setSkill ["spotDistance",0.60]; DYN_ground_enemies pushBack _bg;
         };
         if ((_btr emptyPositions "commander") > 0) then {
             private _bc = _bCG createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
@@ -671,7 +671,7 @@ if (_tigrCount > 1) then {
         if ((_rTigr emptyPositions "gunner") > 0) then {
             private _rg = _rcG createUnit [selectRandom _infPool, getPos _rTigr, [], 0, "NONE"];
             _rg moveInGunner _rTigr; _rg allowFleeing 0; _rg setSkill 0.55;
-            _rg setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _rg;
+            _rg setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _rg;
         };
         private _rCargo = createGroup east; DYN_ground_enemyGroups pushBack _rCargo;
         _allCargoGroups pushBack [_rCargo, _rTigr, _rcG];
@@ -1097,7 +1097,7 @@ if (_objectiveAction == "CAPTURE") then {
             _cd moveInDriver _cv; _cd allowFleeing 0; _cd setSkill 0.50; DYN_ground_enemies pushBack _cd; _chaseUnits pushBack _cd;
             if ((_cv emptyPositions "gunner") > 0) then {
                 private _cg = _ccG createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
-                _cg moveInGunner _cv; _cg allowFleeing 0; _cg setSkill 0.55; _cg setSkill ["aimingAccuracy",0.85];
+                _cg moveInGunner _cv; _cg allowFleeing 0; _cg setSkill 0.55; _cg setSkill ["aimingAccuracy",0.50];
                 DYN_ground_enemies pushBack _cg; _chaseUnits pushBack _cg };
             if ((_cv emptyPositions "commander") > 0) then {
                 private _cc = _ccG createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
