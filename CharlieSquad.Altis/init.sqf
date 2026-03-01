@@ -339,6 +339,10 @@ if (!isServer) then {} else {
 // =====================================================
 // LOAD MISSION SCRIPTS
 // =====================================================
+
+// TFAR connection check — clients only (requires UI)
+if (hasInterface) then { [] execVM "scripts\fn_checkTFR.sqf"; };
+
 [] execVM "scripts\fn_prisonSystem.sqf";
 [] execVM "scripts\fn_spawnObjectives.sqf";
 [] execVM "scripts\reputation\fn_repSystem.sqf";
