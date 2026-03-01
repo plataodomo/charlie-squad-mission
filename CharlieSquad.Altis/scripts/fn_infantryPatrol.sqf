@@ -338,7 +338,7 @@ private _buildingDefCount = 0;
         _unit disableAI "PATH";
         _unit setUnitPos (selectRandom ["UP", "MIDDLE"]);
         _unit allowFleeing 0;
-        _unit setSkill 0.7 + (random 0.3);
+        _unit setSkill 0.35 + (random 0.15);
 
         DYN_AO_enemies pushBack _unit;
         _buildingDefCount = _buildingDefCount + 1;
@@ -423,8 +423,8 @@ for "_i" from 1 to _hilltopCount do {
         _unit setPosATL _spawnPos;
         _unit setUnitPos "MIDDLE";
         _unit allowFleeing 0;
-        _unit setSkill 0.75 + (random 0.25);
-        _unit setSkill ["spotDistance", 1.0];
+        _unit setSkill 0.40 + (random 0.15);
+        _unit setSkill ["spotDistance", 0.60];
 
         DYN_AO_enemies pushBack _unit;
         _hilltopTeamCount = _hilltopTeamCount + 1;
@@ -565,11 +565,11 @@ if ((random 1) < _tankChance && {!(_aoRoads isEqualTo [])}) then {
         {
             DYN_AO_enemies pushBack _x;
             _x allowFleeing 0;
-            _x setSkill 1.0;
-            _x setSkill ["aimingAccuracy", 0.85];
-            _x setSkill ["aimingSpeed", 0.85];
-            _x setSkill ["spotDistance", 1.0];
-            _x setSkill ["courage", 1.0];
+            _x setSkill 0.55;
+            _x setSkill ["aimingAccuracy", 0.50];
+            _x setSkill ["aimingSpeed", 0.45];
+            _x setSkill ["spotDistance", 0.60];
+            _x setSkill ["courage", 0.65];
         } forEach crew _tank;
 
         _grp setBehaviour "AWARE";
@@ -676,11 +676,11 @@ for "_i" from 1 to _sniperSquadCount do {
 
     {
         DYN_AO_enemies pushBack _x;
-        _x setSkill 1.0;
+        _x setSkill 0.55;
         _x setUnitPos "DOWN";
         _x allowFleeing 0;
-        _x setSkill ["spotDistance", 1.0];
-        _x setSkill ["camouflage", 0.1];
+        _x setSkill ["spotDistance", 0.65];
+        _x setSkill ["camouflage", 0.15];
     } forEach units _grp;
 
     [_grp, _aoPos, _aoRadius] spawn {
@@ -760,17 +760,17 @@ for "_i" from 1 to _loneWolfCount do {
 
     DYN_AO_enemies pushBack _sniper;
 
-    _sniper setSkill 1.0;
-    _sniper setSkill ["aimingAccuracy", 0.95];
-    _sniper setSkill ["aimingShake", 0.95];
-    _sniper setSkill ["aimingSpeed", 0.90];
-    _sniper setSkill ["spotDistance", 1.0];
-    _sniper setSkill ["spotTime", 1.0];
-    _sniper setSkill ["courage", 1.0];
-    _sniper setSkill ["commanding", 0.8];
-    _sniper setSkill ["general", 1.0];
-    _sniper setSkill ["reloadSpeed", 1.0];
-    _sniper setSkill ["camouflage", 0.05];
+    _sniper setSkill 0.60;
+    _sniper setSkill ["aimingAccuracy", 0.60];
+    _sniper setSkill ["aimingShake", 0.55];
+    _sniper setSkill ["aimingSpeed", 0.50];
+    _sniper setSkill ["spotDistance", 0.70];
+    _sniper setSkill ["spotTime", 0.55];
+    _sniper setSkill ["courage", 0.60];
+    _sniper setSkill ["commanding", 0.45];
+    _sniper setSkill ["general", 0.55];
+    _sniper setSkill ["reloadSpeed", 0.65];
+    _sniper setSkill ["camouflage", 0.10];
 
     _sniper setUnitPos "DOWN";
     _sniper allowFleeing 0;

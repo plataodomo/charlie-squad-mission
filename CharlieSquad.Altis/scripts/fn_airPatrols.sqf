@@ -104,7 +104,7 @@ private _fn_spawnHeli = {
     { 
         DYN_AO_enemies pushBack _x; 
         _x allowFleeing 0;
-        _x setSkill 1;
+        _x setSkill 0.50;
     } forEach crew _heli;
 
     private _grp = group (driver _heli);

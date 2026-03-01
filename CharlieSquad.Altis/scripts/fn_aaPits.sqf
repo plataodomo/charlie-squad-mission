@@ -403,7 +403,7 @@ for "_p" from 1 to _pitCount do {
             private _c = (_veh getVariable ["aaCharges", 0]) + 1;
             _veh setVariable ["aaCharges", _c, true];
 
-            if (_c >= 3) then {
+            if (_c >= 1) then {
                 _veh setVariable ["aaKilled", true, true];
                 _veh setDamage 1;
             };
@@ -455,7 +455,7 @@ for "_p" from 1 to _pitCount do {
                 sleep 0.3;
             };
 
-            _gunner setSkill 1;
+            _gunner setSkill 0.50;
             _gunner allowFleeing 0;
             { _gunner disableAI _x; } forEach ["PATH", "MOVE", "FSM", "AUTOCOMBAT"];
 

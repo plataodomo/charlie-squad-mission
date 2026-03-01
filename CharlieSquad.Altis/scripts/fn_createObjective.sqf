@@ -66,7 +66,7 @@ private _taskId = format ["task_%1", round (diag_tickTime * 1000)];
 [west, _taskId, [format ["Clear enemy forces in %1.", _cityName], format ["Liberate %1", _cityName], ""], _pos, "ASSIGNED", 1, true, "attack"] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 // Helpers
-private _fn_setMaxSkill = { params ["_u"]; if (isNull _u) exitWith {}; _u setSkill 1; { _u setSkill [_x, 1.0]; } forEach ["aimingAccuracy","aimingShake","aimingSpeed","spotDistance","spotTime","courage","reloadSpeed","commanding","general"]; };
+private _fn_setMaxSkill = { params ["_u"]; if (isNull _u) exitWith {}; _u setSkill 0.55; { _u setSkill [_x, 0.55]; } forEach ["aimingAccuracy","aimingShake","aimingSpeed","spotDistance","spotTime","courage","reloadSpeed","commanding","general"]; };
 private _fn_findWaterPos = { params ["_center", "_min", "_max", ["_tries", 80]]; private _out = []; for "_t" from 1 to _tries do { private _cand = _center getPos [_min + random (_max - _min), random 360]; if (surfaceIsWater _cand) exitWith { _out = _cand; }; }; _out };
 
 // ==================================================

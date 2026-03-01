@@ -49,10 +49,18 @@ if (isNil "DYN_AO_enemyVehs") then { DYN_AO_enemyVehs = []; };
 if (isNil "DYN_AO_sideTasks") then { DYN_AO_sideTasks = []; };
 if (isNil "DYN_OBJ_centers") then { DYN_OBJ_centers = []; };
 if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
+if (isNil "DYN_radioTowerPositions") then { DYN_radioTowerPositions = []; };
+
+// Wait briefly for radio tower to register its position (async execVM race)
+private _rtWait = diag_tickTime + 5;
+waitUntil { sleep 0.25; (count DYN_radioTowerPositions > 0) || (diag_tickTime > _rtWait) };
 
 // =====================================================
 // DISTANCE CHECK — 600m from other major objectives
+// Also checks 150m from radio towers to prevent overlap
 // =====================================================
+private _minFromRadioTower = 150;
+
 private _fn_farEnough = {
     params ["_pos"];
     if (_pos isEqualTo [] || {_pos isEqualTo [0,0,0]}) exitWith { false };
@@ -60,6 +68,9 @@ private _fn_farEnough = {
     {
         if ((_pos distance2D _x) < 600) exitWith { _tooClose = true; };
     } forEach DYN_OBJ_centers;
+    if (!_tooClose) then {
+        { if ((_pos distance2D _x) < _minFromRadioTower) exitWith { _tooClose = true; }; } forEach DYN_radioTowerPositions;
+    };
     !_tooClose
 };
 
@@ -208,13 +219,13 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 if (!isNull _driver) then {
                     _driverGrp = group _driver;
                     _driver allowFleeing 0;
-                    _driver setSkill 1;
+                    _driver setSkill 0.45;
                     DYN_AO_enemies pushBack _driver;
                 };
 
                 if (!isNull _gunner) then {
                     _gunner allowFleeing 0;
-                    _gunner setSkill 1;
+                    _gunner setSkill 0.45;
                     DYN_AO_enemies pushBack _gunner;
                 };
 

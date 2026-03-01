@@ -265,8 +265,8 @@ _mortarGrp setCombatMode "RED";
 
 private _fn_setMortarSkill = {
     params ["_u"];
-    _u setSkill 1;
-    { _u setSkill [_x, 1.0]; } forEach [
+    _u setSkill 0.50;
+    { _u setSkill [_x, 0.50]; } forEach [
         "aimingAccuracy","aimingShake","aimingSpeed",
         "spotDistance","spotTime",
         "courage","reloadSpeed",
