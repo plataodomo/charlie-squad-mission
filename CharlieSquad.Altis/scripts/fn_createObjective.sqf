@@ -31,21 +31,23 @@ DYN_AO_center      = _pos;
 DYN_AO_radius      = _aoRadius;
 DYN_AO_startT      = _aoStartT;
 
-DYN_AO_enemies       = [];
-DYN_AO_enemyGroups   = [];
-DYN_AO_enemyVehs     = [];
-DYN_AO_objects       = [];
-DYN_AO_mines         = [];
-DYN_AO_sideTasks     = [];
-DYN_AO_bonusTasks    = [];
-DYN_AO_civUnits      = [];
-DYN_AO_civVehs       = [];
-DYN_AO_hiddenTerrain = [];
-DYN_OBJ_centers      = [];
+DYN_AO_enemies          = [];
+DYN_AO_enemyGroups      = [];
+DYN_AO_enemyVehs        = [];
+DYN_AO_objects          = [];
+DYN_AO_mines            = [];
+DYN_AO_sideTasks        = [];
+DYN_AO_bonusTasks       = [];
+DYN_AO_civUnits         = [];
+DYN_AO_civVehs          = [];
+DYN_AO_hiddenTerrain    = [];
+DYN_OBJ_centers         = [];
+DYN_AO_hiddenObjectives = [];  // [[taskId, title, pos], ...] — revealed by resistance intel
 
 publicVariable "DYN_AO_active";
 publicVariable "DYN_AO_center";
 publicVariable "DYN_AO_radius";
+publicVariable "DYN_AO_hiddenObjectives";
 
 missionNamespace setVariable ["DYN_gpsJammerDisabled", true, true];
 missionNamespace setVariable ["DYN_dataLinkDisabled", true, true];
@@ -80,6 +82,7 @@ private _fn_findWaterPos = { params ["_center", "_min", "_max", ["_tries", 80]];
 if ((random 1) < 0.40) then { [_pos, _aoRadius] execVM "scripts\fn_gpsJammer.sqf"; };
 [_pos, _aoRadius] execVM "scripts\fn_aaPits.sqf";
 [_pos, _aoRadius] execVM "scripts\fn_airPatrols.sqf";
+[_pos, _aoRadius] execVM "scripts\fn_resistanceAreas.sqf";
 
 // =====================
 // GARRISON
@@ -303,6 +306,23 @@ if !(_waterProbe isEqualTo []) then {
 // =====================
 [_taskId, _markerName, _pos, _aoRadius, _aoStartT, _cityName] spawn {
     params ["_taskId", "_markerName", "_pos", "_aoRadius", "_aoStartT", "_cityName"];
+
+    // Auto-reveal hidden objectives after 20 minutes so the AO can always complete
+    // even if players skip resistance areas entirely.
+    [] spawn {
+        sleep 1200;
+        if (!(missionNamespace getVariable ["DYN_AO_active", false])) exitWith {};
+        private _hidden = missionNamespace getVariable ["DYN_AO_hiddenObjectives", []];
+        if (_hidden isEqualTo []) exitWith {};
+        {
+            _x params ["_tid", "_ttitle", "_tpos"];
+            [_tid, "ASSIGNED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        } forEach _hidden;
+        missionNamespace setVariable ["DYN_AO_hiddenObjectives", [], false];
+        ["TaskUpdated", ["Intel declassified", "All AO objectives have been revealed on the map."]]
+            remoteExecCall ["BIS_fnc_showNotification", 0];
+        diag_log "[RESISTANCE] 20-min timer: auto-revealed all remaining hidden AO objectives";
+    };
 
     waitUntil {
         sleep 5;
