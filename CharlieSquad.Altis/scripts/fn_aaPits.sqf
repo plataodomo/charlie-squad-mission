@@ -403,7 +403,7 @@ for "_p" from 1 to _pitCount do {
             private _c = (_veh getVariable ["aaCharges", 0]) + 1;
             _veh setVariable ["aaCharges", _c, true];
 
-            if (_c >= 1) then {
+            if (_c >= 2) then {
                 _veh setVariable ["aaKilled", true, true];
                 _veh setDamage 1;
             };

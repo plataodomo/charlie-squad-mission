@@ -430,17 +430,22 @@ private _localGroups  = +DYN_naval_enemyGroups;
 private _localMarkers = +DYN_naval_markers;
 private _localObjects = +DYN_naval_objects;
 
+private _bbTimeout = 7200;  // 2 hours
+
 [_recorder, _taskId, _deliveryPos, _searchMarker, _wreck,
- _localEnemies, _localGroups, _localMarkers, _localObjects] spawn {
+ _localEnemies, _localGroups, _localMarkers, _localObjects, _bbTimeout] spawn {
     params [
         "_recorder", "_taskId", "_deliveryPos", "_searchMarker", "_wreck",
-        "_localEnemies", "_localGroups", "_localMarkers", "_localObjects"
+        "_localEnemies", "_localGroups", "_localMarkers", "_localObjects", "_tOut"
     ];
+
+    private _startTime = diag_tickTime;
     
     waitUntil {
         sleep 2;
         
         if (isNull _recorder) exitWith { true };
+        if ((diag_tickTime - _startTime) > _tOut) exitWith { true };
         
         private _attachedTo = attachedTo _recorder;
         if (isNull _attachedTo) exitWith { false };
@@ -449,12 +454,45 @@ private _localObjects = +DYN_naval_objects;
         
         (_attachedTo distance2D _deliveryPos) < 20
     };
+
+    // 2-hour timeout — recorder still intact but time ran out
+    if (!isNull _recorder && (diag_tickTime - _startTime) > _tOut) exitWith {
+        diag_log "[NAVAL] Black box mission failed - 2 hour timeout";
+        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        ["NavalFailed", ["Black Box Mission Expired", "Time ran out. The flight recorder was not recovered."]]
+            remoteExecCall ["BIS_fnc_showNotification", 0];
+
+        { deleteMarker _x } forEach _localMarkers;
+        DYN_naval_markers = DYN_naval_markers - _localMarkers;
+
+        sleep 20;
+        [_taskId] call BIS_fnc_deleteTask;
+        DYN_naval_active = false;
+
+        sleep 300;
+
+        { if (!isNull _x) then { deleteVehicle _x } } forEach _localEnemies;
+        { if (!isNull _x) then { deleteGroup _x } }   forEach _localGroups;
+        {
+            if (!isNull _x) then {
+                if (!isNull (attachedTo _x)) then { detach _x };
+                deleteVehicle _x;
+            };
+        } forEach _localObjects;
+
+        DYN_naval_enemies     = DYN_naval_enemies     - _localEnemies;
+        DYN_naval_enemyGroups = DYN_naval_enemyGroups  - _localGroups;
+        DYN_naval_objects     = DYN_naval_objects      - _localObjects;
+
+        diag_log "[NAVAL] Black box cleanup complete (timeout)";
+    };
     
     // Recorder destroyed
     if (isNull _recorder) exitWith {
         diag_log "[NAVAL] Black box mission failed - recorder destroyed";
         [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
-        hint "Mission Failed: The flight recorder was lost.";
+        ["NavalFailed", ["Black Box Destroyed", "The flight recorder was lost. Mission failed."]]
+            remoteExecCall ["BIS_fnc_showNotification", 0];
         
         { deleteMarker _x } forEach _localMarkers;
         DYN_naval_markers = DYN_naval_markers - _localMarkers;
@@ -517,7 +555,9 @@ private _localObjects = +DYN_naval_objects;
     if (!isNull _wreck) then { _wreck enableSimulationGlobal true; };
     
     [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
-    
+    ["NavalComplete", ["Flight Recorder Recovered", "The black box has been delivered. Mission complete."]]
+        remoteExecCall ["BIS_fnc_showNotification", 0];
+
     [12 + floor random 6, "Flight Recorder Recovery"] call DYN_fnc_changeReputation;
     
     { deleteMarker _x } forEach _localMarkers;

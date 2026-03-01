@@ -10,8 +10,8 @@ if (!isServer) exitWith {};
 private _transportClass = "CUP_O_Mi8AMT_RU";      // Replaces Orca
 private _attackClass = "CUP_O_Mi24_V_Dynamic_RU"; // Replaces Kajman
 
-private _transportAlt = 180;
-private _attackAlt = 240;
+private _transportAlt = 180;  // Base altitude; each additional Mi-8 gets +20m to avoid mid-air collisions
+private _attackAlt = 270;     // Mi-24 flies higher than all transport helis
 
 private _transportCount = 1 + floor (random 4);
 private _attackChance = 0.40;
@@ -190,13 +190,14 @@ private _fn_spawnHeli = {
     _heli
 };
 
-// Spawn Mi-8 transport helicopters
+// Spawn Mi-8 transport helicopters — stagger altitude by 20m per heli to prevent mid-air collisions
 for "_i" from 1 to _transportCount do {
-    [_transportClass, _transportAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive] call _fn_spawnHeli;
+    private _heliAlt = _transportAlt + ((_i - 1) * 20);
+    [_transportClass, _heliAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive] call _fn_spawnHeli;
 };
 diag_log format ["AIRPATROLS: spawned %1 Mi-8(s)", _transportCount];
 
-// Spawn Mi-24 attack helicopter
+// Spawn Mi-24 attack helicopter — flies at _attackAlt (270m), above all Mi-8s
 if ((random 1) < _attackChance) then {
     [_attackClass, _attackAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive] call _fn_spawnHeli;
     diag_log "AIRPATROLS: spawned Mi-24 (40% chance hit)";

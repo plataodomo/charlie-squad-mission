@@ -129,6 +129,9 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
         _laptop setVariable ["DYN_resIntelUsed", true, true];
 
         private _taskId = _laptop getVariable ["DYN_res_taskId", ""];
+
+        // Delete the laptop object now that intel has been extracted
+        deleteVehicle _laptop;
         if (_taskId != "") then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
         };
