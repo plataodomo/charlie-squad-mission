@@ -127,6 +127,7 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
         if ((_caller distance _laptop) > 3) exitWith {};
 
         _laptop setVariable ["DYN_resIntelUsed", true, true];
+        deleteVehicle _laptop;
 
         private _taskId = _laptop getVariable ["DYN_res_taskId", ""];
         if (_taskId != "") then {

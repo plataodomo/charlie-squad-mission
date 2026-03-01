@@ -38,7 +38,7 @@ private _fn_randPosInAO = {
 };
 
 private _fn_setupHeliWPs = {
-    params ["_grp", "_center", "_radius", "_alt", "_dlActive"];
+    params ["_grp", "_center", "_radius", "_alt", "_dlActive", ["_phase", 0]];
 
     // Inlined: clear all waypoints (was _fn_clearWPs — breaks in spawn scope)
     for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
@@ -61,7 +61,11 @@ private _fn_setupHeliWPs = {
     private _loiterR   = if (_dlActive) then {200 + random 150} else {300 + random 250};
 
     for "_i" from 1 to _moveCount do {
-        private _p2 = [_center, _radius, 120, 0.85, 50] call _fn_rPos;
+        // Phase offset rotates the search bias so helis don't share waypoints
+        private _biasDir = (_phase * 90 + _i * 70) mod 360;
+        private _biasPos = _center getPos [_radius * 0.4, _biasDir];
+        private _p2 = [_biasPos, _radius * 0.5, 80, 0.9, 50] call _fn_rPos;
+        if (_p2 isEqualTo []) then { _p2 = [_center, _radius, 120, 0.85, 50] call _fn_rPos; };
         private _p3 = [_p2#0, _p2#1, _alt];
         if (_i == 1) then { _firstPos3 = _p3; };
 
@@ -88,15 +92,23 @@ private _fn_setupHeliWPs = {
 };
 
 private _fn_spawnHeli = {
-    params ["_class", "_alt", "_center", "_radius", "_fn_setupHeliWPs", "_fn_dlActive"];
+    params ["_class", "_alt", "_center", "_radius", "_fn_setupHeliWPs", "_fn_dlActive", ["_heliIdx", 0]];
 
-    private _spawn2 = [_center, _radius, 150, 0.70, 60] call _fn_randPosInAO;
-    private _spawn3 = [_spawn2#0, _spawn2#1, _alt];
+    // Spread spawn positions around the AO and stagger altitude to prevent collisions
+    private _spawnDir = (_heliIdx * 110 + random 40) mod 360;
+    private _spawnDist = (_radius * 0.5) + random (_radius * 0.25);
+    private _spawn2 = _center getPos [_spawnDist, _spawnDir];
+    if (surfaceIsWater _spawn2) then {
+        _spawn2 = [_center, _radius, 150, 0.70, 60] call _fn_randPosInAO;
+    };
+    private _myAlt = _alt + (_heliIdx * 30); // 30m altitude gap between each heli
+    private _spawn3 = [_spawn2#0, _spawn2#1, _myAlt];
 
     private _heli = createVehicle [_class, _spawn3, [], 0, "FLY"];
     _heli setDir (random 360);
     _heli flyInHeight _alt;
     _heli setVehicleAmmo 1;
+    _heli flyInHeight _myAlt;
 
     createVehicleCrew _heli;
 
@@ -114,11 +126,11 @@ private _fn_spawnHeli = {
     _grp setCombatMode "RED";
     _grp setSpeedMode "FULL";
 
-    [_grp, _center, _radius, _alt, (call _fn_dlActive)] call _fn_setupHeliWPs;
+    [_grp, _center, _radius, _myAlt, (call _fn_dlActive), _heliIdx] call _fn_setupHeliWPs;
 
     // Engage loop
-    [_heli, _center, _radius, _alt, _fn_dlActive] spawn {
-        params ["_heli","_center","_radius","_alt","_fn_dlActive"];
+    [_heli, _center, _radius, _myAlt, _fn_dlActive] spawn {
+        params ["_heli","_center","_radius","_myAlt","_fn_dlActive"];
 
         while { DYN_AO_active && {alive _heli} } do {
             private _dl = call _fn_dlActive;
@@ -144,13 +156,13 @@ private _fn_spawnHeli = {
                 _gunner doFire _tgt;
             };
 
-            _heli flyInHeight _alt;
+            _heli flyInHeight _myAlt;
         };
     };
 
     // Leash + WP refresh
-    [_heli, _grp, _center, _radius, _alt, _fn_setupHeliWPs, _fn_dlActive] spawn {
-        params ["_heli","_grp","_center","_radius","_alt","_fn_setupHeliWPs","_fn_dlActive"];
+    [_heli, _grp, _center, _radius, _myAlt, _heliIdx, _fn_setupHeliWPs, _fn_dlActive] spawn {
+        params ["_heli","_grp","_center","_radius","_myAlt","_heliIdx","_fn_setupHeliWPs","_fn_dlActive"];
 
         private _lastPos = getPosATL _heli;
         private _lastMoveT = diag_tickTime;
@@ -167,7 +179,7 @@ private _fn_spawnHeli = {
 
             if ((_heli distance2D _center) > (_radius * 1.05)) then {
                 (driver _heli) doMove (_center getPos [_radius * 0.6, random 360]);
-                _heli flyInHeight _alt;
+                _heli flyInHeight _myAlt;
                 _lastMoveT = diag_tickTime;
                 continue;
             };
@@ -175,13 +187,13 @@ private _fn_spawnHeli = {
             private _refreshT = if (_dl) then {120} else {180};
 
             if ((speed _heli) < 8 && {(diag_tickTime - _lastMoveT) > 90}) then {
-                [_grp, _center, _radius, _alt, _dl] call _fn_setupHeliWPs;
+                [_grp, _center, _radius, _myAlt, _dl, _heliIdx] call _fn_setupHeliWPs;
                 _lastMoveT = diag_tickTime;
                 continue;
             };
 
             if ((diag_tickTime - _lastMoveT) > _refreshT) then {
-                [_grp, _center, _radius, _alt, _dl] call _fn_setupHeliWPs;
+                [_grp, _center, _radius, _myAlt, _dl, _heliIdx] call _fn_setupHeliWPs;
                 _lastMoveT = diag_tickTime;
             };
         };
@@ -190,15 +202,16 @@ private _fn_spawnHeli = {
     _heli
 };
 
-// Spawn Mi-8 transport helicopters
+// Spawn Mi-8 transport helicopters — stagger each one with a 5s delay and unique index
 for "_i" from 1 to _transportCount do {
-    [_transportClass, _transportAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive] call _fn_spawnHeli;
+    [_transportClass, _transportAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive, _i - 1] call _fn_spawnHeli;
+    if (_i < _transportCount) then { sleep 5; };
 };
 diag_log format ["AIRPATROLS: spawned %1 Mi-8(s)", _transportCount];
 
-// Spawn Mi-24 attack helicopter
+// Spawn Mi-24 attack helicopter — separate altitude tier from transports
 if ((random 1) < _attackChance) then {
-    [_attackClass, _attackAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive] call _fn_spawnHeli;
+    [_attackClass, _attackAlt, _aoCenter, _aoRadius, _fn_setupHeliWPs, _fn_dlActive, _transportCount] call _fn_spawnHeli;
     diag_log "AIRPATROLS: spawned Mi-24 (40% chance hit)";
 } else {
     diag_log "AIRPATROLS: Mi-24 not spawned (40% chance miss)";

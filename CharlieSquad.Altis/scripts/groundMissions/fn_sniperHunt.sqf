@@ -26,7 +26,7 @@ diag_log format ["[GROUND-SNIPER] Forest position found: %1", _forestPos];
 // =====================================================
 // 2. SETTINGS
 // =====================================================
-private _timeout      = 1800;
+private _timeout      = 7200; // 2 hours
 private _repReward    = 15 + floor random 6;
 private _cleanupDelay = 120;
 private _searchRadius = 300;
@@ -482,6 +482,8 @@ private _localMarkers  = +DYN_ground_markers;
         diag_log format ["[GROUND-SNIPER] SUCCESS. +%1 rep.", _rep];
     } else {
         [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        ["TaskFailed", ["Sniper hunt mission expired. The enemy team escaped."]]
+            remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[GROUND-SNIPER] TIMED OUT.";
     };
 

@@ -48,7 +48,7 @@ diag_log format ["[NAVAL-PATROL] Deep water center: %1", _waterCenter];
 // =====================================================
 private _boatCount   = 2 + floor random 3;
 private _patrolArea  = 600;
-private _timeout     = 1800;
+private _timeout     = 7200; // 2 hours
 private _repReward   = 5 + floor random 6;
 private _cleanupDelay = 300;
 

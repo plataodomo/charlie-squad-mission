@@ -429,25 +429,48 @@ private _localEnemies = +DYN_naval_enemies;
 private _localGroups  = +DYN_naval_enemyGroups;
 private _localMarkers = +DYN_naval_markers;
 private _localObjects = +DYN_naval_objects;
+private _bbTimeout    = 7200; // 2 hours
 
-[_recorder, _taskId, _deliveryPos, _searchMarker, _wreck,
+[_recorder, _taskId, _deliveryPos, _searchMarker, _wreck, _bbTimeout,
  _localEnemies, _localGroups, _localMarkers, _localObjects] spawn {
     params [
-        "_recorder", "_taskId", "_deliveryPos", "_searchMarker", "_wreck",
+        "_recorder", "_taskId", "_deliveryPos", "_searchMarker", "_wreck", "_bbTimeout",
         "_localEnemies", "_localGroups", "_localMarkers", "_localObjects"
     ];
-    
+
+    private _startTime = diag_tickTime;
+
     waitUntil {
         sleep 2;
-        
+
         if (isNull _recorder) exitWith { true };
-        
+        if ((diag_tickTime - _startTime) > _bbTimeout) exitWith { true };
+
         private _attachedTo = attachedTo _recorder;
         if (isNull _attachedTo) exitWith { false };
         if (_attachedTo isEqualTo _wreck) exitWith { false };
         if (!(_attachedTo isKindOf "Man")) exitWith { false };
-        
+
         (_attachedTo distance2D _deliveryPos) < 20
+    };
+
+    // Timed out
+    if (!isNull _recorder && (diag_tickTime - _startTime) > _bbTimeout) exitWith {
+        diag_log "[NAVAL] Black box mission timed out";
+        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        ["NavalFailed", ["Black box mission expired."]] remoteExecCall ["BIS_fnc_showNotification", 0];
+
+        { deleteMarker _x } forEach _localMarkers;
+        DYN_naval_markers = DYN_naval_markers - _localMarkers;
+
+        sleep 20;
+        [_taskId] call BIS_fnc_deleteTask;
+        DYN_naval_active = false;
+
+        sleep 300;
+        { if (!isNull _x) then { deleteVehicle _x } } forEach (_localEnemies + _localObjects);
+        { if (!isNull _x) then { deleteGroup _x } } forEach _localGroups;
+        diag_log "[NAVAL] Black box timeout cleanup complete";
     };
     
     // Recorder destroyed

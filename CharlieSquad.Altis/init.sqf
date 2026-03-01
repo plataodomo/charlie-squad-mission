@@ -175,19 +175,21 @@ if (isNil "DYN_fnc_registerAceCapture") then {
 // =====================================================
 if (isNil "DYN_fnc_boostOpforAwareness") then {
     // LAMBS_Danger.fsm compatible — lower values since LAMBS already
-    // adds flanking, suppression, coordinated movement, and CQB
-    missionNamespace setVariable ["DYN_OPFOR_base_spotDistance", 0.45, true];
-    missionNamespace setVariable ["DYN_OPFOR_base_spotTime",     0.40, true];
-    missionNamespace setVariable ["DYN_OPFOR_base_courage",      0.50, true];
-    missionNamespace setVariable ["DYN_OPFOR_base_commanding",   0.45, true];
-    missionNamespace setVariable ["DYN_OPFOR_base_general",      0.50, true];
-    missionNamespace setVariable ["DYN_OPFOR_base_aimingSpeed",  0.35, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_spotDistance",   0.65, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_spotTime",       0.55, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_courage",        0.70, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_commanding",     0.65, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_general",        0.65, true];
-    missionNamespace setVariable ["DYN_OPFOR_dl_aimingSpeed",    0.55, true];
+    // adds flanking, suppression, coordinated movement, and CQB.
+    // Data link OFF  = moderate threat (previous ON values)
+    // Data link ON   = higher threat (0.75 across the board)
+    missionNamespace setVariable ["DYN_OPFOR_base_spotDistance", 0.65, true];
+    missionNamespace setVariable ["DYN_OPFOR_base_spotTime",     0.55, true];
+    missionNamespace setVariable ["DYN_OPFOR_base_courage",      0.70, true];
+    missionNamespace setVariable ["DYN_OPFOR_base_commanding",   0.65, true];
+    missionNamespace setVariable ["DYN_OPFOR_base_general",      0.65, true];
+    missionNamespace setVariable ["DYN_OPFOR_base_aimingSpeed",  0.55, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_spotDistance",   0.75, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_spotTime",       0.75, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_courage",        0.75, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_commanding",     0.75, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_general",        0.75, true];
+    missionNamespace setVariable ["DYN_OPFOR_dl_aimingSpeed",    0.75, true];
     missionNamespace setVariable ["DYN_OPFOR_allowFleeing", 0.15, true];
     
     DYN_fnc_boostOpforAwareness = {

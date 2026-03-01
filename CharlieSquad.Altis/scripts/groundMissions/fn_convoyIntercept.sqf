@@ -1192,9 +1192,24 @@ if (_deliveryPos isEqualTo [0,0,0]) then { _deliveryPos = _basePos };
     switch (_result) do {
         case "SUCCESS": { [_tid,"SUCCEEDED",false] remoteExec ["BIS_fnc_taskSetState", 0, true];
             [_rep,"Convoy Intercepted"] call DYN_fnc_changeReputation; diag_log format ["[GROUND-CONVOY] SUCCESS +%1rep (%2)",_rep,_action] };
-        case "CONVOY_ARRIVED": { [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true]; diag_log format ["[GROUND-CONVOY] FAILED - reached %1",_to] };
-        case "DESTROYED": { [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true]; diag_log "[GROUND-CONVOY] FAILED - truck destroyed (CAPTURE)" };
-        case "TIMEOUT": { [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true]; diag_log "[GROUND-CONVOY] TIMED OUT" };
+        case "CONVOY_ARRIVED": {
+            [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            ["TaskFailed", [format ["Convoy reached %1. Mission failed.", _to]]]
+                remoteExecCall ["BIS_fnc_showNotification", 0];
+            diag_log format ["[GROUND-CONVOY] FAILED - reached %1",_to]
+        };
+        case "DESTROYED": {
+            [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            ["TaskFailed", ["The objective vehicle was destroyed. Mission failed."]]
+                remoteExecCall ["BIS_fnc_showNotification", 0];
+            diag_log "[GROUND-CONVOY] FAILED - truck destroyed (CAPTURE)"
+        };
+        case "TIMEOUT": {
+            [_tid,"FAILED",false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            ["TaskFailed", ["Convoy intercept mission expired."]]
+                remoteExecCall ["BIS_fnc_showNotification", 0];
+            diag_log "[GROUND-CONVOY] TIMED OUT"
+        };
     };
     sleep 5; [_tid] call BIS_fnc_deleteTask;
     private _aV = +DYN_ground_enemyVehs; private _aE = +DYN_ground_enemies; private _aG = +DYN_ground_enemyGroups;
