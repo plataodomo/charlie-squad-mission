@@ -27,6 +27,7 @@ if (!_found) then {
 // FIX: Register radio tower position so AA pits and other objectives avoid it
 if (isNil "DYN_radioTowerPositions") then { DYN_radioTowerPositions = []; };
 DYN_radioTowerPositions pushBack _txPos;
+if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
 
 // RADIO TOWER + TASK
 private _radioTaskId = format ["task_radio_%1", round (diag_tickTime * 1000)];
@@ -49,13 +50,14 @@ _radioTower setVariable ["radioDone", false, true];
         ""
     ],
     getPosATL _radioTower,
-    "ASSIGNED",
+    "CREATED",
     1,
     true,
     "radio"
 ] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 DYN_AO_sideTasks pushBack _radioTaskId;
+DYN_AO_hiddenObjectives pushBack [_radioTaskId, "Radio Tower", getPosATL _radioTower];
 
 // TASK COMPLETION
 _radioTower addEventHandler ["Killed", {

@@ -36,6 +36,7 @@ if (isNil "DYN_AO_enemies") then { DYN_AO_enemies = []; };
 if (isNil "DYN_AO_enemyGroups") then { DYN_AO_enemyGroups = []; };
 if (isNil "DYN_AO_sideTasks") then { DYN_AO_sideTasks = []; };
 if (isNil "DYN_OBJ_centers") then { DYN_OBJ_centers = []; };
+if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
 
 // -----------------------------------------------------
 // Wait briefly for HQ pos
@@ -168,13 +169,14 @@ DYN_OBJ_centers pushBack _depotPos;
         ""
     ],
     _depotPos,
-    "ASSIGNED",
+    "CREATED",
     1,
     true,
     "destroy"
 ] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 DYN_AO_sideTasks pushBack _depotTaskId;
+DYN_AO_hiddenObjectives pushBack [_depotTaskId, "Fuel Depot", _depotPos];
 
 // Hide terrain
 {

@@ -48,6 +48,7 @@ if (isNil "DYN_AO_enemyGroups") then { DYN_AO_enemyGroups = []; };
 if (isNil "DYN_AO_enemyVehs") then { DYN_AO_enemyVehs = []; };
 if (isNil "DYN_AO_sideTasks") then { DYN_AO_sideTasks = []; };
 if (isNil "DYN_OBJ_centers") then { DYN_OBJ_centers = []; };
+if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
 
 // =====================================================
 // DISTANCE CHECK — 600m from other major objectives
@@ -573,13 +574,14 @@ private _baseASLNew = (_mmFinal select 0) + _zOffset;
         ""
     ],
     _hqPos,
-    "ASSIGNED",
+    "CREATED",
     1,
     true,
     "attack"
 ] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 DYN_AO_sideTasks pushBack _hqTaskId;
+DYN_AO_hiddenObjectives pushBack [_hqTaskId, "Enemy HQ", _hqPos];
 
 // =====================================================
 // BARRIER CLASSNAMES — for surface snap + disable sim
