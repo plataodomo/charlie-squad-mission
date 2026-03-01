@@ -502,7 +502,7 @@ for "_i" from 0 to (_sniperCount - 1) do {
     _sn setPosATL _p;
     _sn disableAI "PATH";
     _sn setUnitPos "UP";
-    _sn setSkill 1;
+    _sn setSkill 0.55;
     _sn allowFleeing 0;
     _sn setDir (random 360);
     DYN_AO_enemies pushBack _sn;
@@ -534,7 +534,7 @@ if (!isNull _tower) then {
         _u disableAI "PATH";
         _u setUnitPos "UP";
         _u allowFleeing 0;
-        _u setSkill (0.7 + random 0.3);
+        _u setSkill (0.40 + random 0.15);
         _u setDir (random 360);
         DYN_AO_enemies pushBack _u;
     };

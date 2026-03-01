@@ -476,7 +476,7 @@ for "_i" from 1 to (ceil (_enemyCount * 0.4)) do {
     if (!isNull _u) then {
         _u setUnitPos (selectRandom ["UP", "MIDDLE"]);
         _u allowFleeing 0;
-        _u setSkill 0.80;
+        _u setSkill 0.45;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -492,7 +492,7 @@ for "_i" from 1 to (ceil (_enemyCount * 0.25)) do {
     private _u = _grpInnerPatrol createUnit [selectRandom _infPool, _p, [], 0, "FORM"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.85;
+        _u setSkill 0.50;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -525,7 +525,7 @@ for "_i" from 1 to (ceil (_enemyCount * 0.2)) do {
     private _u = _grpOuterPatrol createUnit [selectRandom _infPool, _p, [], 0, "FORM"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.80;
+        _u setSkill 0.45;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -562,8 +562,8 @@ for "_i" from 1 to (floor (_enemyCount * 0.15)) do {
         _u setUnitPos "MIDDLE";
         _u setDir _dirToSea;
         _u allowFleeing 0;
-        _u setSkill 0.85;
-        _u setSkill ["spotDistance", 1.0];
+        _u setSkill 0.50;
+        _u setSkill ["spotDistance", 0.60];
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -575,7 +575,7 @@ if (!isNull _compositionHMG) then {
     private _hmgGunner = _hmgGrp createUnit [selectRandom _infPool, getPos _compositionHMG, [], 0, "NONE"];
     _hmgGunner moveInGunner _compositionHMG;
     _hmgGunner allowFleeing 0;
-    _hmgGunner setSkill 0.90;
+    _hmgGunner setSkill 0.55;
     DYN_naval_enemies pushBack _hmgGunner;
 };
 
@@ -591,14 +591,14 @@ sleep 6;
         private _driver = _vGrp createUnit [selectRandom _infPool, getPos _x, [], 0, "NONE"];
         _driver moveInDriver _x;
         _driver allowFleeing 0;
-        _driver setSkill 0.80;
+        _driver setSkill 0.45;
         DYN_naval_enemies pushBack _driver;
 
         if ((_x emptyPositions "gunner") > 0) then {
             private _gunner = _vGrp createUnit [selectRandom _infPool, getPos _x, [], 0, "NONE"];
             _gunner moveInGunner _x;
             _gunner allowFleeing 0;
-            _gunner setSkill 0.85;
+            _gunner setSkill 0.50;
             DYN_naval_enemies pushBack _gunner;
         };
     };

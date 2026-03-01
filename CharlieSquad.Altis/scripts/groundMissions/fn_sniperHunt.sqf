@@ -244,8 +244,8 @@ _sniper setPosATL _sniperPos;
 _sniper setDir _bestDir;
 _sniper setUnitPos "DOWN";
 _sniper allowFleeing 0;
-_sniper setSkill 1;
-{ _sniper setSkill [_x, 1.0] } forEach _skillList;
+_sniper setSkill 0.55;
+{ _sniper setSkill [_x, 0.55] } forEach _skillList;
 
 private _nearTreeObjs = nearestTerrainObjects [_sniperPos, ["TREE"], 8, false];
 if (count _nearTreeObjs > 0) then {
@@ -280,8 +280,8 @@ _spotter setPosATL _spotterPos;
 _spotter setDir _bestDir;
 _spotter setUnitPos "DOWN";
 _spotter allowFleeing 0;
-_spotter setSkill 1;
-{ _spotter setSkill [_x, 1.0] } forEach _skillList;
+_spotter setSkill 0.55;
+{ _spotter setSkill [_x, 0.55] } forEach _skillList;
 
 DYN_ground_enemies pushBack _spotter;
 

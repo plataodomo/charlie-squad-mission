@@ -257,15 +257,15 @@ private _fn_spawnGazPickup = {
     };
     private _gazGrp = createGroup east; DYN_ground_enemyGroups pushBack _gazGrp;
     private _gDrv = _gazGrp createUnit [selectRandom _infPool, _spawnPos, [], 0, "NONE"];
-    _gDrv moveInDriver _gaz; _gDrv allowFleeing 0; _gDrv setSkill 0.85; DYN_ground_enemies pushBack _gDrv;
+    _gDrv moveInDriver _gaz; _gDrv allowFleeing 0; _gDrv setSkill 0.50; DYN_ground_enemies pushBack _gDrv;
     if ((_gaz emptyPositions "gunner") > 0) then {
         private _gGnr = _gazGrp createUnit [selectRandom _infPool, _spawnPos, [], 0, "NONE"];
-        _gGnr moveInGunner _gaz; _gGnr allowFleeing 0; _gGnr setSkill 0.90;
-        _gGnr setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _gGnr;
+        _gGnr moveInGunner _gaz; _gGnr allowFleeing 0; _gGnr setSkill 0.55;
+        _gGnr setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _gGnr;
     };
     if ((_gaz emptyPositions "commander") > 0) then {
         private _gCdr = _gazGrp createUnit [selectRandom _infPool, _spawnPos, [], 0, "NONE"];
-        _gCdr moveInCommander _gaz; _gCdr allowFleeing 0; _gCdr setSkill 0.85; DYN_ground_enemies pushBack _gCdr;
+        _gCdr moveInCommander _gaz; _gCdr allowFleeing 0; _gCdr setSkill 0.50; DYN_ground_enemies pushBack _gCdr;
     };
     sleep 0.3;
     { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _gazGrp) select {vehicle _x != _gaz});
@@ -558,10 +558,10 @@ _nextIdx = _nextIdx + 1;
 if (isNull _zsu) exitWith { diag_log "[GROUND-CONVOY] ZSU spawn failed"; DYN_ground_active = false };
 private _zsuGrp = createGroup east; DYN_ground_enemyGroups pushBack _zsuGrp;
 private _zsuD = _zsuGrp createUnit [selectRandom _infPool, getPos _zsu, [], 0, "NONE"];
-_zsuD moveInDriver _zsu; _zsuD allowFleeing 0; _zsuD setSkill 0.85; DYN_ground_enemies pushBack _zsuD;
+_zsuD moveInDriver _zsu; _zsuD allowFleeing 0; _zsuD setSkill 0.50; DYN_ground_enemies pushBack _zsuD;
 private _zsuG = _zsuGrp createUnit [selectRandom _infPool, getPos _zsu, [], 0, "NONE"];
-_zsuG moveInGunner _zsu; _zsuG allowFleeing 0; _zsuG setSkill 0.90;
-_zsuG setSkill ["aimingAccuracy",0.90]; _zsuG setSkill ["spotDistance",1.0]; DYN_ground_enemies pushBack _zsuG;
+_zsuG moveInGunner _zsu; _zsuG allowFleeing 0; _zsuG setSkill 0.55;
+_zsuG setSkill ["aimingAccuracy",0.50]; _zsuG setSkill ["spotDistance",0.60]; DYN_ground_enemies pushBack _zsuG;
 sleep 0.5;
 { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _zsuGrp) select {vehicle _x != _zsu});
 DYN_ground_enemyVehs pushBack _zsu;
@@ -580,18 +580,18 @@ for "_i" from 1 to _frontTigrCount do {
     if (isNull _tigr) then { continue };
     private _cGrp = createGroup east; DYN_ground_enemyGroups pushBack _cGrp; _escortGroups pushBack _cGrp;
     private _td = _cGrp createUnit [selectRandom _infPool, getPos _tigr, [], 0, "NONE"];
-    _td moveInDriver _tigr; _td allowFleeing 0; _td setSkill 0.85; DYN_ground_enemies pushBack _td;
+    _td moveInDriver _tigr; _td allowFleeing 0; _td setSkill 0.50; DYN_ground_enemies pushBack _td;
     if ((_tigr emptyPositions "gunner") > 0) then {
         private _tg = _cGrp createUnit [selectRandom _infPool, getPos _tigr, [], 0, "NONE"];
-        _tg moveInGunner _tigr; _tg allowFleeing 0; _tg setSkill 0.90;
-        _tg setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _tg;
+        _tg moveInGunner _tigr; _tg allowFleeing 0; _tg setSkill 0.55;
+        _tg setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _tg;
     };
     private _cgGrp = createGroup east; DYN_ground_enemyGroups pushBack _cgGrp;
     _allCargoGroups pushBack [_cgGrp, _tigr, _cGrp];
     private _mc = _tigr emptyPositions "cargo";
     for "_p" from 1 to _mc do {
         private _ps = _cgGrp createUnit [selectRandom _infPool, getPos _tigr, [], 0, "NONE"];
-        _ps moveInCargo _tigr; _ps allowFleeing 0; _ps setSkill 0.80; DYN_ground_enemies pushBack _ps;
+        _ps moveInCargo _tigr; _ps allowFleeing 0; _ps setSkill 0.45; DYN_ground_enemies pushBack _ps;
     };
     DYN_ground_enemyVehs pushBack _tigr; _escortVehicles pushBack _tigr;
     _allSmartDriveVehs pushBack [_tigr, _cGrp, "SAFE", "RED"];
@@ -612,15 +612,15 @@ if (_spawnBTR) then {
     if (!isNull _btr) then {
         private _bCG = createGroup east; DYN_ground_enemyGroups pushBack _bCG; _escortGroups pushBack _bCG;
         private _bd = _bCG createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
-        _bd moveInDriver _btr; _bd allowFleeing 0; _bd setSkill 0.85; DYN_ground_enemies pushBack _bd;
+        _bd moveInDriver _btr; _bd allowFleeing 0; _bd setSkill 0.50; DYN_ground_enemies pushBack _bd;
         if ((_btr emptyPositions "gunner") > 0) then {
             private _bg = _bCG createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
-            _bg moveInGunner _btr; _bg allowFleeing 0; _bg setSkill 0.92;
-            _bg setSkill ["aimingAccuracy",0.90]; _bg setSkill ["spotDistance",1.0]; DYN_ground_enemies pushBack _bg;
+            _bg moveInGunner _btr; _bg allowFleeing 0; _bg setSkill 0.55;
+            _bg setSkill ["aimingAccuracy",0.50]; _bg setSkill ["spotDistance",0.60]; DYN_ground_enemies pushBack _bg;
         };
         if ((_btr emptyPositions "commander") > 0) then {
             private _bc = _bCG createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
-            _bc moveInCommander _btr; _bc allowFleeing 0; _bc setSkill 0.85; DYN_ground_enemies pushBack _bc;
+            _bc moveInCommander _btr; _bc allowFleeing 0; _bc setSkill 0.50; DYN_ground_enemies pushBack _bc;
         };
         sleep 0.5;
         { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _bCG) select {vehicle _x != _btr});
@@ -629,7 +629,7 @@ if (_spawnBTR) then {
         private _bmc = _btr emptyPositions "cargo";
         for "_p" from 1 to _bmc do {
             private _bp = _bCargo createUnit [selectRandom _infPool, getPos _btr, [], 0, "NONE"];
-            _bp moveInCargo _btr; _bp allowFleeing 0; _bp setSkill 0.82; DYN_ground_enemies pushBack _bp;
+            _bp moveInCargo _btr; _bp allowFleeing 0; _bp setSkill 0.48; DYN_ground_enemies pushBack _bp;
         };
         DYN_ground_enemyVehs pushBack _btr; _escortVehicles pushBack _btr;
         _allSmartDriveVehs pushBack [_btr, _bCG, "SAFE", "RED"];
@@ -649,7 +649,7 @@ private _oi = [_nextIdx] call _fn_idx; _nextIdx = _nextIdx + 1;
 private _objTruck = [_objectiveTruckClass, _spawnPositions select _oi, _convoyDir] call _fn_spawnConvoyVehicle;
 if (isNull _objTruck) exitWith { diag_log "[GROUND-CONVOY] Objective truck spawn failed"; DYN_ground_active = false };
 private _objDriver = _convoyGrp createUnit [selectRandom _infPool, getPos _objTruck, [], 0, "NONE"];
-_objDriver moveInDriver _objTruck; _objDriver allowFleeing 0; _objDriver setSkill 0.85;
+_objDriver moveInDriver _objTruck; _objDriver allowFleeing 0; _objDriver setSkill 0.50;
 DYN_ground_enemies pushBack _objDriver;
 DYN_ground_enemyVehs pushBack _objTruck;
 _objTruck setVariable ["DYN_isObjectiveTruck",true,true];
@@ -667,18 +667,18 @@ if (_tigrCount > 1) then {
     if (!isNull _rTigr) then {
         private _rcG = createGroup east; DYN_ground_enemyGroups pushBack _rcG; _escortGroups pushBack _rcG;
         private _rd = _rcG createUnit [selectRandom _infPool, getPos _rTigr, [], 0, "NONE"];
-        _rd moveInDriver _rTigr; _rd allowFleeing 0; _rd setSkill 0.85; DYN_ground_enemies pushBack _rd;
+        _rd moveInDriver _rTigr; _rd allowFleeing 0; _rd setSkill 0.50; DYN_ground_enemies pushBack _rd;
         if ((_rTigr emptyPositions "gunner") > 0) then {
             private _rg = _rcG createUnit [selectRandom _infPool, getPos _rTigr, [], 0, "NONE"];
-            _rg moveInGunner _rTigr; _rg allowFleeing 0; _rg setSkill 0.90;
-            _rg setSkill ["aimingAccuracy",0.85]; DYN_ground_enemies pushBack _rg;
+            _rg moveInGunner _rTigr; _rg allowFleeing 0; _rg setSkill 0.55;
+            _rg setSkill ["aimingAccuracy",0.50]; DYN_ground_enemies pushBack _rg;
         };
         private _rCargo = createGroup east; DYN_ground_enemyGroups pushBack _rCargo;
         _allCargoGroups pushBack [_rCargo, _rTigr, _rcG];
         private _rmc = _rTigr emptyPositions "cargo";
         for "_p" from 1 to _rmc do {
             private _rp = _rCargo createUnit [selectRandom _infPool, getPos _rTigr, [], 0, "NONE"];
-            _rp moveInCargo _rTigr; _rp allowFleeing 0; _rp setSkill 0.80; DYN_ground_enemies pushBack _rp;
+            _rp moveInCargo _rTigr; _rp allowFleeing 0; _rp setSkill 0.45; DYN_ground_enemies pushBack _rp;
         };
         DYN_ground_enemyVehs pushBack _rTigr; _escortVehicles pushBack _rTigr;
         _allSmartDriveVehs pushBack [_rTigr, _rcG, "SAFE", "RED"];
@@ -1094,14 +1094,14 @@ if (_objectiveAction == "CAPTURE") then {
             [_cv] spawn { params ["_v"]; sleep 30; if (!isNull _v && alive _v) then { _v allowDamage true; diag_log format ["[GROUND-CONVOY] Chase godmode ended: %1", typeOf _v] } };
             private _ccG = createGroup east; DYN_ground_enemyGroups pushBack _ccG; _chaseGrps pushBack _ccG;
             private _cd = _ccG createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
-            _cd moveInDriver _cv; _cd allowFleeing 0; _cd setSkill 0.85; DYN_ground_enemies pushBack _cd; _chaseUnits pushBack _cd;
+            _cd moveInDriver _cv; _cd allowFleeing 0; _cd setSkill 0.50; DYN_ground_enemies pushBack _cd; _chaseUnits pushBack _cd;
             if ((_cv emptyPositions "gunner") > 0) then {
                 private _cg = _ccG createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
-                _cg moveInGunner _cv; _cg allowFleeing 0; _cg setSkill 0.90; _cg setSkill ["aimingAccuracy",0.85];
+                _cg moveInGunner _cv; _cg allowFleeing 0; _cg setSkill 0.55; _cg setSkill ["aimingAccuracy",0.50];
                 DYN_ground_enemies pushBack _cg; _chaseUnits pushBack _cg };
             if ((_cv emptyPositions "commander") > 0) then {
                 private _cc = _ccG createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
-                _cc moveInCommander _cv; _cc allowFleeing 0; _cc setSkill 0.85;
+                _cc moveInCommander _cv; _cc allowFleeing 0; _cc setSkill 0.50;
                 DYN_ground_enemies pushBack _cc; _chaseUnits pushBack _cc };
             sleep 0.3;
             { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _ccG) select {vehicle _x != _cv});
@@ -1109,7 +1109,7 @@ if (_objectiveAction == "CAPTURE") then {
             private _cmc = _cv emptyPositions "cargo";
             for "_p" from 1 to _cmc do {
                 private _cp = _ccCargo createUnit [selectRandom _pool, _csp, [], 0, "NONE"];
-                _cp moveInCargo _cv; _cp allowFleeing 0; _cp setSkill 0.80;
+                _cp moveInCargo _cv; _cp allowFleeing 0; _cp setSkill 0.45;
                 DYN_ground_enemies pushBack _cp; _chaseUnits pushBack _cp };
             DYN_ground_enemyVehs pushBack _cv;
             _ccG setBehaviour "AWARE"; _ccG setCombatMode "RED"; _ccG setSpeedMode "FULL";

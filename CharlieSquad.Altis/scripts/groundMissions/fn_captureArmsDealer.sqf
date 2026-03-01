@@ -188,7 +188,7 @@ for "_i" from 1 to _guardCount do {
     private _u = _guardGrp createUnit [selectRandom _guardPool, _gPos, [], 0, "NONE"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.8;
+        _u setSkill 0.45;
         DYN_ground_enemies pushBack _u;
     };
 };
@@ -232,7 +232,7 @@ if (_escapeIsHeli) then {
     _pilotUnit = _pilotGrp createUnit [_pilotClass, _heliPos, [], 0, "NONE"];
     _pilotUnit moveInDriver _escapeVeh;
     _pilotUnit allowFleeing 0;
-    _pilotUnit setSkill 1.0;
+    _pilotUnit setSkill 0.50;
     DYN_ground_enemies pushBack _pilotUnit;
 
     // Door gunner — suppresses players during escape
@@ -240,10 +240,10 @@ if (_escapeIsHeli) then {
     if (!isNull _gunnerUnit) then {
         _gunnerUnit moveInTurret [_escapeVeh, [0]];
         _gunnerUnit allowFleeing 0;
-        _gunnerUnit setSkill 0.85;
-        _gunnerUnit setSkill ["aimingAccuracy", 0.6];
-        _gunnerUnit setSkill ["spotDistance", 1.0];
-        _gunnerUnit setSkill ["courage", 1.0];
+        _gunnerUnit setSkill 0.50;
+        _gunnerUnit setSkill ["aimingAccuracy", 0.40];
+        _gunnerUnit setSkill ["spotDistance", 0.60];
+        _gunnerUnit setSkill ["courage", 0.60];
         DYN_ground_enemies pushBack _gunnerUnit;
     };
 

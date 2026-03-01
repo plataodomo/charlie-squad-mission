@@ -88,15 +88,15 @@ for "_i" from 1 to _boatCount do {
     _driver moveInDriver _boat;
     DYN_naval_enemies pushBack _driver;
     _driver allowFleeing 0;
-    _driver setSkill 0.85;
+    _driver setSkill 0.50;
 
     private _gunner = _grp createUnit [selectRandom _crewPool, _spawnPos, [], 0, "NONE"];
     _gunner moveInGunner _boat;
     DYN_naval_enemies pushBack _gunner;
     _gunner allowFleeing 0;
-    _gunner setSkill 0.85;
-    _gunner setSkill ["spotDistance", 1.0];
-    _gunner setSkill ["aimingSpeed", 0.80];
+    _gunner setSkill 0.50;
+    _gunner setSkill ["spotDistance", 0.60];
+    _gunner setSkill ["aimingSpeed", 0.45];
 
     DYN_naval_enemyVehs pushBack _boat;
 

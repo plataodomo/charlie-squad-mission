@@ -24,9 +24,11 @@ if (!_found) then {
     _txPos = [_pos, 200, _spawnRadius, 10, 0, 0.3, 0] call BIS_fnc_findSafePos;
 };
 
-// FIX: Register radio tower position so AA pits and other objectives avoid it
+// Register radio tower position so AA pits, HQ, and other objectives avoid it
 if (isNil "DYN_radioTowerPositions") then { DYN_radioTowerPositions = []; };
 DYN_radioTowerPositions pushBack _txPos;
+if (isNil "DYN_OBJ_centers") then { DYN_OBJ_centers = []; };
+DYN_OBJ_centers pushBack _txPos;
 if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
 
 // RADIO TOWER + TASK

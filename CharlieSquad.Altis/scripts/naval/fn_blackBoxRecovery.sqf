@@ -389,8 +389,8 @@ for "_g" from 1 to _groupCount do {
         private _diver = _diverGrp createUnit [selectRandom _diverPool, [0,0,0], [], 0, "NONE"];
         _diver setPosASL [_diverSpawnPos select 0, _diverSpawnPos select 1, _diverZ];
         
-        _diver setSkill ["aimingAccuracy", 0.6];
-        _diver setSkill ["aimingSpeed", 0.7];
+        _diver setSkill ["aimingAccuracy", 0.40];
+        _diver setSkill ["aimingSpeed", 0.40];
         _diver allowFleeing 0;
         
         DYN_naval_enemies pushBack _diver;

@@ -453,9 +453,9 @@ if (!isNull _bigTowerObj) then {
             _u setPosATL _bPos;
             _u setUnitPos "UP";
             _u allowFleeing 0;
-            _u setSkill 0.90;
-            _u setSkill ["aimingAccuracy", 0.85];
-            _u setSkill ["spotDistance", 1.0];
+            _u setSkill 0.55;
+            _u setSkill ["aimingAccuracy", 0.50];
+            _u setSkill ["spotDistance", 0.60];
             _u doWatch ([_bigTowerWorldPos, 200, _dirToSea] call DYN_fnc_posOffset);
             DYN_naval_enemies pushBack _u;
         };
@@ -491,9 +491,9 @@ if (!isNull _smallTowerObj) then {
             _u setPosATL _bPos;
             _u setUnitPos "UP";
             _u allowFleeing 0;
-            _u setSkill 0.90;
-            _u setSkill ["aimingAccuracy", 0.85];
-            _u setSkill ["spotDistance", 1.0];
+            _u setSkill 0.55;
+            _u setSkill ["aimingAccuracy", 0.50];
+            _u setSkill ["spotDistance", 0.60];
             _u doWatch ([_smallTowerWorldPos, 200, _dirToSea] call DYN_fnc_posOffset);
             DYN_naval_enemies pushBack _u;
         };
@@ -517,7 +517,7 @@ _grpArtyGuard setCombatMode "RED";
         private _u = _grpArtyGuard createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
         if (!isNull _u) then {
             _u allowFleeing 0;
-            _u setSkill 0.85;
+            _u setSkill 0.50;
             DYN_naval_enemies pushBack _u;
         };
     };
@@ -534,7 +534,7 @@ for "_i" from 1 to 5 do {
     private _u = _grpHQ createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.85;
+        _u setSkill 0.50;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -550,7 +550,7 @@ for "_i" from 1 to 5 do {
     private _u = _grpBarracks createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.80;
+        _u setSkill 0.45;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -567,7 +567,7 @@ for "_i" from 1 to 3 do {
     if (!isNull _u) then {
         _u setUnitPos "MIDDLE";
         _u allowFleeing 0;
-        _u setSkill 0.85;
+        _u setSkill 0.50;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -581,7 +581,7 @@ for "_i" from 1 to 4 do {
     private _u = _grpInteriorPatrol createUnit [selectRandom _infPool, _p, [], 0, "FORM"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.80;
+        _u setSkill 0.45;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -618,7 +618,7 @@ for "_i" from 1 to 3 do {
     private _u = _grpMedic createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
         _u allowFleeing 0;
-        _u setSkill 0.80;
+        _u setSkill 0.45;
         DYN_naval_enemies pushBack _u;
     };
 };
@@ -659,13 +659,13 @@ for "_g" from 1 to _gazCount do {
         private _driver = _gazGrp createUnit [selectRandom _infPool, _gazSpawnPos, [], 0, "NONE"];
         _driver moveInDriver _gazVeh;
         _driver allowFleeing 0;
-        _driver setSkill 0.80;
+        _driver setSkill 0.45;
         DYN_naval_enemies pushBack _driver;
 
         private _gunner = _gazGrp createUnit [selectRandom _infPool, _gazSpawnPos, [], 0, "NONE"];
         _gunner moveInGunner _gazVeh;
         _gunner allowFleeing 0;
-        _gunner setSkill 0.85;
+        _gunner setSkill 0.50;
         DYN_naval_enemies pushBack _gunner;
 
         private _passengerCount = 1 + floor random 2;
@@ -673,7 +673,7 @@ for "_g" from 1 to _gazCount do {
             private _passenger = _gazGrp createUnit [selectRandom _infPool, _gazSpawnPos, [], 0, "NONE"];
             _passenger moveInCargo _gazVeh;
             _passenger allowFleeing 0;
-            _passenger setSkill 0.80;
+            _passenger setSkill 0.45;
             DYN_naval_enemies pushBack _passenger;
         };
 
@@ -739,7 +739,7 @@ for "_fp" from 1 to 2 do {
         private _u = _fpGrp createUnit [selectRandom _infPool, _p, [], 0, "FORM"];
         if (!isNull _u) then {
             _u allowFleeing 0;
-            _u setSkill 0.80;
+            _u setSkill 0.45;
             DYN_naval_enemies pushBack _u;
         };
     };
