@@ -194,6 +194,10 @@ class CfgRemoteExec
         class DYN_fnc_awardHealRep          { allowedTargets = 2; };
         class DYN_fnc_purchaseVehicle       { allowedTargets = 2; };
 
+        // === RESISTANCE INTEL ===
+        class DYN_fnc_addResIntelAction     { allowedTargets = 0; jip = 1; };
+        class DYN_fnc_serverResIntelUsed    { allowedTargets = 2; };
+
         // === NAVAL ===
         class DYN_fnc_addBlackBoxInteraction { allowedTargets = 0; jip = 1; };
     };

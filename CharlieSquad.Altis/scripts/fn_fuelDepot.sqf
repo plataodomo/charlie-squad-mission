@@ -177,6 +177,7 @@ DYN_OBJ_centers pushBack _depotPos;
 
 DYN_AO_sideTasks pushBack _depotTaskId;
 DYN_AO_hiddenObjectives pushBack [_depotTaskId, "Fuel Depot", _depotPos];
+publicVariable "DYN_AO_hiddenObjectives";
 
 // Hide terrain
 {

@@ -582,6 +582,7 @@ private _baseASLNew = (_mmFinal select 0) + _zOffset;
 
 DYN_AO_sideTasks pushBack _hqTaskId;
 DYN_AO_hiddenObjectives pushBack [_hqTaskId, "Enemy HQ", _hqPos];
+publicVariable "DYN_AO_hiddenObjectives";
 
 // =====================================================
 // BARRIER CLASSNAMES — for surface snap + disable sim

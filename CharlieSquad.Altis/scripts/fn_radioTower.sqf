@@ -58,6 +58,7 @@ _radioTower setVariable ["radioDone", false, true];
 
 DYN_AO_sideTasks pushBack _radioTaskId;
 DYN_AO_hiddenObjectives pushBack [_radioTaskId, "Radio Tower", getPosATL _radioTower];
+publicVariable "DYN_AO_hiddenObjectives";
 
 // TASK COMPLETION
 _radioTower addEventHandler ["Killed", {

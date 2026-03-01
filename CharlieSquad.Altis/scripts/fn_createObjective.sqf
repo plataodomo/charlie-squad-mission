@@ -318,7 +318,7 @@ if !(_waterProbe isEqualTo []) then {
             _x params ["_tid", "_ttitle", "_tpos"];
             [_tid, "ASSIGNED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
         } forEach _hidden;
-        missionNamespace setVariable ["DYN_AO_hiddenObjectives", [], false];
+        missionNamespace setVariable ["DYN_AO_hiddenObjectives", [], true];
         ["TaskUpdated", ["Intel declassified", "All AO objectives have been revealed on the map."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[RESISTANCE] 20-min timer: auto-revealed all remaining hidden AO objectives";

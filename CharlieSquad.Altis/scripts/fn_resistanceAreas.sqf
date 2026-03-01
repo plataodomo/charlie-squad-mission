@@ -96,7 +96,7 @@ if (isNil "DYN_fnc_revealAOObjective") then {
         private _idx = floor (random (count _hidden));
         (_hidden select _idx) params ["_taskId", "_title", "_pos"];
         _hidden deleteAt _idx;
-        missionNamespace setVariable ["DYN_AO_hiddenObjectives", _hidden, false];
+        missionNamespace setVariable ["DYN_AO_hiddenObjectives", _hidden, true];
 
         [_taskId, "ASSIGNED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
 
@@ -379,9 +379,9 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     _pp set [2, (_pp select 2) + 0.02];
     _lap setPosATL _pp;
 
-    _lap setVariable ["DYN_res_taskId",        _resTaskId, false];
-    _lap setVariable ["DYN_resIntelUsed",       false,      false];
-    _lap setVariable ["DYN_resIntelDownloading",false,      false];
+    _lap setVariable ["DYN_res_taskId",        _resTaskId, true];
+    _lap setVariable ["DYN_resIntelUsed",       false,      true];
+    _lap setVariable ["DYN_resIntelDownloading",false,      true];
 
     if (!isNil "DYN_AO_objects") then { DYN_AO_objects pushBack _lap; };
 
@@ -393,7 +393,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         waitUntil {
             sleep 5;
             private _state = [_taskId, west] call BIS_fnc_taskState;
-            _state == "SUCCEEDED" || {_state == "CANCELED"} || {!DYN_AO_active}
+            _state == "SUCCEEDED" || {_state == "CANCELED"} || {!(missionNamespace getVariable ["DYN_AO_active", false])}
         };
         sleep 3;
         deleteMarker _marker;
