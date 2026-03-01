@@ -392,12 +392,12 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         params ["_marker", "_taskId"];
         waitUntil {
             sleep 5;
-            private _state = [west, _taskId] call BIS_fnc_taskState;
+            private _state = [_taskId, west] call BIS_fnc_taskState;
             _state == "SUCCEEDED" || {_state == "CANCELED"} || {!DYN_AO_active}
         };
         sleep 3;
         deleteMarker _marker;
-        if (!([west, _taskId] call BIS_fnc_taskCompleted)) then {
+        if (!([_taskId, west] call BIS_fnc_taskCompleted)) then {
             [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
         };
     };
