@@ -299,14 +299,14 @@ if (isNil "DYN_fnc_spawnBonusHVT") then {
             1,
             true,
             "meet"
-        ] remoteExec ["BIS_fnc_taskCreate", 0, true];
+        ] remoteExec ["BIS_fnc_taskCreate", 0, _hvtTaskId];
 
         DYN_AO_bonusTasks pushBack _hvtTaskId;
 
         _hvt addEventHandler ["Killed", {
             params ["_unit"];
             private _tid = _unit getVariable ["hvtTaskId", ""];
-            if (_tid != "") then { [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, true]; };
+            if (_tid != "") then { [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid]; };
         }];
 
         if (!isNil "DYN_fnc_registerAceCapture") then {
@@ -573,7 +573,7 @@ for "_i" from 1 to _cacheCount do {
         1,
         true,
         "destroy"
-    ] remoteExec ["BIS_fnc_taskCreate", 0, true];
+    ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
     private _crateW = createVehicle ["Box_FIA_Wps_F", _bldPos, [], 0, "CAN_COLLIDE"];
     private _ammoPos = _bldPos getPos [1.5 + random 1.5, random 360];
@@ -594,7 +594,7 @@ for "_i" from 1 to _cacheCount do {
             private _pair = _killed getVariable ["cachePair", []];
             if (_pair isEqualTo []) exitWith {};
             if (({ alive _x } count _pair) == 0) then {
-                [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+                [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             };
         }];
     } forEach [_crateW, _crateA];

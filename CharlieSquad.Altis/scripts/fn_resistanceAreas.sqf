@@ -262,7 +262,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         1,
         true,
         "investigate"
-    ] remoteExec ["BIS_fnc_taskCreate", 0, true];
+    ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
     // --- Enemies (4-8) ---
     private _enemyCount = 4 + floor (random 5);
@@ -368,12 +368,12 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         private _total = count _enemies;
         private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
         if (_ratio >= 0.80) then {
-            [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
             ["TaskSucceeded", [format ["Resistance in %1 eliminated.", _name], "Area cleared."]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
             diag_log format ["[RESISTANCE] Area '%1' cleared (task %2)", _name, _taskId];
         } else {
-            [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
         };
         sleep 3;
         deleteMarker _marker;

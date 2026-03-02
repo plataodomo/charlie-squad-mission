@@ -71,7 +71,7 @@ while { true } do {
         [_u] call DYN_fnc_awardPrisonerRep;
 
         if (_tid != "") then {
-            [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         };
 
     } forEach _prisoners;

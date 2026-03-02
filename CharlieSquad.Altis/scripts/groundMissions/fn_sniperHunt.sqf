@@ -440,7 +440,7 @@ DYN_ground_markers pushBack _mkr;
     3,
     true,
     "kill"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_ground_tasks pushBack _taskId;
 
@@ -477,11 +477,11 @@ private _localMarkers  = +DYN_ground_markers;
     private _bothDead = !alive _sniper && !alive _spotter;
 
     if (_bothDead) then {
-        [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         [_rep, "Sniper Team Eliminated"] call DYN_fnc_changeReputation;
         diag_log format ["[GROUND-SNIPER] SUCCESS. +%1 rep.", _rep];
     } else {
-        [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskFailed", ["Sniper Hunt Failed", "The sniper team evaded elimination. Mission expired."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[GROUND-SNIPER] TIMED OUT.";

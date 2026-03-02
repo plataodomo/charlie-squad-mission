@@ -63,7 +63,7 @@ _markerName setMarkerColor "ColorRed";
 _markerName setMarkerBrush "SolidBorder";
 
 private _taskId = format ["task_%1", round (diag_tickTime * 1000)];
-[west, _taskId, [format ["Clear enemy forces in %1.", _cityName], format ["Liberate %1", _cityName], ""], _pos, "ASSIGNED", 1, true, "attack"] remoteExec ["BIS_fnc_taskCreate", 0, true];
+[west, _taskId, [format ["Clear enemy forces in %1.", _cityName], format ["Liberate %1", _cityName], ""], _pos, "ASSIGNED", 1, true, "attack"] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 // Helpers
 private _fn_setMaxSkill = { params ["_u"]; if (isNull _u) exitWith {}; _u setSkill 0.55; { _u setSkill [_x, 0.55]; } forEach ["aimingAccuracy","aimingShake","aimingSpeed","spotDistance","spotTime","courage","reloadSpeed","commanding","general"]; };
@@ -326,14 +326,14 @@ if !(_waterProbe isEqualTo []) then {
     DYN_AO_active = false;
     publicVariable "DYN_AO_active";
 
-    [_taskId, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+    [_taskId, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
     _markerName setMarkerColor "ColorGreen";
 
     // Award reputation for liberating the city
     private _liberationRep = 30 + floor (random 21);
     [_liberationRep, format ["%1 Liberated", _cityName]] call DYN_fnc_changeReputation;
 
-    { if !([_x] call BIS_fnc_taskCompleted) then { [_x, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, true]; }; } forEach DYN_AO_bonusTasks;
+    { if !([_x] call BIS_fnc_taskCompleted) then { [_x, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _x]; }; } forEach DYN_AO_bonusTasks;
     { if (!isNull _x) then { _x hideObjectGlobal false; _x setVariable ["DYN_hiddenByAO", false, false]; }; } forEach DYN_AO_hiddenTerrain;
     DYN_AO_hiddenTerrain = [];
 

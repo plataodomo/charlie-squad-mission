@@ -54,7 +54,7 @@ _radioTower setVariable ["radioDone", false, true];
     1,
     true,
     "radio"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _radioTaskId];
 
 DYN_AO_sideTasks pushBack _radioTaskId;
 
@@ -66,7 +66,7 @@ _radioTower addEventHandler ["Killed", {
     _tower setVariable ["radioDone", true, true];
 
     private _tid = _tower getVariable ["radioTaskId", ""];
-    if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true]; };
+    if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _tid]; };
 
     ["TaskSucceeded", ["Radio Tower Destroyed", "Enemy communications disrupted."]]
         remoteExecCall ["BIS_fnc_showNotification", 0];
@@ -80,7 +80,7 @@ _radioTower addEventHandler ["HandleDamage", {
         _tower setVariable ["radioDone", true, true];
 
         private _tid = _tower getVariable ["radioTaskId", ""];
-        if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true]; };
+        if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _tid]; };
 
         ["TaskSucceeded", ["Radio Tower Destroyed", "Enemy communications disrupted."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];

@@ -658,7 +658,7 @@ DYN_naval_markers pushBack _mkr;
     3,
     true,
     "attack"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_naval_tasks pushBack _taskId;
 
@@ -699,13 +699,13 @@ private _localObjects = +DYN_naval_objects;
     private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
 
     if (_ratio >= 0.85) then {
-        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalComplete", ["Coastal outpost cleared."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         [_rep, "Coastal Outpost Cleared"] call DYN_fnc_changeReputation;
         diag_log format ["[NAVAL-OUTPOST] SUCCESS. +%1 rep.", _rep];
     } else {
-        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalFailed", ["Coastal outpost mission expired."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[NAVAL-OUTPOST] TIMED OUT.";

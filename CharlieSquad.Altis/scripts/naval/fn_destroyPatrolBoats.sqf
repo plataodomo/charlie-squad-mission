@@ -158,7 +158,7 @@ DYN_naval_markers pushBack _mkr;
     3,
     true,
     "destroy"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_naval_tasks pushBack _taskId;
 
@@ -189,13 +189,13 @@ diag_log format ["[NAVAL-PATROL] %1 boats spawned at %2", count _actualBoats, _w
     private _boatsAlive = { !isNull _x && alive _x } count _localVehs;
 
     if (_boatsAlive == 0) then {
-        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalComplete", ["All enemy patrol boats neutralized."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         [_rep, "Naval Patrol Neutralized"] call DYN_fnc_changeReputation;
         diag_log format ["[NAVAL-PATROL] SUCCESS. +%1 rep.", _rep];
     } else {
-        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalFailed", ["Naval patrol mission expired."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[NAVAL-PATROL] TIMED OUT.";
