@@ -169,15 +169,13 @@ DYN_OBJ_centers pushBack _depotPos;
         ""
     ],
     _depotPos,
-    "CREATED",
+    "ASSIGNED",
     1,
     true,
     "destroy"
 ] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 DYN_AO_sideTasks pushBack _depotTaskId;
-DYN_AO_hiddenObjectives pushBack [_depotTaskId, "Fuel Depot", _depotPos];
-publicVariable "DYN_AO_hiddenObjectives";
 
 // Hide terrain
 {
@@ -455,8 +453,8 @@ private _truckSpots = [
     ["CUP_O_Kamaz_6396_fuel_RUS_M", 23341.9,17382.0, [ 0.99145,  0.130486,0],  5.33867]
 ] call BIS_fnc_arrayShuffle;
 
-private _podCount   = (4 + floor (random 4)) min (count _podSpots);
-private _truckCount = (2 + floor (random 2)) min (count _truckSpots);
+private _podCount   = (2 + floor (random 3)) min (count _podSpots);
+private _truckCount = (1 + floor (random 2)) min (count _truckSpots);
 
 private _targetIndex = 0;
 

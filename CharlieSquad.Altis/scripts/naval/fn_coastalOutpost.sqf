@@ -394,15 +394,6 @@ private _interactiveDefs = [
     ["Box_East_WpsLaunch_F", [1924.4,2704.07], [-0.99975,-0.0223604,0], [0,0,1]],
     ["O_CargoNet_01_ammo_F", [1922.63,2704.56], [0,1,0], [0,0,1]],
 
-    // Flexible fuel tanks (ACE refuel)
-    ["FlexibleTank_01_sand_F", [1923.73,2727.26], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1924.28,2727.61], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1924.4,2726.87], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1924.79,2728.18], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1925.36,2727.83], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1924.95,2727.2], [0,1,0], [0,0,1]],
-    ["FlexibleTank_01_sand_F", [1925.21,2728.7], [0,1,0], [0,0,1]],
-
     // Repair depot
     ["Land_RepairDepot_01_tan_F", [1924.28,2712.34], [-0.00345572,-0.999994,0], [0,0,1]]
 ];

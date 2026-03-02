@@ -203,12 +203,12 @@ if (isNil "DYN_fnc_boostOpforAwareness") then {
         if (side _g != east) exitWith {};
         
         private _dlDisabled = missionNamespace getVariable ["DYN_dataLinkDisabled", true];
-        private _spotDist = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_spotDistance", 0.80] } else { missionNamespace getVariable ["DYN_OPFOR_dl_spotDistance", 1.00] };
-        private _spotTime = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_spotTime", 0.75] } else { missionNamespace getVariable ["DYN_OPFOR_dl_spotTime", 1.00] };
-        private _courage  = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_courage", 0.85] } else { missionNamespace getVariable ["DYN_OPFOR_dl_courage", 1.00] };
-        private _cmd      = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_commanding", 0.85] } else { missionNamespace getVariable ["DYN_OPFOR_dl_commanding", 1.00] };
-        private _gen      = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_general", 0.85] } else { missionNamespace getVariable ["DYN_OPFOR_dl_general", 1.00] };
-        private _aimSpd   = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_aimingSpeed", 0.70] } else { missionNamespace getVariable ["DYN_OPFOR_dl_aimingSpeed", 0.95] };
+        private _spotDist = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_spotDistance", 0.65] } else { missionNamespace getVariable ["DYN_OPFOR_dl_spotDistance", 0.75] };
+        private _spotTime = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_spotTime", 0.55] } else { missionNamespace getVariable ["DYN_OPFOR_dl_spotTime", 0.65] };
+        private _courage  = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_courage", 0.70] } else { missionNamespace getVariable ["DYN_OPFOR_dl_courage", 0.75] };
+        private _cmd      = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_commanding", 0.65] } else { missionNamespace getVariable ["DYN_OPFOR_dl_commanding", 0.75] };
+        private _gen      = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_general", 0.65] } else { missionNamespace getVariable ["DYN_OPFOR_dl_general", 0.75] };
+        private _aimSpd   = if (_dlDisabled) then { missionNamespace getVariable ["DYN_OPFOR_base_aimingSpeed", 0.55] } else { missionNamespace getVariable ["DYN_OPFOR_dl_aimingSpeed", 0.65] };
         
         _u setSkill ["spotDistance", _spotDist];
         _u setSkill ["spotTime",     _spotTime];
