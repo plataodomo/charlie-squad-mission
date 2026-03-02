@@ -4,8 +4,8 @@
     
     DRIVING IMPROVEMENTS:
     - forceFollowRoad on all convoy vehicles — AI sticks to road surface
-    - Dense route sampling (25m spacing) — curves get 2-3x more guide points
-    - Tight waypoint completion radius (12m) — no more corner cutting
+    - Sparser route sampling (50m spacing) — forceFollowRoad handles road curves between points
+    - Relaxed waypoint completion radius (20m) — no waypoint hunting or rapid multi-completions
     - 10-point / 200m turn lookahead with proximity weighting
     - 6-tier graduated speed (8/14/22/32/55/150 km/h)
     - NORMAL speed mode (not LIMITED) — convoy cruises ~50 km/h, limitSpeed caps for curves
@@ -110,7 +110,7 @@ private _fn_findAheadIdx = {
     _ahead
 };
 
-// IMPROVED: 12m completion radius — forces vehicles through each curve point instead of cutting corners at 40m
+// 20m completion radius — smooth progression through waypoints, no hunting between nearby guide points
 private _fn_refreshWPs = {
     params ["_grp","_rt","_fromIdx","_bhv","_cbt","_spd"];
     for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
@@ -118,13 +118,13 @@ private _fn_refreshWPs = {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
         _wp setWaypointBehaviour _bhv; _wp setWaypointCombatMode _cbt;
-        _wp setWaypointCompletionRadius (if (_w == ((count _rt)-1)) then {200} else {12});
+        _wp setWaypointCompletionRadius (if (_w == ((count _rt)-1)) then {200} else {20});
     };
     private _h = _grp addWaypoint [_rt select ((count _rt)-1), 5];
     _h setWaypointType "HOLD"; _h setWaypointBehaviour _bhv; _h setWaypointCompletionRadius 200;
 };
 
-// IMPROVED: 12m completion radius for initial assignment too
+// 20m completion radius for initial assignment too
 private _fn_assignInitialWPs = {
     params ["_grp","_veh","_rt","_bhv","_cbt","_spd"];
     private _vPos = getPos _veh; private _vDir = getDir _veh;
@@ -145,7 +145,7 @@ private _fn_assignInitialWPs = {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
         _wp setWaypointBehaviour _bhv; _wp setWaypointCombatMode _cbt;
-        _wp setWaypointCompletionRadius (if (_w == ((count _rt)-1)) then {200} else {12});
+        _wp setWaypointCompletionRadius (if (_w == ((count _rt)-1)) then {200} else {20});
     };
     private _h = _grp addWaypoint [_rt select ((count _rt)-1), 5];
     _h setWaypointType "HOLD"; _h setWaypointBehaviour _bhv; _h setWaypointCompletionRadius 200;
@@ -199,11 +199,12 @@ private _fn_convoySpacing = {
             };
         };
     } forEach DYN_ground_enemyVehs;
-    // Graduated: <15m=5kph, 15-25m=12kph, 25-40m=22kph, 40-60m=40kph, >60m=no limit
-    if (_closestDist < 15) exitWith { 5 };
-    if (_closestDist < 25) exitWith { 12 };
-    if (_closestDist < 40) exitWith { 22 };
-    if (_closestDist < 60) exitWith { 40 };
+    // Graduated: <8m=10kph, 8-18m=18kph, 18-35m=28kph, 35-55m=42kph, >55m=no limit
+    // Raised minimum from 5→10kph so vehicles never drop below stuck-detection threshold (3m/3s)
+    if (_closestDist < 8)  exitWith { 10 };
+    if (_closestDist < 18) exitWith { 18 };
+    if (_closestDist < 35) exitWith { 28 };
+    if (_closestDist < 55) exitWith { 42 };
     -1
 };
 
@@ -278,7 +279,7 @@ private _fn_spawnGazPickup = {
     [_gaz, _gazGrp]
 };
 
-// IMPROVED: 25m minimum spacing (was 60m) — curves get 2-3x more waypoints for accurate cornering
+// 50m minimum spacing — fewer total waypoints; forceFollowRoad handles road curves between points
 private _fn_buildRoadRoute = {
     params ["_startPos","_endPos"];
     private _route = [];
@@ -308,7 +309,7 @@ private _fn_buildRoadRoute = {
                     if (_bnd < _bestD) then {_bestD=_bnd; _bestR=_x};
                 } forEach _cands;
                 _cur = _bestR; _curP = getPos _cur; _visited pushBack _cur;
-                if (_curP distance2D (_route select (count _route - 1)) > 25) then { _route pushBack _curP };
+                if (_curP distance2D (_route select (count _route - 1)) > 50) then { _route pushBack _curP };
             };
         };
         if (_s % 15 == 0) then { sleep 0.05 };
@@ -427,7 +428,7 @@ private _smoothedRoute = [];
         private _distNext = _pt distance2D _next;
         _pullback = _pullback min (_distPrev * 0.4) min (_distNext * 0.4);
 
-        if (_pullback > 5) then {
+        if (_pullback > 15) then {
             // Entry point — on the line from prev toward corner
             private _dirFromPrev = _prev getDir _pt;
             private _entryPt = [_pt, _pullback, _dirFromPrev + 180] call DYN_fnc_posOffset;
@@ -736,8 +737,9 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             if (_spacingLimit > 0) then {
                 _veh limitSpeed _spacingLimit;
                 _grp setSpeedMode "NORMAL";
+                // Allow stuck timer to accumulate during spacing so cascading stops can still recover
+                if (_curPos distance2D _lastPos < 2 && abs(speed _veh) < 2) then { _stuckTime = _stuckTime + 3 };
                 _lastPos = _curPos;
-                _stuckTime = 0; _l1Done = false; _l2Done = false;
                 continue
             };
             private _distToTruck = _curPos distance2D (getPos _truck); private _catchingUp = false;
@@ -830,8 +832,9 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             if (_spacingLimit > 0) then {
                 _truck limitSpeed _spacingLimit;
                 _grp setSpeedMode "NORMAL";
+                // Allow stuck timer to accumulate during spacing so cascading stops can still recover
+                if (_curPos distance2D _lastPos < 2 && abs(speed _truck) < 2) then { _stuckTime = _stuckTime + 3 };
                 _lastPos = _curPos;
-                _stuckTime = 0; _l1Done = false; _l2Done = false;
                 continue
             };
             private _tl = [_truck, _route, _angles] call _fnTurnSpd; _truck limitSpeed _tl;
