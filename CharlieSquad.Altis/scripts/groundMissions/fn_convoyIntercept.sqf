@@ -4,6 +4,7 @@
     
     DRIVING IMPROVEMENTS:
     - forceFollowRoad on all convoy vehicles — AI sticks to road surface
+    - useAISteeringComponent false — prevents AI steering oscillation at turns
     - Sparser route sampling (50m spacing) — forceFollowRoad handles road curves between points
     - Relaxed waypoint completion radius (20m) — no waypoint hunting or rapid multi-completions
     - 10-point / 200m turn lookahead with proximity weighting
@@ -244,6 +245,7 @@ private _fn_spawnGazPickup = {
     sleep 0.5; _gaz enableSimulation true;
     sleep 1; _gaz setVelocityModelSpace [0,0,0];
     _gaz forceFollowRoad true;
+    _gaz useAISteeringComponent false;
     _gaz setVariable ["DYN_convoyVehicle",true,true];
     _gaz addEventHandler ["HandleDamage", {
         params ["_unit","_sel","_damage","_source","_projectile","_hitIndex"];
@@ -408,72 +410,6 @@ private _turnAngles = [];
 
 diag_log format ["[GROUND-CONVOY] Route: %1 wp | %2 sharp turns (>50deg)", count _routePoints, { _x > 50 } count _turnAngles];
 
-// =====================================================
-// ROUTE SMOOTHING — insert curve guide points at sharp turns
-// This makes AI follow arcs instead of sharp angles
-// =====================================================
-private _smoothedRoute = [];
-{
-    private _idx = _forEachIndex;
-    private _pt = _x;
-    private _angle = _turnAngles select _idx;
-
-    if (_idx > 0 && _idx < (count _routePoints - 1) && _angle > 40) then {
-        private _prev = _routePoints select (_idx - 1);
-        private _next = _routePoints select (_idx + 1);
-
-        // Distance to pull control points back from the corner
-        private _pullback = if (_angle > 80) then {25} else {if (_angle > 60) then {18} else {12}};
-        private _distPrev = _pt distance2D _prev;
-        private _distNext = _pt distance2D _next;
-        _pullback = _pullback min (_distPrev * 0.4) min (_distNext * 0.4);
-
-        if (_pullback > 15) then {
-            // Entry point — on the line from prev toward corner
-            private _dirFromPrev = _prev getDir _pt;
-            private _entryPt = [_pt, _pullback, _dirFromPrev + 180] call DYN_fnc_posOffset;
-
-            // Exit point — on the line from corner toward next
-            private _dirToNext = _pt getDir _next;
-            private _exitPt = [_pt, _pullback, _dirToNext] call DYN_fnc_posOffset;
-
-            // Midpoint — averaged curve apex (Bezier midpoint)
-            private _midX = ((_entryPt select 0) + (_pt select 0) + (_exitPt select 0)) / 3;
-            private _midY = ((_entryPt select 1) + (_pt select 1) + (_exitPt select 1)) / 3;
-            private _midPt = [_midX, _midY, 0];
-
-            // Snap guide points to nearest road if possible
-            {
-                private _rds = _x nearRoads 15;
-                if (count _rds > 0) then { _x = getPos (_rds select 0) };
-            } forEach [_entryPt, _midPt, _exitPt];
-
-            _smoothedRoute pushBack _entryPt;
-            if (_angle > 60) then { _smoothedRoute pushBack _midPt };
-            _smoothedRoute pushBack _exitPt;
-        } else {
-            _smoothedRoute pushBack _pt;
-        };
-    } else {
-        _smoothedRoute pushBack _pt;
-    };
-} forEach _routePoints;
-
-// Rebuild turn angles for the smoothed route
-_routePoints = _smoothedRoute;
-_turnAngles = [];
-{
-    if (_forEachIndex == 0 || _forEachIndex >= (count _routePoints - 1)) then { _turnAngles pushBack 0 } else {
-        private _prev = _routePoints select (_forEachIndex-1); private _curr = _x;
-        private _next = _routePoints select (_forEachIndex+1);
-        private _dIn = _prev getDir _curr; private _dOut = _curr getDir _next;
-        private _diff = abs(_dOut - _dIn); if (_diff > 180) then {_diff = 360 - _diff};
-        _turnAngles pushBack _diff;
-    };
-} forEach _routePoints;
-
-diag_log format ["[GROUND-CONVOY] Smoothed route: %1 wp (was %2) | max remaining turn: %3 deg",
-    count _routePoints, count _smoothedRoute, selectMax _turnAngles];
 
 // =====================================================
 // SPAWN VEHICLE (30s godmode + anti-ram + water safety + forceFollowRoad)
@@ -508,8 +444,9 @@ private _fn_spawnConvoyVehicle = {
     sleep 0.5; _v setVelocityModelSpace [0,0,0];
     _v setVariable ["DYN_isDismounting", false, true];
     _v setVariable ["DYN_convoyVehicle", true, true];
-    // IMPROVED: force AI to stay on road surface
+    // Force AI to stay on road surface; disable steering component to prevent oscillation at turns
     _v forceFollowRoad true;
+    _v useAISteeringComponent false;
     _v addEventHandler ["HandleDamage", {
         params ["_unit","_sel","_damage","_source","_projectile","_hitIndex"];
         if (_projectile isEqualTo "") then {
@@ -1096,6 +1033,7 @@ if (_objectiveAction == "CAPTURE") then {
             _cv setDir (_csp getDir _tPos); _cv setPosATL _csp;
             sleep 0.5; _cv enableSimulation true; sleep 1;
             _cv forceFollowRoad true;
+            _cv useAISteeringComponent false;
             _cv setVariable ["DYN_convoyVehicle", true, true];
             _cv addEventHandler ["HandleDamage", {
                 params ["_unit","_sel","_damage","_source","_projectile","_hitIndex"];
