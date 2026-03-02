@@ -8,6 +8,7 @@
     - Tight waypoint completion radius (12m) — no more corner cutting
     - 10-point / 200m turn lookahead with proximity weighting
     - 6-tier graduated speed (8/14/22/32/55/150 km/h)
+    - NORMAL speed mode (not LIMITED) — convoy cruises ~50 km/h, limitSpeed caps for curves
     
     FIXES APPLIED:
     - All getPos on position arrays replaced with DYN_fnc_posOffset
@@ -16,6 +17,9 @@
     - Chase vehicles get anti-ram + godmode protection
     - Driver swap mutex prevents race condition
     - GAZ spawn lateral offset prevents stacking
+    - Proximity-based dismount (damage > 0.15 or player < 200m) — no more global cascade
+    - Dismounted troops get SAD waypoint toward nearest player
+    - Fast spawn: 0.5s between vehicles (was 4s)
     - DESTROY success: !canMove OR damage >= 0.9
     - Standardized all log prefixes to [GROUND-CONVOY]
     - Surgical cleanup pattern
@@ -500,7 +504,7 @@ private _fn_spawnConvoyVehicle = {
     _v setDir _dir;
     _v setPosATL [_safePos select 0, _safePos select 1, 0];
     sleep 0.5; _v enableSimulation true;
-    sleep 2; _v setVelocityModelSpace [0,0,0];
+    sleep 0.5; _v setVelocityModelSpace [0,0,0];
     _v setVariable ["DYN_isDismounting", false, true];
     _v setVariable ["DYN_convoyVehicle", true, true];
     // IMPROVED: force AI to stay on road surface
@@ -566,7 +570,7 @@ sleep 0.5;
 { DYN_ground_enemies deleteAt (DYN_ground_enemies find _x); deleteVehicle _x } forEach ((units _zsuGrp) select {vehicle _x != _zsu});
 DYN_ground_enemyVehs pushBack _zsu;
 _allSmartDriveVehs pushBack [_zsu, _zsuGrp, "SAFE", "RED"];
-sleep 4;
+sleep 0.5;
 
 // =====================================================
 // FRONT TIGRS
@@ -599,7 +603,7 @@ for "_i" from 1 to _frontTigrCount do {
     _cgGrp setBehaviour "SAFE"; _cgGrp setCombatMode "RED";
     _tigr setVariable ["DYN_escortVehicle",true,true];
     _tigr setVariable ["DYN_crewGroup",_cGrp,true]; _tigr setVariable ["DYN_cargoGroup",_cgGrp,true];
-    sleep 4;
+    sleep 0.5;
 };
 
 // =====================================================
@@ -637,7 +641,7 @@ if (_spawnBTR) then {
         _bCargo setBehaviour "SAFE"; _bCargo setCombatMode "RED";
         _btr setVariable ["DYN_escortVehicle",true,true];
         _btr setVariable ["DYN_crewGroup",_bCG,true]; _btr setVariable ["DYN_cargoGroup",_bCargo,true];
-        sleep 4;
+        sleep 0.5;
     };
 };
 
@@ -656,7 +660,7 @@ _objTruck setVariable ["DYN_isObjectiveTruck",true,true];
 _objTruck setVariable ["DYN_objectiveType",_objectiveType,true];
 _objTruck setVariable ["DYN_objectiveAction",_objectiveAction,true];
 _objTruck setVariable ["DYN_objDriver",_objDriver,true];
-sleep 4;
+sleep 0.5;
 
 // =====================================================
 // REAR GUARD
@@ -686,7 +690,7 @@ if (_tigrCount > 1) then {
         _rCargo setBehaviour "SAFE"; _rCargo setCombatMode "RED";
         _rTigr setVariable ["DYN_escortVehicle",true,true];
         _rTigr setVariable ["DYN_crewGroup",_rcG,true]; _rTigr setVariable ["DYN_cargoGroup",_rCargo,true];
-        sleep 4;
+        sleep 0.5;
     };
 };
 
@@ -696,18 +700,18 @@ diag_log format ["[GROUND-CONVOY] Convoy: ZSU + %1 Tigrs + %2 BTR + Obj | %3 car
 // =====================================================
 // DIRECTION-AWARE WAYPOINTS
 // =====================================================
-[_convoyGrp, _objTruck, _routePoints, "CARELESS", "GREEN", "LIMITED"] call _fn_assignInitialWPs;
-_convoyGrp setBehaviour "CARELESS"; _convoyGrp setCombatMode "GREEN"; _convoyGrp setSpeedMode "LIMITED";
+[_convoyGrp, _objTruck, _routePoints, "CARELESS", "GREEN", "NORMAL"] call _fn_assignInitialWPs;
+_convoyGrp setBehaviour "CARELESS"; _convoyGrp setCombatMode "GREEN"; _convoyGrp setSpeedMode "NORMAL";
 _objDriver disableAI "AUTOCOMBAT"; _objDriver disableAI "SUPPRESSION";
 _objDriver disableAI "TARGET"; _objDriver disableAI "AUTOTARGET";
 
-[_zsuGrp, _zsu, _routePoints, "SAFE", "RED", "LIMITED"] call _fn_assignInitialWPs;
-_zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "LIMITED";
+[_zsuGrp, _zsu, _routePoints, "SAFE", "RED", "NORMAL"] call _fn_assignInitialWPs;
+_zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "NORMAL";
 
 { private _eg = _x; private _ev = objNull;
     { if (vehicle _x != _x) exitWith { _ev = vehicle _x } } forEach units _eg;
-    if (!isNull _ev) then { [_eg, _ev, _routePoints, "SAFE", "RED", "LIMITED"] call _fn_assignInitialWPs };
-    _eg setSpeedMode "LIMITED";
+    if (!isNull _ev) then { [_eg, _ev, _routePoints, "SAFE", "RED", "NORMAL"] call _fn_assignInitialWPs };
+    _eg setSpeedMode "NORMAL";
 } forEach _escortGroups;
 
 // =====================================================
@@ -731,28 +735,28 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             private _spacingLimit = [_veh] call _fnSpacing;
             if (_spacingLimit > 0) then {
                 _veh limitSpeed _spacingLimit;
-                _grp setSpeedMode "LIMITED";
+                _grp setSpeedMode "NORMAL";
                 _lastPos = _curPos;
                 _stuckTime = 0; _l1Done = false; _l2Done = false;
                 continue
             };
             private _distToTruck = _curPos distance2D (getPos _truck); private _catchingUp = false;
             if (_distToTruck > 800) then { _grp setSpeedMode "FULL"; _veh limitSpeed 150; _catchingUp = true }
-            else { if (_distToTruck > 400) then { _grp setSpeedMode "NORMAL"; _veh limitSpeed 80; _catchingUp = true } else { _grp setSpeedMode "LIMITED" } };
+            else { if (_distToTruck > 400) then { _grp setSpeedMode "NORMAL"; _veh limitSpeed 80; _catchingUp = true } else { _grp setSpeedMode "NORMAL" } };
             if (!_catchingUp) then { private _turnLimit = [_veh, _route, _angles] call _fnTurnSpd; _veh limitSpeed _turnLimit };
             private _moved = _curPos distance2D _lastPos;
             if (_moved < 3 && abs(speed _veh) < 3) then {
                 _stuckTime = _stuckTime + 3;
                 if (_stuckTime >= 25 && !_l1Done) then { _l1Done=true; _veh limitSpeed 150;
-                    private _ai = [_veh, _route] call _fnAhead; [_grp, _route, _ai, _bhv, _cbt, "LIMITED"] call _fnRefresh;
-                    _grp setBehaviour _bhv; _grp setSpeedMode "LIMITED"; _recoveries=_recoveries+1;
+                    private _ai = [_veh, _route] call _fnAhead; [_grp, _route, _ai, _bhv, _cbt, "NORMAL"] call _fnRefresh;
+                    _grp setBehaviour _bhv; _grp setSpeedMode "NORMAL"; _recoveries=_recoveries+1;
                     diag_log format ["[GROUND-CONVOY] %1 L1 stuck #%2", _label, _recoveries];
                 };
                 if (_stuckTime >= 45 && !_l2Done) then { _l2Done=true; _veh limitSpeed 150;
                     _veh setVelocityModelSpace [0,-3,0]; sleep 3; _veh setVelocityModelSpace [0,0,0]; sleep 0.5;
                     private _ai = [_veh, _route] call _fnAhead; _veh setDir ((getPos _veh) getDir (_route select _ai));
                     sleep 0.3; _veh setVelocityModelSpace [0,4,0]; sleep 2;
-                    [_grp, _route, _ai, _bhv, _cbt, "LIMITED"] call _fnRefresh; _grp setBehaviour _bhv; _grp setSpeedMode "LIMITED";
+                    [_grp, _route, _ai, _bhv, _cbt, "NORMAL"] call _fnRefresh; _grp setBehaviour _bhv; _grp setSpeedMode "NORMAL";
                     _stuckTime=15; _recoveries=_recoveries+1; diag_log format ["[GROUND-CONVOY] %1 L2 stuck #%2", _label, _recoveries];
                 };
                 if (_stuckTime >= 70) then { _veh limitSpeed 150;
@@ -763,7 +767,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                     private _nxt = _route select ((_ai+1) min ((count _route)-1));
                     _veh setDir (_tpP getDir _nxt); _veh setPosATL [_tpP select 0, _tpP select 1, 0];
                     sleep 1; _veh setVelocityModelSpace [0,3,0];
-                    [_grp, _route, _ai, _bhv, _cbt, "LIMITED"] call _fnRefresh; _grp setBehaviour _bhv; _grp setSpeedMode "LIMITED";
+                    [_grp, _route, _ai, _bhv, _cbt, "NORMAL"] call _fnRefresh; _grp setBehaviour _bhv; _grp setSpeedMode "NORMAL";
                     _stuckTime=0; _l1Done=false; _l2Done=false; _recoveries=_recoveries+1;
                     diag_log format ["[GROUND-CONVOY] %1 L3 stuck #%2", _label, _recoveries];
                 };
@@ -810,22 +814,22 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                         _newD allowFleeing 0; { _newD disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"];
                         _truck setVariable ["DYN_objDriver",_newD,true];
                         private _ai = [_truck, _route] call _fnAhead;
-                        [_grp, _route, _ai, "CARELESS", "GREEN", "LIMITED"] call _fnRefresh;
-                        _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "LIMITED";
+                        [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
+                        _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                         _lastPos = getPos _truck;
                     };
                 };
             };
             _truck setVariable ["DYN_driverSwapInProgress",false,true];
         } else {
-            _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "LIMITED";
+            _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
             private _curPos = getPos _truck;
             if (_truck distance2D _dest < 300) then { _lastPos=_curPos; _stuckTime=0; _truck limitSpeed 150; continue };
             // Graduated convoy spacing
             private _spacingLimit = [_truck] call _fnSpacing;
             if (_spacingLimit > 0) then {
                 _truck limitSpeed _spacingLimit;
-                _grp setSpeedMode "LIMITED";
+                _grp setSpeedMode "NORMAL";
                 _lastPos = _curPos;
                 _stuckTime = 0; _l1Done = false; _l2Done = false;
                 continue
@@ -836,8 +840,8 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                 _stuckTime = _stuckTime + 3;
                 if (_stuckTime >= 25 && !_l1Done) then { _l1Done=true; _truck limitSpeed 150;
                     private _ai = [_truck, _route] call _fnAhead;
-                    [_grp, _route, _ai, "CARELESS", "GREEN", "LIMITED"] call _fnRefresh;
-                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "LIMITED";
+                    [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
+                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
                     _recoveries = _recoveries + 1;
                 };
@@ -845,8 +849,8 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                     _truck setVelocityModelSpace [0,-3,0]; sleep 3; _truck setVelocityModelSpace [0,0,0]; sleep 0.5;
                     private _ai = [_truck, _route] call _fnAhead; _truck setDir ((getPos _truck) getDir (_route select _ai));
                     sleep 0.3; _truck setVelocityModelSpace [0,4,0]; sleep 2;
-                    [_grp, _route, _ai, "CARELESS", "GREEN", "LIMITED"] call _fnRefresh;
-                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "LIMITED";
+                    [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
+                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
                     _stuckTime = 15; _recoveries = _recoveries + 1;
                 };
@@ -858,8 +862,8 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                     private _nxt = _route select ((_ai+1) min ((count _route)-1));
                     _truck setDir (_tpP getDir _nxt); _truck setPosATL [_tpP select 0, _tpP select 1, 0];
                     sleep 1; _truck setVelocityModelSpace [0,3,0];
-                    [_grp, _route, _ai, "CARELESS", "GREEN", "LIMITED"] call _fnRefresh;
-                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "LIMITED";
+                    [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
+                    _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
                     _stuckTime=0; _l1Done=false; _l2Done=false; _recoveries = _recoveries + 1;
                 };
@@ -881,10 +885,9 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
         waitUntil { sleep 3;
             if (isNull _objTruck || !alive _objTruck) exitWith {true}; if (isNull _veh || !alive _veh) exitWith {true};
             [_veh] call _fnEject; private _c = false;
-            if (behaviour leader _crewGrp == "COMBAT") then {_c=true};
-            if (!_c && damage _veh > 0.05) then {_c=true};
-            if (!_c) then { { if (isPlayer _x && alive _x) exitWith {_c=true} } forEach (_veh nearEntities ["Man", 300]) };
-            if (!_c) then { { if (alive _x && behaviour _x == "COMBAT") exitWith {_c=true} } forEach units _crewGrp };
+            // Only dismount if THIS vehicle is directly threatened
+            if (damage _veh > 0.15) then {_c=true};
+            if (!_c) then { { if (isPlayer _x && alive _x && _x distance2D _veh < 200) exitWith {_c=true} } forEach allPlayers };
             _c
         };
         if (isNull _veh || !alive _veh || isNull _objTruck || !alive _objTruck) exitWith {};
@@ -897,6 +900,14 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
         { if (alive _x && vehicle _x == _veh) then { unassignVehicle _x; moveOut _x; _x setUnitPos "AUTO"; _dc=_dc+1 }; sleep 0.3 } forEach units _cargoGrp;
         sleep 2; if (!isNull _cDrv && alive _cDrv) then { _cDrv enableAI "MOVE" };
         { if (alive _x && vehicle _x == _x) then { _x setBehaviour "COMBAT"; _x setCombatMode "RED" } } forEach units _cargoGrp;
+        // Send dismounted troops toward nearest player threat
+        private _nearP = objNull;
+        { if (isPlayer _x && alive _x && _x distance2D _veh < 500) exitWith {_nearP = _x} } forEach allPlayers;
+        if (!isNull _nearP) then {
+            private _wp = _cargoGrp addWaypoint [getPos _nearP, 50];
+            _wp setWaypointType "SAD"; _wp setWaypointBehaviour "COMBAT";
+            _wp setWaypointCombatMode "RED"; _wp setWaypointSpeed "FULL";
+        };
         _veh setVariable ["DYN_isDismounting",false,true];
         diag_log format ["[GROUND-CONVOY] %1 dismounted %2", _vType, _dc];
         while {!isNull _objTruck && alive _objTruck} do {
@@ -925,8 +936,8 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                 if (!isNull _veh && alive _veh && canMove _veh) then {
                     { if ((_veh emptyPositions "cargo") > 0) then { _x moveInCargo _veh } } forEach _strandedUnits;
                     _cargoGrp setBehaviour "SAFE"; _crewGrp setBehaviour "SAFE"; _hasDismounted = false;
-                    if (!isNull _objTruck && alive _objTruck) then { private _ai = [_veh, _route] call _fnAhead; [_crewGrp, _route, _ai, "SAFE", "RED", "LIMITED"] call _fnRefresh };
-                    _crewGrp setSpeedMode "LIMITED"; diag_log format ["[GROUND-CONVOY] %1 remounting normally", _vType];
+                    if (!isNull _objTruck && alive _objTruck) then { private _ai = [_veh, _route] call _fnAhead; [_crewGrp, _route, _ai, "SAFE", "RED", "NORMAL"] call _fnRefresh };
+                    _crewGrp setSpeedMode "NORMAL"; diag_log format ["[GROUND-CONVOY] %1 remounting normally", _vType];
                 } else {
                     if (!_gazPickupSpawned && count _strandedUnits > 0) then {
                         _gazPickupSpawned = true;
@@ -977,11 +988,11 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                                         private _d = driver _gv; if (isNull _d || !alive _d) then { _st=0; _lp=getPos _gv; continue };
                                         private _cp = getPos _gv;
                                         private _spacingLimitG = [_gv] call _fSpacing;
-                                        if (_spacingLimitG > 0) then { _gv limitSpeed _spacingLimitG; _gg setSpeedMode "LIMITED"; _lp=_cp; _st=0; continue };
+                                        if (_spacingLimitG > 0) then { _gv limitSpeed _spacingLimitG; _gg setSpeedMode "NORMAL"; _lp=_cp; _st=0; continue };
                                         private _dtk = _cp distance2D (getPos _tk);
                                         if (_dtk > 600) then { _gg setSpeedMode "FULL"; _gv limitSpeed 150 }
                                         else { if (_dtk > 300) then { _gg setSpeedMode "NORMAL"; _gv limitSpeed 80 }
-                                            else { _gg setSpeedMode "LIMITED"; private _tl = [_gv, _rr, _aa] call _fturn; _gv limitSpeed _tl } };
+                                            else { _gg setSpeedMode "NORMAL"; private _tl = [_gv, _rr, _aa] call _fturn; _gv limitSpeed _tl } };
                                         private _mv = _cp distance2D _lp;
                                         if (_mv < 3 && abs(speed _gv) < 3) then { _st=_st+3;
                                             if (_st >= 25) then { _gv setVelocityModelSpace [0,-3,0]; sleep 2; _gv setVelocityModelSpace [0,0,0]; sleep 0.5;
@@ -1158,8 +1169,8 @@ if (_objectiveAction == "CAPTURE") then {
                 { _rec disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"];
                 _truck setVariable ["DYN_objDriver",_rec,true];
                 private _ai = [_truck, _route] call _fnAhead;
-                [_tGrp, _route, _ai, "CARELESS", "GREEN", "LIMITED"] call _fnRefresh;
-                _tGrp setBehaviour "CARELESS"; _tGrp setCombatMode "GREEN"; _tGrp setSpeedMode "LIMITED" };
+                [_tGrp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
+                _tGrp setBehaviour "CARELESS"; _tGrp setCombatMode "GREEN"; _tGrp setSpeedMode "NORMAL" };
             _truck setVariable ["DYN_driverSwapInProgress",false,true];
         };
     };
