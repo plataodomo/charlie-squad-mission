@@ -136,7 +136,7 @@ private _taskId = format ["bonusDataLink_%1", round (diag_tickTime * 1000)];
     1,
     true,
     "download"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_AO_bonusTasks pushBack _taskId;
 
@@ -377,7 +377,7 @@ if (isNil "DYN_fnc_serverDisableDataLink") then {
         missionNamespace setVariable ["DYN_dataLinkDisabled", true, true];
 
         private _tid = _tablet getVariable ["DYN_dataLinkTaskId", ""];
-        if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true]; };
+        if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _tid]; };
 
         ["TaskSucceeded", ["Data Link Disabled", "Enemy coordination degraded."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];

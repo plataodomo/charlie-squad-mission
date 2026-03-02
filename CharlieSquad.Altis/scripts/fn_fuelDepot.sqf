@@ -173,7 +173,7 @@ DYN_OBJ_centers pushBack _depotPos;
     1,
     true,
     "destroy"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _depotTaskId];
 
 DYN_AO_sideTasks pushBack _depotTaskId;
 
@@ -583,7 +583,7 @@ missionNamespace setVariable [_targetsKey, _depotTargets, false];
         private _targets = missionNamespace getVariable [_key, []];
         if (_targets isEqualTo []) exitWith {};
         if (({ !isNull _x && alive _x } count _targets) == 0) then {
-            [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         };
     }];
 } forEach _depotTargets;

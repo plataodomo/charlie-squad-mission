@@ -347,7 +347,7 @@ private _taskId = format ["naval_blackbox_%1", round (diag_tickTime * 1000)];
     2,
     true,
     "download"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_naval_tasks pushBack _taskId;
 
@@ -458,7 +458,7 @@ private _bbTimeout = 7200;  // 2 hours
     // 2-hour timeout — recorder still intact but time ran out
     if (!isNull _recorder && (diag_tickTime - _startTime) > _tOut) exitWith {
         diag_log "[NAVAL] Black box mission failed - 2 hour timeout";
-        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
         ["NavalFailed", ["Black Box Mission Expired", "Time ran out. The flight recorder was not recovered."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
 
@@ -490,7 +490,7 @@ private _bbTimeout = 7200;  // 2 hours
     // Recorder destroyed
     if (isNull _recorder) exitWith {
         diag_log "[NAVAL] Black box mission failed - recorder destroyed";
-        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_taskId, "FAILED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
         ["NavalFailed", ["Black Box Destroyed", "The flight recorder was lost. Mission failed."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         
@@ -554,7 +554,7 @@ private _bbTimeout = 7200;  // 2 hours
     
     if (!isNull _wreck) then { _wreck enableSimulationGlobal true; };
     
-    [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+    [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
     ["NavalComplete", ["Flight Recorder Recovered", "The black box has been delivered. Mission complete."]]
         remoteExecCall ["BIS_fnc_showNotification", 0];
 

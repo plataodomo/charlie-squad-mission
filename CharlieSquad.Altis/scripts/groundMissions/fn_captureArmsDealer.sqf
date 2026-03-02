@@ -334,7 +334,7 @@ private _escapeType = if (_escapeIsHeli) then {"helicopter extraction"} else {"a
     3,
     true,
     "meet"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_ground_tasks pushBack _taskId;
 
@@ -649,25 +649,25 @@ private _localMarkers  = +DYN_ground_markers;
     private _timedOut  = (diag_tickTime - _startTime) > _tOut;
 
     if (_delivered) then {
-        [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         // Rep is awarded by DYN_fnc_awardPrisonerRep in the prison system — no double dip
         ["TaskSucceeded", ["Arms Dealer Captured", "Arms dealer secured and in custody. Outstanding work."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[GROUND-DEALER] SUCCESS. Rep awarded by prison system.";
     } else {
         if (_dead) then {
-            [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             ["TaskFailed", ["Arms Dealer Killed", "The target is dead. Mission failed."]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
             diag_log "[GROUND-DEALER] FAILED — Arms dealer was killed.";
         } else {
             if (_escaped) then {
-                [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+                [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 ["TaskFailed", ["Arms Dealer Escaped", "The target has escaped the area."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-DEALER] FAILED — Arms dealer escaped.";
             } else {
-                [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, true];
+                [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 ["TaskFailed", ["Mission Expired", "Time ran out. The arms dealer has gone dark."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-DEALER] FAILED — timed out.";

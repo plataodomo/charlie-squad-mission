@@ -589,7 +589,7 @@ private _baseASLNew = (_mmFinal select 0) + _zOffset;
     1,
     true,
     "attack"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _hqTaskId];
 
 DYN_AO_sideTasks pushBack _hqTaskId;
 
@@ -764,7 +764,7 @@ _officer addEventHandler ["Killed", {
     if (_unit getVariable ["DYN_prisonDelivered", false]) exitWith {};
 
     private _tid = _unit getVariable ["hqTaskId", ""];
-    if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true]; };
+    if (_tid != "") then { [_tid, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _tid]; };
 
     ["TaskSucceeded", ["Officer Neutralized", "Enemy HQ leadership removed."]]
         remoteExecCall ["BIS_fnc_showNotification", 0];

@@ -836,7 +836,7 @@ private _truckWord = if (count _artilleryVehs == 1) then {"truck"} else {"trucks
     3,
     true,
     "destroy"
-] remoteExec ["BIS_fnc_taskCreate", 0, true];
+] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_naval_tasks pushBack _taskId;
 
@@ -873,13 +873,13 @@ private _localObjects = +DYN_naval_objects;
     private _alive = { !isNull _x && alive _x } count _objectives;
 
     if (_alive == 0) then {
-        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "SUCCEEDED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalComplete", ["All BM-21 artillery vehicles destroyed!"]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         [_rep, "Coastal Artillery Destroyed"] call DYN_fnc_changeReputation;
         diag_log format ["[NAVAL-ARTY] SUCCESS. +%1 rep.", _rep];
     } else {
-        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
+        [_tid, "FAILED"] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["NavalFailed", ["Coastal artillery mission expired."]]
             remoteExecCall ["BIS_fnc_showNotification", 0];
         diag_log "[NAVAL-ARTY] TIMED OUT.";
