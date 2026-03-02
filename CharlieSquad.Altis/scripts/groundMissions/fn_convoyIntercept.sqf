@@ -3,9 +3,11 @@
     GROUND MISSION: High-Value Convoy Intercept
     
     DRIVING IMPROVEMENTS:
+    - useAISteeringComponent true — enables ArmA's improved steering, fixes back-and-forth at turns
     - forceFollowRoad on all convoy vehicles — AI sticks to road surface
     - Sparser route sampling (50m spacing) — forceFollowRoad handles road curves between points
     - Relaxed waypoint completion radius (20m) — no waypoint hunting or rapid multi-completions
+    - Curve smoothing only for sharp turns (>65°); forceFollowRoad handles gentler bends
     - 10-point / 200m turn lookahead with proximity weighting
     - 6-tier graduated speed (8/14/22/32/55/150 km/h)
     - NORMAL speed mode (not LIMITED) — convoy cruises ~50 km/h, limitSpeed caps for curves
@@ -45,6 +47,9 @@
     MP safe
 */
 if (!isServer) exitWith {};
+
+// Enable the improved AI steering component globally — fixes back-and-forth oscillation at turns
+useAISteeringComponent true;
 
 diag_log "[GROUND-CONVOY] Setting up Convoy Intercept mission...";
 
@@ -409,47 +414,47 @@ private _turnAngles = [];
 diag_log format ["[GROUND-CONVOY] Route: %1 wp | %2 sharp turns (>50deg)", count _routePoints, { _x > 50 } count _turnAngles];
 
 // =====================================================
-// ROUTE SMOOTHING — insert curve guide points at sharp turns
-// This makes AI follow arcs instead of sharp angles
+// ROUTE SMOOTHING — entry/exit guide points for sharp turns only
+// Gentle bends (<=65°) are left to forceFollowRoad + useAISteeringComponent.
+// No midpoint: entry+exit only, keeping them far enough apart to avoid
+// cascade-completion (both triggered inside 20m radius simultaneously).
+// Road snapping uses 8m radius — tight enough to stay on the correct road
+// segment and not accidentally snap onto a crossing side-street.
 // =====================================================
 private _smoothedRoute = [];
+private _origRouteCount = count _routePoints;
 {
     private _idx = _forEachIndex;
     private _pt = _x;
     private _angle = _turnAngles select _idx;
 
-    if (_idx > 0 && _idx < (count _routePoints - 1) && _angle > 40) then {
+    if (_idx > 0 && _idx < (count _routePoints - 1) && _angle > 65) then {
         private _prev = _routePoints select (_idx - 1);
         private _next = _routePoints select (_idx + 1);
 
-        // Distance to pull control points back from the corner
-        private _pullback = if (_angle > 80) then {25} else {if (_angle > 60) then {18} else {12}};
+        // Larger pullback values + 0.5 factor ensure entry-exit gap > 25m
+        // so they never both sit inside the 20m completion radius at once
+        private _pullback = if (_angle > 80) then {30} else {22};
         private _distPrev = _pt distance2D _prev;
         private _distNext = _pt distance2D _next;
-        _pullback = _pullback min (_distPrev * 0.4) min (_distNext * 0.4);
+        _pullback = _pullback min (_distPrev * 0.5) min (_distNext * 0.5);
 
         if (_pullback > 15) then {
-            // Entry point — on the line from prev toward corner
+            // Entry point — on the approach leg, before the corner
             private _dirFromPrev = _prev getDir _pt;
             private _entryPt = [_pt, _pullback, _dirFromPrev + 180] call DYN_fnc_posOffset;
 
-            // Exit point — on the line from corner toward next
+            // Exit point — on the exit leg, past the corner
             private _dirToNext = _pt getDir _next;
             private _exitPt = [_pt, _pullback, _dirToNext] call DYN_fnc_posOffset;
 
-            // Midpoint — averaged curve apex (Bezier midpoint)
-            private _midX = ((_entryPt select 0) + (_pt select 0) + (_exitPt select 0)) / 3;
-            private _midY = ((_entryPt select 1) + (_pt select 1) + (_exitPt select 1)) / 3;
-            private _midPt = [_midX, _midY, 0];
-
-            // Snap guide points to nearest road if possible
+            // Snap to road with tight radius (8m) — avoids snapping to wrong road at junctions
             {
-                private _rds = _x nearRoads 15;
+                private _rds = _x nearRoads 8;
                 if (count _rds > 0) then { _x = getPos (_rds select 0) };
-            } forEach [_entryPt, _midPt, _exitPt];
+            } forEach [_entryPt, _exitPt];
 
             _smoothedRoute pushBack _entryPt;
-            if (_angle > 60) then { _smoothedRoute pushBack _midPt };
             _smoothedRoute pushBack _exitPt;
         } else {
             _smoothedRoute pushBack _pt;
@@ -473,7 +478,7 @@ _turnAngles = [];
 } forEach _routePoints;
 
 diag_log format ["[GROUND-CONVOY] Smoothed route: %1 wp (was %2) | max remaining turn: %3 deg",
-    count _routePoints, count _smoothedRoute, selectMax _turnAngles];
+    count _routePoints, _origRouteCount, selectMax _turnAngles];
 
 // =====================================================
 // SPAWN VEHICLE (30s godmode + anti-ram + water safety + forceFollowRoad)
@@ -991,7 +996,9 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                                         private _d = driver _gv; if (isNull _d || !alive _d) then { _st=0; _lp=getPos _gv; continue };
                                         private _cp = getPos _gv;
                                         private _spacingLimitG = [_gv] call _fSpacing;
-                                        if (_spacingLimitG > 0) then { _gv limitSpeed _spacingLimitG; _gg setSpeedMode "NORMAL"; _lp=_cp; _st=0; continue };
+                                        if (_spacingLimitG > 0) then { _gv limitSpeed _spacingLimitG; _gg setSpeedMode "NORMAL";
+                                            if (_cp distance2D _lp < 2 && abs(speed _gv) < 2) then { _st = _st + 3 };
+                                            _lp=_cp; continue };
                                         private _dtk = _cp distance2D (getPos _tk);
                                         if (_dtk > 600) then { _gg setSpeedMode "FULL"; _gv limitSpeed 150 }
                                         else { if (_dtk > 300) then { _gg setSpeedMode "NORMAL"; _gv limitSpeed 80 }
