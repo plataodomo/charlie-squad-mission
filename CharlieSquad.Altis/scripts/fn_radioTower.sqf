@@ -29,8 +29,6 @@ if (isNil "DYN_radioTowerPositions") then { DYN_radioTowerPositions = []; };
 DYN_radioTowerPositions pushBack _txPos;
 if (isNil "DYN_OBJ_centers") then { DYN_OBJ_centers = []; };
 DYN_OBJ_centers pushBack _txPos;
-if (isNil "DYN_AO_hiddenObjectives") then { DYN_AO_hiddenObjectives = []; };
-
 // RADIO TOWER + TASK
 private _radioTaskId = format ["task_radio_%1", round (diag_tickTime * 1000)];
 
@@ -52,15 +50,13 @@ _radioTower setVariable ["radioDone", false, true];
         ""
     ],
     getPosATL _radioTower,
-    "CREATED",
+    "ASSIGNED",
     1,
     true,
     "radio"
 ] remoteExec ["BIS_fnc_taskCreate", 0, true];
 
 DYN_AO_sideTasks pushBack _radioTaskId;
-DYN_AO_hiddenObjectives pushBack [_radioTaskId, "Radio Tower", getPosATL _radioTower];
-publicVariable "DYN_AO_hiddenObjectives";
 
 // TASK COMPLETION
 _radioTower addEventHandler ["Killed", {

@@ -2,8 +2,8 @@
     scripts\fn_resistanceAreas.sqf
     Spawns 1-3 small enemy resistance areas near the main AO.
     Each area has a handful of enemies guarding an intel laptop.
-    When a player downloads the intel, one hidden AO side objective
-    (HQ / fuel depot / radio tower) is revealed on the map.
+    Area completes when 80% of enemies are eliminated.
+    The intel laptop awards reputation points when secured via ACE interact.
     Server only.
 */
 
@@ -85,32 +85,7 @@ if (isNil "DYN_fnc_showProgressBar") then {
 };
 
 // =====================================================
-// SERVER: REVEAL ONE HIDDEN AO OBJECTIVE
-// =====================================================
-if (isNil "DYN_fnc_revealAOObjective") then {
-    DYN_fnc_revealAOObjective = {
-        if (!isServer) exitWith { false };
-        private _hidden = missionNamespace getVariable ["DYN_AO_hiddenObjectives", []];
-        if (_hidden isEqualTo []) exitWith { false };
-
-        private _idx = floor (random (count _hidden));
-        (_hidden select _idx) params ["_taskId", "_title", "_pos"];
-        _hidden deleteAt _idx;
-        missionNamespace setVariable ["DYN_AO_hiddenObjectives", _hidden, true];
-
-        [_taskId, "ASSIGNED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
-
-        ["TaskUpdated", [format ["Intel analysed: %1 located!", _title], "New objective revealed on your map."]]
-            remoteExecCall ["BIS_fnc_showNotification", 0];
-
-        diag_log format ["[RESISTANCE] Revealed AO objective: %1 at %2", _title, _pos];
-        true
-    };
-    publicVariable "DYN_fnc_revealAOObjective";
-};
-
-// =====================================================
-// SERVER: RESISTANCE LAPTOP USED
+// SERVER: RESISTANCE LAPTOP USED — awards rep only
 // =====================================================
 if (isNil "DYN_fnc_serverResIntelUsed") then {
     DYN_fnc_serverResIntelUsed = {
@@ -127,20 +102,6 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
         if ((_caller distance _laptop) > 3) exitWith {};
 
         _laptop setVariable ["DYN_resIntelUsed", true, true];
-
-        private _taskId = _laptop getVariable ["DYN_res_taskId", ""];
-
-        // Delete the laptop object now that intel has been extracted
-        deleteVehicle _laptop;
-        if (_taskId != "") then {
-            [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
-        };
-
-        private _revealed = call DYN_fnc_revealAOObjective;
-        if (!_revealed) then {
-            ["RepStatus", ["Intel collected. All AO objectives already revealed."]]
-                remoteExecCall ["BIS_fnc_showNotification", 0];
-        };
 
         if (!isNil "DYN_fnc_changeReputation") then {
             private _repGain = 5 + floor (random 6);
@@ -270,10 +231,11 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
 // SPAWN EACH RESISTANCE AREA
 // =====================================================
 {
-    private _loc     = _x;
-    private _lPos    = locationPosition _loc;
-    private _lName   = text _loc;
-    private _areaIdx = _forEachIndex;
+    private _loc         = _x;
+    private _lPos        = locationPosition _loc;
+    private _lName       = text _loc;
+    private _areaIdx     = _forEachIndex;
+    private _areaEnemies = [];
 
     // --- Marker ---
     private _mName = format ["RES_marker_%1_%2", _areaIdx, round (diag_tickTime * 1000)];
@@ -291,7 +253,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         west,
         _resTaskId,
         [
-            format ["Enemy forces have established a resistance presence in %1. Eliminate the resistance and secure enemy intel to reveal AO objectives.", _lName],
+            format ["Enemy forces have established a resistance presence in %1. Eliminate the resistance.", _lName],
             format ["Resistance - %1", _lName],
             ""
         ],
@@ -330,6 +292,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
                 _u allowFleeing 0;
                 if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
                 if (!isNil "DYN_AO_enemies") then { DYN_AO_enemies pushBack _u; };
+                _areaEnemies pushBack _u;
                 _spawnedCount = _spawnedCount + 1;
             };
         };
@@ -345,6 +308,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
             _u allowFleeing 0;
             if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
             if (!isNil "DYN_AO_enemies") then { DYN_AO_enemies pushBack _u; };
+            _areaEnemies pushBack _u;
         };
     };
 
@@ -390,19 +354,29 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
 
     [_lap] remoteExec ["DYN_fnc_addResIntelAction", 0, true];
 
-    // --- Cleanup marker when task finishes or AO ends ---
-    [_mName, _resTaskId] spawn {
-        params ["_marker", "_taskId"];
+    // --- Complete task when 80% of area enemies are eliminated ---
+    [_mName, _resTaskId, _areaEnemies, _lName] spawn {
+        params ["_marker", "_taskId", "_enemies", "_name"];
         waitUntil {
             sleep 5;
-            private _state = [_taskId, west] call BIS_fnc_taskState;
-            _state == "SUCCEEDED" || {_state == "CANCELED"} || {!(missionNamespace getVariable ["DYN_AO_active", false])}
+            private _alive = { !isNull _x && alive _x } count _enemies;
+            private _total = count _enemies;
+            private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
+            _ratio >= 0.80 || {!(missionNamespace getVariable ["DYN_AO_active", false])}
+        };
+        private _alive = { !isNull _x && alive _x } count _enemies;
+        private _total = count _enemies;
+        private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
+        if (_ratio >= 0.80) then {
+            [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, true];
+            ["TaskSucceeded", [format ["Resistance in %1 eliminated.", _name], "Area cleared."]]
+                remoteExecCall ["BIS_fnc_showNotification", 0];
+            diag_log format ["[RESISTANCE] Area '%1' cleared (task %2)", _name, _taskId];
+        } else {
+            [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
         };
         sleep 3;
         deleteMarker _marker;
-        if (!([_taskId, west] call BIS_fnc_taskCompleted)) then {
-            [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, true];
-        };
     };
 
     diag_log format ["[RESISTANCE] Area spawned: %1 at %2, task %3", _lName, _lPos, _resTaskId];
