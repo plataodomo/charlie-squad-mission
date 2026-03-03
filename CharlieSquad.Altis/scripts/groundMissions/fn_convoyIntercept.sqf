@@ -244,7 +244,6 @@ private _fn_spawnGazPickup = {
     _gaz setPosATL [_spawnPos select 0, _spawnPos select 1, 0];
     sleep 0.5; _gaz enableSimulation true;
     sleep 1; _gaz setVelocityModelSpace [0,0,0];
-    _gaz forceFollowRoad true;
     _gaz useAISteeringComponent false;
     _gaz setVariable ["DYN_convoyVehicle",true,true];
     _gaz addEventHandler ["HandleDamage", {
@@ -311,7 +310,7 @@ private _fn_buildRoadRoute = {
                     if (_bnd < _bestD) then {_bestD=_bnd; _bestR=_x};
                 } forEach _cands;
                 _cur = _bestR; _curP = getPos _cur; _visited pushBack _cur;
-                if (_curP distance2D (_route select (count _route - 1)) > 50) then { _route pushBack _curP };
+                if (_curP distance2D (_route select (count _route - 1)) > 30) then { _route pushBack _curP };
             };
         };
         if (_s % 15 == 0) then { sleep 0.05 };
@@ -444,8 +443,7 @@ private _fn_spawnConvoyVehicle = {
     sleep 0.5; _v setVelocityModelSpace [0,0,0];
     _v setVariable ["DYN_isDismounting", false, true];
     _v setVariable ["DYN_convoyVehicle", true, true];
-    // Force AI to stay on road surface; disable steering component to prevent oscillation at turns
-    _v forceFollowRoad true;
+    // Disable steering component to reduce oscillation at turns
     _v useAISteeringComponent false;
     _v addEventHandler ["HandleDamage", {
         params ["_unit","_sel","_damage","_source","_projectile","_hitIndex"];
@@ -686,19 +684,19 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             private _moved = _curPos distance2D _lastPos;
             if (_moved < 3 && abs(speed _veh) < 3) then {
                 _stuckTime = _stuckTime + 3;
-                if (_stuckTime >= 25 && !_l1Done) then { _l1Done=true; _veh limitSpeed 150;
+                if (_stuckTime >= 15 && !_l1Done) then { _l1Done=true; _veh limitSpeed 150;
                     private _ai = [_veh, _route] call _fnAhead; [_grp, _route, _ai, _bhv, _cbt, "NORMAL"] call _fnRefresh;
                     _grp setBehaviour _bhv; _grp setSpeedMode "NORMAL"; _recoveries=_recoveries+1;
                     diag_log format ["[GROUND-CONVOY] %1 L1 stuck #%2", _label, _recoveries];
                 };
-                if (_stuckTime >= 45 && !_l2Done) then { _l2Done=true; _veh limitSpeed 150;
+                if (_stuckTime >= 30 && !_l2Done) then { _l2Done=true; _veh limitSpeed 150;
                     _veh setVelocityModelSpace [0,-3,0]; sleep 3; _veh setVelocityModelSpace [0,0,0]; sleep 0.5;
                     private _ai = [_veh, _route] call _fnAhead; _veh setDir ((getPos _veh) getDir (_route select _ai));
                     sleep 0.3; _veh setVelocityModelSpace [0,4,0]; sleep 2;
                     [_grp, _route, _ai, _bhv, _cbt, "NORMAL"] call _fnRefresh; _grp setBehaviour _bhv; _grp setSpeedMode "NORMAL";
-                    _stuckTime=15; _recoveries=_recoveries+1; diag_log format ["[GROUND-CONVOY] %1 L2 stuck #%2", _label, _recoveries];
+                    _stuckTime=10; _recoveries=_recoveries+1; diag_log format ["[GROUND-CONVOY] %1 L2 stuck #%2", _label, _recoveries];
                 };
-                if (_stuckTime >= 70) then { _veh limitSpeed 150;
+                if (_stuckTime >= 45) then { _veh limitSpeed 150;
                     private _ai = [_veh, _route] call _fnAhead; _ai = (_ai + 3) min ((count _route)-1);
                     private _tpP = _route select _ai; private _tR = _tpP nearRoads 100;
                     if (count _tR > 0) then { private _rp = getPos(_tR select 0); if !(surfaceIsWater _rp) then {_tpP=_rp} };
@@ -710,7 +708,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                     _stuckTime=0; _l1Done=false; _l2Done=false; _recoveries=_recoveries+1;
                     diag_log format ["[GROUND-CONVOY] %1 L3 stuck #%2", _label, _recoveries];
                 };
-            } else { if (_stuckTime > 0) then { _stuckTime = (_stuckTime - 2) max 0 }; if (_stuckTime < 20) then { _l1Done = false }; if (_stuckTime < 40) then { _l2Done = false } };
+            } else { if (_stuckTime > 0) then { _stuckTime = (_stuckTime - 2) max 0 }; if (_stuckTime < 10) then { _l1Done = false }; if (_stuckTime < 25) then { _l2Done = false } };
             _lastPos = _curPos;
         };
         _veh limitSpeed 150; diag_log format ["[GROUND-CONVOY] %1 drive ended | recoveries:%2", _label, _recoveries];
@@ -778,23 +776,23 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
             private _moved = _curPos distance2D _lastPos;
             if (_moved < 3 && abs(speed _truck) < 3) then {
                 _stuckTime = _stuckTime + 3;
-                if (_stuckTime >= 25 && !_l1Done) then { _l1Done=true; _truck limitSpeed 150;
+                if (_stuckTime >= 15 && !_l1Done) then { _l1Done=true; _truck limitSpeed 150;
                     private _ai = [_truck, _route] call _fnAhead;
                     [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
                     _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
                     _recoveries = _recoveries + 1;
                 };
-                if (_stuckTime >= 45 && !_l2Done) then { _l2Done=true; _truck limitSpeed 150;
+                if (_stuckTime >= 30 && !_l2Done) then { _l2Done=true; _truck limitSpeed 150;
                     _truck setVelocityModelSpace [0,-3,0]; sleep 3; _truck setVelocityModelSpace [0,0,0]; sleep 0.5;
                     private _ai = [_truck, _route] call _fnAhead; _truck setDir ((getPos _truck) getDir (_route select _ai));
                     sleep 0.3; _truck setVelocityModelSpace [0,4,0]; sleep 2;
                     [_grp, _route, _ai, "CARELESS", "GREEN", "NORMAL"] call _fnRefresh;
                     _grp setBehaviour "CARELESS"; _grp setCombatMode "GREEN"; _grp setSpeedMode "NORMAL";
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
-                    _stuckTime = 15; _recoveries = _recoveries + 1;
+                    _stuckTime = 10; _recoveries = _recoveries + 1;
                 };
-                if (_stuckTime >= 70) then { _truck limitSpeed 150;
+                if (_stuckTime >= 45) then { _truck limitSpeed 150;
                     private _ai = [_truck, _route] call _fnAhead; _ai = (_ai + 3) min ((count _route)-1);
                     private _tpP = _route select _ai; private _tR = _tpP nearRoads 100;
                     if (count _tR > 0) then { private _rp = getPos(_tR select 0); if !(surfaceIsWater _rp) then {_tpP=_rp} };
@@ -807,7 +805,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                     private _d2 = driver _truck; if (!isNull _d2) then { { _d2 disableAI _x } forEach ["AUTOCOMBAT","SUPPRESSION","TARGET","AUTOTARGET"] };
                     _stuckTime=0; _l1Done=false; _l2Done=false; _recoveries = _recoveries + 1;
                 };
-            } else { if (_stuckTime > 0) then { _stuckTime = (_stuckTime - 2) max 0 }; if (_stuckTime < 20) then { _l1Done = false }; if (_stuckTime < 40) then { _l2Done = false } };
+            } else { if (_stuckTime > 0) then { _stuckTime = (_stuckTime - 2) max 0 }; if (_stuckTime < 10) then { _l1Done = false }; if (_stuckTime < 25) then { _l2Done = false } };
             _lastPos = _curPos;
         };
     };
@@ -935,7 +933,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
                                             else { _gg setSpeedMode "NORMAL"; private _tl = [_gv, _rr, _aa] call _fturn; _gv limitSpeed _tl } };
                                         private _mv = _cp distance2D _lp;
                                         if (_mv < 3 && abs(speed _gv) < 3) then { _st=_st+3;
-                                            if (_st >= 25) then { _gv setVelocityModelSpace [0,-3,0]; sleep 2; _gv setVelocityModelSpace [0,0,0]; sleep 0.5;
+                                            if (_st >= 15) then { _gv setVelocityModelSpace [0,-3,0]; sleep 2; _gv setVelocityModelSpace [0,0,0]; sleep 0.5;
                                                 private _ai = [_gv, _rr] call _fahead; _gv setDir ((getPos _gv) getDir (_rr select _ai));
                                                 sleep 0.3; _gv setVelocityModelSpace [0,5,0]; sleep 2;
                                                 [_gg, _rr, _ai, "SAFE", "RED", "FULL"] call _frefresh; _gg setSpeedMode "FULL"; _st=0; _rc=_rc+1 };
@@ -1032,7 +1030,6 @@ if (_objectiveAction == "CAPTURE") then {
             { deleteVehicle _x } forEach crew _cv;
             _cv setDir (_csp getDir _tPos); _cv setPosATL _csp;
             sleep 0.5; _cv enableSimulation true; sleep 1;
-            _cv forceFollowRoad true;
             _cv useAISteeringComponent false;
             _cv setVariable ["DYN_convoyVehicle", true, true];
             _cv addEventHandler ["HandleDamage", {
@@ -1073,7 +1070,7 @@ if (_objectiveAction == "CAPTURE") then {
                     _wp setWaypointBehaviour "AWARE"; _wp setWaypointCombatMode "RED"; sleep 10;
                     if (!isNull _veh && alive _veh && canMove _veh) then { private _cP = getPos _veh;
                         if (_cP distance2D _lastP < 3 && abs(speed _veh) < 3) then { _sT=_sT+10;
-                            if (_sT >= 25) then { _veh setVelocityModelSpace [0,-3,0]; sleep 2; _veh setVelocityModelSpace [0,0,0]; sleep 0.5;
+                            if (_sT >= 15) then { _veh setVelocityModelSpace [0,-3,0]; sleep 2; _veh setVelocityModelSpace [0,0,0]; sleep 0.5;
                                 _veh setDir (_cP getDir _tP); sleep 0.3; _veh setVelocityModelSpace [0,5,0]; sleep 2; _sT = 0 };
                         } else { _sT = 0 }; _lastP = _cP };
                     sleep 5;
