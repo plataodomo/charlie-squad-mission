@@ -61,13 +61,16 @@ for "_try" from 1 to 30 do {
     if (_validPos) exitWith {};
 };
 
-// Fallback — less strict
+// Fallback — require at least some tree cover
 if (!_validPos) then {
-    for "_try" from 1 to 20 do {
-        private _testPos = [_forestPos, 50 + random 150, random 360] call DYN_fnc_posOffset;
+    for "_try" from 1 to 30 do {
+        private _testPos = [_forestPos, 30 + random 150, random 360] call DYN_fnc_posOffset;
         if (!surfaceIsWater _testPos) then {
-            _sniperPos = _testPos;
-            _validPos = true;
+            private _nearTrees = count (nearestTerrainObjects [_testPos, ["TREE", "SMALL TREE"], 15, false]);
+            if (_nearTrees >= 2) then {
+                _sniperPos = _testPos;
+                _validPos = true;
+            };
         };
         if (_validPos) exitWith {};
     };
@@ -244,8 +247,8 @@ _sniper setPosATL _sniperPos;
 _sniper setDir _bestDir;
 _sniper setUnitPos "DOWN";
 _sniper allowFleeing 0;
-_sniper setSkill 0.55;
-{ _sniper setSkill [_x, 0.55] } forEach _skillList;
+_sniper setSkill 1.0;
+{ _sniper setSkill [_x, 1.0] } forEach _skillList;
 
 private _nearTreeObjs = nearestTerrainObjects [_sniperPos, ["TREE"], 8, false];
 if (count _nearTreeObjs > 0) then {
@@ -280,8 +283,8 @@ _spotter setPosATL _spotterPos;
 _spotter setDir _bestDir;
 _spotter setUnitPos "DOWN";
 _spotter allowFleeing 0;
-_spotter setSkill 0.55;
-{ _spotter setSkill [_x, 0.55] } forEach _skillList;
+_spotter setSkill 1.0;
+{ _spotter setSkill [_x, 1.0] } forEach _skillList;
 
 DYN_ground_enemies pushBack _spotter;
 

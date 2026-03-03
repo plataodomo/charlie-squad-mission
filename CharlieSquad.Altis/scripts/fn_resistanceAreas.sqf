@@ -236,6 +236,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     private _lName       = text _loc;
     private _areaIdx     = _forEachIndex;
     private _areaEnemies = [];
+    private _areaGroups  = [];
 
     // --- Marker ---
     private _mName = format ["RES_marker_%1_%2", _areaIdx, round (diag_tickTime * 1000)];
@@ -264,64 +265,79 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         "investigate"
     ] remoteExec ["BIS_fnc_taskCreate", 0, _resTaskId];
 
-    // --- Enemies (4-8) ---
-    private _enemyCount = 4 + floor (random 5);
-    private _resGrp = createGroup east;
-    if (!isNil "DYN_AO_enemyGroups") then { DYN_AO_enemyGroups pushBack _resGrp; };
-    _resGrp setBehaviour "AWARE";
-    _resGrp setCombatMode "RED";
-
     private _nearBuildings = nearestObjects [_lPos, ["House", "Building"], 160];
     _nearBuildings = _nearBuildings select { !isNull _x };
     _nearBuildings = _nearBuildings call BIS_fnc_arrayShuffle;
 
-    private _spawnedCount = 0;
+    // --- Squad 1: Patrol around the area perimeter ---
+    private _patrolGrp = createGroup east;
+    _patrolGrp setBehaviour "AWARE";
+    _patrolGrp setCombatMode "RED";
+    _areaGroups pushBack _patrolGrp;
 
-    if (!(_nearBuildings isEqualTo [])) then {
-        // Garrison buildings first
-        private _useHouses = (_enemyCount min (count _nearBuildings)) max 1;
-        for "_h" from 0 to (_useHouses - 1) do {
-            private _bld = _nearBuildings select _h;
-            private _positions = [_bld] call BIS_fnc_buildingPositions;
-            if (_positions isEqualTo []) then { continue };
-
-            private _u = _resGrp createUnit [selectRandom _infantryPool, selectRandom _positions, [], 0, "NONE"];
-            if (!isNull _u) then {
-                _u disableAI "PATH";
-                _u setUnitPos (selectRandom ["UP","MIDDLE"]);
-                _u allowFleeing 0;
-                if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
-                if (!isNil "DYN_AO_enemies") then { DYN_AO_enemies pushBack _u; };
-                _areaEnemies pushBack _u;
-                _spawnedCount = _spawnedCount + 1;
-            };
-        };
-    };
-
-    // Fill remaining count with outside patrol units
-    for "_i" from _spawnedCount to (_enemyCount - 1) do {
-        private _p = [_lPos, 10, 180, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
+    private _patrolCount = 4 + floor (random 3);  // 4-6 units
+    for "_i" from 0 to (_patrolCount - 1) do {
+        private _p = [_lPos, 20, 180, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
         if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [30 + random 80, random 360]; };
-
-        private _u = _resGrp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
+        private _u = _patrolGrp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
         if (!isNull _u) then {
             _u allowFleeing 0;
             if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
-            if (!isNil "DYN_AO_enemies") then { DYN_AO_enemies pushBack _u; };
             _areaEnemies pushBack _u;
         };
     };
 
-    // Patrol waypoints around the area
-    for "_w" from 1 to 4 do {
-        private _wpPos = [_lPos, 20, 200, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
-        if (surfaceIsWater _wpPos || {_wpPos isEqualTo [0,0,0]}) then { _wpPos = _lPos getPos [60 + random 100, _w * 90]; };
-        private _wp = _resGrp addWaypoint [_wpPos, 10];
+    for "_w" from 1 to 5 do {
+        private _wpPos = [_lPos, 30, 200, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
+        if (surfaceIsWater _wpPos || {_wpPos isEqualTo [0,0,0]}) then { _wpPos = _lPos getPos [60 + random 120, _w * 72]; };
+        private _wp = _patrolGrp addWaypoint [_wpPos, 20];
         _wp setWaypointType "MOVE";
         _wp setWaypointSpeed "LIMITED";
         _wp setWaypointBehaviour "AWARE";
+        _wp setWaypointCombatMode "RED";
     };
-    (_resGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+    (_patrolGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+
+    // --- Squad 2: Interior garrison (inside buildings) ---
+    private _garrisonGrp = createGroup east;
+    _garrisonGrp setBehaviour "AWARE";
+    _garrisonGrp setCombatMode "RED";
+    _areaGroups pushBack _garrisonGrp;
+
+    private _garrisonCount = 3 + floor (random 3);  // 3-5 units
+    if (!(_nearBuildings isEqualTo [])) then {
+        private _useHouses = (_garrisonCount min (count _nearBuildings)) max 1;
+        for "_h" from 0 to (_useHouses - 1) do {
+            private _bld = _nearBuildings select _h;
+            private _positions = [_bld] call BIS_fnc_buildingPositions;
+            if (_positions isEqualTo []) then { continue };
+            private _u = _garrisonGrp createUnit [selectRandom _infantryPool, selectRandom _positions, [], 0, "NONE"];
+            if (!isNull _u) then {
+                _u setUnitPos (selectRandom ["UP","MIDDLE"]);
+                _u allowFleeing 0;
+                if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
+                _areaEnemies pushBack _u;
+            };
+        };
+    } else {
+        // No buildings — spawn as additional patrol
+        for "_i" from 0 to (_garrisonCount - 1) do {
+            private _p = _lPos getPos [20 + random 60, random 360];
+            private _u = _garrisonGrp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
+            if (!isNull _u) then {
+                _u allowFleeing 0;
+                if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
+                _areaEnemies pushBack _u;
+            };
+        };
+        for "_w" from 1 to 4 do {
+            private _wpPos = _lPos getPos [40 + random 80, _w * 90];
+            private _wp = _garrisonGrp addWaypoint [_wpPos, 15];
+            _wp setWaypointType "MOVE";
+            _wp setWaypointSpeed "LIMITED";
+        };
+        (_garrisonGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+    };
 
     // --- Intel laptop ---
     private _lapPos = [];
@@ -355,8 +371,9 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     [_lap] remoteExec ["DYN_fnc_addResIntelAction", 0, true];
 
     // --- Complete task when 80% of area enemies are eliminated ---
-    [_mName, _resTaskId, _areaEnemies, _lName] spawn {
-        params ["_marker", "_taskId", "_enemies", "_name"];
+    // OR despawn cleanly when main AO ends
+    [_mName, _resTaskId, _areaEnemies, _areaGroups, _lName] spawn {
+        params ["_marker", "_taskId", "_enemies", "_groups", "_name"];
         waitUntil {
             sleep 5;
             private _alive = { !isNull _x && alive _x } count _enemies;
@@ -373,7 +390,11 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
                 remoteExecCall ["BIS_fnc_showNotification", 0];
             diag_log format ["[RESISTANCE] Area '%1' cleared (task %2)", _name, _taskId];
         } else {
+            // AO ended — cancel task and despawn remaining resistance
             [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
+            { if (!isNull _x && alive _x) then { deleteVehicle _x } } forEach _enemies;
+            { if (!isNull _x) then { deleteGroup _x } } forEach _groups;
+            diag_log format ["[RESISTANCE] Area '%1' despawned — AO ended", _name];
         };
         sleep 3;
         deleteMarker _marker;
