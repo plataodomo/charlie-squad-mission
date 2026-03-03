@@ -262,7 +262,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         1,
         true,
         "investigate"
-    ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
+    ] remoteExec ["BIS_fnc_taskCreate", 0, _resTaskId];
 
     // --- Enemies (4-8) ---
     private _enemyCount = 4 + floor (random 5);
