@@ -192,7 +192,9 @@ DYN_AO_sideTasks pushBack _depotTaskId;
 private _origCenter = [23351.5, 17381.3];
 
 private _barrierClasses = [
-    "Land_HBarrier_Big_F"
+    "Land_HBarrier_Big_F",
+    "Land_HBarrier_3_F",
+    "Land_HBarrier_5_F"
 ];
 
 private _fn_rot2D = {
@@ -359,38 +361,50 @@ private _protectedClasses = [
 private _struct = [
     ["Land_Cargo_Tower_V3_F", 23343.3,17370.4, [0.120445,-0.99272,0], 16.0762, false],
 
+    // South wall
     ["Land_HBarrier_Big_F", 23338.8,17360.8, [ 0.0689602,-0.997619,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23347.1,17361.6, [ 0.0689602,-0.997619,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23355.4,17362.4, [ 0.0689602,-0.997619,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23363.8,17363.4, [ 0.0689602,-0.997619,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23371.7,17364.3, [ 0.0689602,-0.997619,0], 4.4, true],
 
+    // East wall
     ["Land_HBarrier_Big_F", 23375.2,17367.9, [-0.997448,-0.0714004,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23374.5,17376.0, [-0.999426,-0.033868,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23373.9,17384.2, [-0.997448,-0.0714004,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23373.2,17392.6, [-0.997448,-0.0714004,0], 4.4, true],
 
-    ["Land_HBarrier_Big_F", 23359.4,17394.6, [ 0.0689602,-0.997619,0], 4.4, true],
+    // North-east
     ["Land_HBarrier_Big_F", 23367.8,17395.4, [ 0.0689602,-0.997619,0], 4.4, true],
+    ["Land_HBarrier_Big_F", 23359.4,17394.6, [ 0.0689602,-0.997619,0], 4.4, true],
 
+    // West wall
     ["Land_HBarrier_Big_F", 23335.1,17363.6, [-0.99584,-0.0911162,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23333.9,17371.9, [-0.99584,-0.0911162,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23332.8,17380.3, [-0.99584,-0.0911162,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23331.8,17388.7, [-0.99584,-0.0911162,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23330.8,17397.0, [-0.99584,-0.0911162,0], 4.4, true],
 
+    // North wall
     ["Land_HBarrier_Big_F", 23335.6,17400.7, [ 0.0689602,-0.997619,0], 4.4, true],
     ["Land_HBarrier_Big_F", 23341.9,17401.3, [ 0.0689602,-0.997619,0], 4.4, true],
-
-    ["Land_HBarrier_Big_F", 23354.1,17367.4, [-0.999591,-0.028612,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23355.7,17399.4, [-0.999591,-0.028612,0],  4.4, true],
+
+    // Interior dividers
+    ["Land_HBarrier_Big_F", 23354.1,17367.4, [-0.999591,-0.028612,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23345.4,17396.7, [-0.999591,-0.028612,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23338.4,17378.0, [-0.142454, 0.989801,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23346.8,17379.3, [-0.104767, 0.994497,0],  4.4, true],
 
+    // Interior small/medium barriers (new in this layout)
+    ["Land_HBarrier_3_F",   23357.1,17386.4, [-0.989788,-0.14255,0],   3.98834, true],
+    ["Land_HBarrier_5_F",   23356.4,17390.7, [-0.988904,-0.148558,0],  3.93051, true],
+    ["Land_HBarrier_5_F",   23346.3,17389.7, [-0.988904,-0.148558,0],  3.93051, true],
+
+    // Buildings & gate
     ["Land_Shed_Small_F", 23368.5,17381.6, [ 0.0923531,-0.995726,0], 5.32135, true],
     ["Land_Shed_Big_F",   23338.9,17389.7, [-0.104077,  0.994569,0], 6.56814, true],
-    ["Land_BarGate_F",    23350.5,17403.6, [-0.103099,  0.994671,0], 7.24028, true]
+    ["Land_BarGate_F",    23350.1,17403.5, [-0.103099,  0.994671,0], 7.24028, true]
 ];
 
 private _tower = objNull;
@@ -438,19 +452,18 @@ private _protectedObjs = [];
 private _depotTargets = [];
 
 private _podSpots = [
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23341.0,17397.3, [ 0.994823,  0.101622,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23341.5,17393.4, [ 0.992603,  0.121408,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.6,17389.9, [ 0.0959322,-0.995388,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23365.3,17389.3, [ 0.0959322,-0.995388,0], 4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23341.1,17395.9, [ 0.0895167,-0.995985,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23335.4,17395.1, [ 0.0890577,-0.996026,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.7,17389.9, [ 0.0959322,-0.995388,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.3,17383.5, [ 0.0959322,-0.995388,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.5,17377.8, [-0.998849, -0.0479624,0], 4.5098],
     ["Land_Pod_Heli_Transport_04_fuel_F", 23368.8,17374.4, [-0.999069, -0.0431304,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.2,17370.9, [-0.996757, -0.0804717,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.5,17377.8, [-0.998849, -0.0479624,0], 4.5098]
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.2,17370.9, [-0.996757, -0.0804717,0], 4.5098]
 ] call BIS_fnc_arrayShuffle;
 
 private _truckSpots = [
-    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23335.5,17392.6, [ 0.131387,-0.991331,0],  5.33867],
-    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23365.4,17382.0, [-0.996611,-0.0822577,0], 5.33867],
-    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23341.9,17382.0, [ 0.99145,  0.130486,0],  5.33867]
+    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23357.0,17370.9, [-0.107909, 0.994161,0], 5.33867],
+    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23361.6,17371.2, [-0.107909, 0.994161,0], 5.33867]
 ] call BIS_fnc_arrayShuffle;
 
 private _podCount   = (2 + floor (random 3)) min (count _podSpots);
