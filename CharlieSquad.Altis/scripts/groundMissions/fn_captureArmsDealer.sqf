@@ -465,6 +465,11 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
             };
 
             if (alive _dealer && vehicle _dealer == _escapeVeh) then {
+                // Re-disable movement AI so dealer stays in heli (same as ground fix)
+                _dealer disableAI "MOVE";
+                _dealer disableAI "PATH";
+                _dealer setCombatMode "BLUE";
+
                 // Clear HOLD — now give flight waypoint
                 for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
@@ -532,6 +537,28 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                 // Lock dealer in cargo — prevent seat-switching to driver
                 _dealer assignAsCargo _escapeVeh;
                 _escapeVeh lockDriver true;
+
+                // Re-disable movement AI so dealer can't pathfind out of the vehicle
+                // (MOVE/PATH were re-enabled at alert trigger — without this the AI bails to fight)
+                _dealer disableAI "MOVE";
+                _dealer disableAI "PATH";
+                _dealer setCombatMode "BLUE"; // Passive — won't exit to engage
+
+                // Keep-in-vehicle monitor: force dealer back in if they somehow exit
+                [_dealer, _escapeVeh] spawn {
+                    params ["_d", "_veh"];
+                    while {
+                        alive _d && alive _veh
+                        && !(_d getVariable ["DYN_dealerCaptured", false])
+                        && !(_d getVariable ["DYN_isPrisoner", false])
+                    } do {
+                        sleep 1;
+                        if (alive _d && vehicle _d != _veh && alive _veh) then {
+                            _d assignAsCargo _veh;
+                            _d moveInCargo _veh;
+                        };
+                    };
+                };
 
                 // Drive to escape point
                 private _grp = group (driver _escapeVeh);
