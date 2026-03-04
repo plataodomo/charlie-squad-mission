@@ -1,11 +1,12 @@
 /*
     scripts\shop\fn_shopSystem.sqf
     VEHICLE SHOP - SERVER SYSTEM
-    
+
     REQUIRED MARKERS (place in Eden editor):
       base_area     - ELLIPSE/RECTANGLE marker covering your base (for persistence)
       shop_spawn    - Ground vehicle spawn (Cars, Trucks, Armor)
       heli_spawn    - Helicopter spawn pad
+      boat_spawn    - Boat spawn point (place near water)
       jet_spawn_1   - First jet hangar
       jet_spawn_2   - Second jet hangar
 */
@@ -98,7 +99,15 @@ DYN_shopVehicles = [
 
     // ===== JETS =====
     ["CFP_B_USMC_AV_8B_Harrier_II_DES_01", "AV-8B Harrier II", 100, "Jets"],
-    ["cfp_o_syarmy_yak130", "Yak-130", 100, "Jets"]
+    ["cfp_o_syarmy_yak130", "Yak-130", 100, "Jets"],
+
+    // ===== BOATS =====
+    ["B_Boat_Transport_01_F",       "Assault Boat",          3,  "Boats"],
+    ["CUP_B_CRRC_USMC",            "CRRC Raiding Craft",    3,  "Boats"],
+    ["CUP_B_RHIB_USN",             "RHIB Unarmed",          5,  "Boats"],
+    ["B_SDV_01_F",                  "SDV Submersible",       5,  "Boats"],
+    ["B_Boat_Armed_01_minigun_F",   "Assault Boat Armed",    8,  "Boats"],
+    ["CUP_B_RHIB_Armed_USN",       "RHIB Armed",            10, "Boats"]
 ];
 publicVariable "DYN_shopVehicles";
 
@@ -189,9 +198,19 @@ DYN_fnc_getSpawnPosByCategory = {
                 diag_log "[SHOP] WARNING: heli_spawn marker not found, using ground spawn";
             };
         } else {
-            _pos = [] call DYN_fnc_getShopSpawnPos;
-            private _shopDir = markerDir "shop_spawn";
-            if (_shopDir != 0) then { _dir = _shopDir; };
+            if (_category == "Boats") then {
+                private _bPos = getMarkerPos "boat_spawn";
+                if (!(_bPos isEqualTo [0,0,0])) then {
+                    _pos = _bPos;
+                    _dir = markerDir "boat_spawn";
+                } else {
+                    _err = "No boat_spawn marker found! Place a 'boat_spawn' marker near water in the editor.";
+                };
+            } else {
+                _pos = [] call DYN_fnc_getShopSpawnPos;
+                private _shopDir = markerDir "shop_spawn";
+                if (_shopDir != 0) then { _dir = _shopDir; };
+            };
         };
     };
     
