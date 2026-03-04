@@ -33,8 +33,8 @@ private _infPool = [
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",  // Light AT — engages light vehicles
-    "CUP_O_RU_Soldier_AT_Ratnik_Autumn",   // Heavy AT — Metis/Konkurs vs armor
-    "CUP_O_RU_Soldier_AA_Ratnik_Autumn",   // MANPADS — Igla vs helicopters/planes
+    "CUP_O_RUS_M_Soldier_HAT_Ratnik_Autumn", // Heavy AT — Metis/Konkurs vs armor
+    "CUP_O_RUS_M_Soldier_AA_Ratnik_Autumn",  // MANPADS — Igla vs helicopters/planes
     "CUP_O_RU_Medic_Ratnik_Autumn"
 ];
 
@@ -43,8 +43,8 @@ private _defenderPool = [
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",
-    "CUP_O_RU_Soldier_AT_Ratnik_Autumn",   // Heavy AT in static defense
-    "CUP_O_RU_Soldier_AA_Ratnik_Autumn",   // AA MANPADS in static defense
+    "CUP_O_RUS_M_Soldier_HAT_Ratnik_Autumn", // Heavy AT in static defense
+    "CUP_O_RUS_M_Soldier_AA_Ratnik_Autumn",  // AA MANPADS in static defense
     "CUP_O_RU_Soldier_Marksman_Ratnik_Autumn"
 ];
 
