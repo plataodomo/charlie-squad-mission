@@ -128,9 +128,15 @@ DYN_fnc_findCoastalLandPos = {
 
         if (_slopeRange > (_compRadius * _maxSlope)) then { continue };
 
-        // Count obstructions
-        private _treeCount = count (nearestTerrainObjects [_testPos, ["TREE", "SMALL TREE", "BUSH", "BUILDING", "HOUSE", "ROCK", "ROCKS"], _compRadius, false]);
-        private _placedCount = count (_testPos nearObjects ["Building", _compRadius]);
+        // Hard reject — composition can't overlap buildings or placed structures
+        // (previously only soft-penalised, causing spawns inside coastal towns)
+        private _buildingsInArea = count (nearestTerrainObjects [_testPos, ["BUILDING", "HOUSE", "FENCE", "WALL"], _compRadius + 20, false]);
+        if (_buildingsInArea > 0) then { continue };
+        private _placedCount = count (_testPos nearObjects ["Building", _compRadius + 20]);
+        if (_placedCount > 0) then { continue };
+
+        // Count remaining obstructions (trees/rocks only — buildings already rejected above)
+        private _treeCount = count (nearestTerrainObjects [_testPos, ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS"], _compRadius, false]);
 
         // Check surface type
         private _surfType = toLower (surfaceType _testPos);
