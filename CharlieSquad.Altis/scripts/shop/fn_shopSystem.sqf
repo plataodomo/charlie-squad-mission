@@ -103,11 +103,11 @@ DYN_shopVehicles = [
 
     // ===== BOATS =====
     ["B_Boat_Transport_01_F",       "Assault Boat",          3,  "Boats"],
-    ["CUP_B_CRRC_USMC",            "CRRC Raiding Craft",    3,  "Boats"],
-    ["CUP_B_RHIB_USN",             "RHIB Unarmed",          5,  "Boats"],
+    ["CUP_B_RHIB_USMC",            "RHIB USMC",             5,  "Boats"],
+    ["CUP_B_MK10_GB",              "MK10 Patrol Boat",      7,  "Boats"],
     ["B_SDV_01_F",                  "SDV Submersible",       5,  "Boats"],
     ["B_Boat_Armed_01_minigun_F",   "Assault Boat Armed",    8,  "Boats"],
-    ["CUP_B_RHIB_Armed_USN",       "RHIB Armed",            10, "Boats"]
+    ["CUP_B_RHIB2Turret_USMC",     "RHIB Armed",            10, "Boats"]
 ];
 publicVariable "DYN_shopVehicles";
 

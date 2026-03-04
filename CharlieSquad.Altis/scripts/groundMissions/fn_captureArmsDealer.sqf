@@ -216,8 +216,15 @@ private _pilotUnit = objNull;
 if (_escapeIsHeli) then {
     // === HELICOPTER VARIANT ===
     // Find flat spot close to dealer for helicopter
-    private _heliPos = [_missionPos, 0, 40, 15, 0, 0.2, 0] call BIS_fnc_findSafePos;
-    if (_heliPos isEqualTo [0,0,0]) then { _heliPos = [_missionPos, 25, random 360] call DYN_fnc_posOffset; };
+    // Manual search — BIS_fnc_findSafePos returns 2D [x,y] which breaks isEqualTo [0,0,0] checks
+    private _heliPos = "";
+    private _heliFound = false;
+    for "_try" from 0 to 11 do {
+        private _testPos = [_missionPos, 30 + (_try mod 4) * 10, _try * 30] call DYN_fnc_posOffset;
+        if (!surfaceIsWater _testPos) then { _heliPos = _testPos; _heliFound = true; };
+        if (_heliFound) exitWith {};
+    };
+    if (!_heliFound) then { _heliPos = [_missionPos, 50, random 360] call DYN_fnc_posOffset; };
 
     _escapeVeh = createVehicle [_heliClass, _heliPos, [], 0, "NONE"];
     _escapeVeh setDir (_heliPos getDir _missionPos);
@@ -424,6 +431,13 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
     if (_isHeli) then {
         // === HELICOPTER ESCAPE ===
         if (!isNull _escapeVeh && alive _escapeVeh && !isNull _pilot && alive _pilot) then {
+            // HOLD waypoint keeps pilot grounded while dealer boards
+            // Without this, engineOn causes the AI to lift off immediately, making moveInCargo eject the unit
+            private _grp = group _pilot;
+            for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
+            private _holdWp = _grp addWaypoint [getPos _escapeVeh, 0];
+            _holdWp setWaypointType "HOLD";
+
             // Start engine
             _escapeVeh engineOn true;
 
@@ -432,7 +446,7 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
             [_dealer] orderGetIn true;
 
             // Wait for boarding or timeout
-            private _boardTime = diag_tickTime + 30;
+            private _boardTime = diag_tickTime + 35;
             waitUntil {
                 sleep 1;
                 (vehicle _dealer == _escapeVeh)
@@ -442,16 +456,16 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                 || {diag_tickTime > _boardTime}
             };
 
-            // Force board if still alive and nearby
+            // Force board if still alive and not captured
             if (alive _dealer && vehicle _dealer != _escapeVeh
                 && !(_dealer getVariable ["DYN_dealerCaptured", false])
                 && !(_dealer getVariable ["DYN_isPrisoner", false])) then {
                 _dealer moveInCargo _escapeVeh;
+                sleep 0.5; // Brief settle time after force-board
             };
 
             if (alive _dealer && vehicle _dealer == _escapeVeh) then {
-                // Fly to escape point
-                private _grp = group _pilot;
+                // Clear HOLD — now give flight waypoint
                 for "_i" from (count waypoints _grp - 1) to 0 step -1 do { deleteWaypoint [_grp, _i]; };
 
                 private _wp = _grp addWaypoint [[_escapePos select 0, _escapePos select 1, 200], 0];
