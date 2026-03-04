@@ -239,8 +239,13 @@ _patrolGrp1 setSpeedMode "LIMITED";
 
 private _patrol1Count = 3 + floor (random 2);
 for "_i" from 1 to _patrol1Count do {
-    private _p = [_jamPos, 10, 30, 2, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_p isEqualTo [0,0,0]) then { _p = _jamPos getPos [20, random 360]; };
+    // BIS_fnc_findSafePos returns 2D [x,y] — isEqualTo [0,0,0] never matches it,
+    // so the fallback never triggered and units could spawn far outside the AO.
+    private _p = _jamPos;
+    for "_t" from 1 to 15 do {
+        private _tp = _jamPos getPos [8 + random 22, random 360];
+        if (!surfaceIsWater _tp && (_tp distance2D _aoPos) <= _aoRadius) exitWith { _p = _tp; };
+    };
 
     private _u = _patrolGrp1 createUnit [selectRandom _patrolPool, _p, [], 0, "FORM"];
     _u allowFleeing 0;
@@ -248,8 +253,10 @@ for "_i" from 1 to _patrol1Count do {
 };
 
 for "_w" from 1 to 5 do {
-    private _wpPos = [_jamPos, 15, 50, 2, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_wpPos isEqualTo [0,0,0]) then { _wpPos = _jamPos getPos [30, _w * 72]; };
+    private _wpPos = _jamPos getPos [15 + random 35, _w * 72];
+    if (surfaceIsWater _wpPos || (_wpPos distance2D _aoPos) > _aoRadius) then {
+        _wpPos = _jamPos getPos [20, _w * 72];
+    };
 
     private _wp = _patrolGrp1 addWaypoint [_wpPos, 5];
     _wp setWaypointType "MOVE";
@@ -268,8 +275,11 @@ _patrolGrp2 setSpeedMode "NORMAL";
 
 private _patrol2Count = 2 + floor (random 2);
 for "_i" from 1 to _patrol2Count do {
-    private _p = [_jamPos, 40, 70, 4, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_p isEqualTo [0,0,0]) then { _p = _jamPos getPos [50, random 360]; };
+    private _p = _jamPos;
+    for "_t" from 1 to 15 do {
+        private _tp = _jamPos getPos [35 + random 35, random 360];
+        if (!surfaceIsWater _tp && (_tp distance2D _aoPos) <= _aoRadius) exitWith { _p = _tp; };
+    };
 
     private _u = _patrolGrp2 createUnit [selectRandom _patrolPool, _p, [], 0, "FORM"];
     _u allowFleeing 0;
@@ -277,8 +287,10 @@ for "_i" from 1 to _patrol2Count do {
 };
 
 for "_w" from 1 to 6 do {
-    private _wpPos = [_jamPos, 50, 90, 4, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_wpPos isEqualTo [0,0,0]) then { _wpPos = _jamPos getPos [70, _w * 60]; };
+    private _wpPos = _jamPos getPos [50 + random 40, _w * 60];
+    if (surfaceIsWater _wpPos || (_wpPos distance2D _aoPos) > _aoRadius) then {
+        _wpPos = _jamPos getPos [60, _w * 60];
+    };
 
     private _wp = _patrolGrp2 addWaypoint [_wpPos, 10];
     _wp setWaypointType "MOVE";
