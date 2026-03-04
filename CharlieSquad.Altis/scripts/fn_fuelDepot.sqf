@@ -554,6 +554,41 @@ if (!isNull _tower) then {
 };
 
 // -----------------------------------------------------
+// INTERIOR COMPOUND GUARDS
+// Stationed near the fuel targets inside the perimeter;
+// short patrol loops confined to the compound interior (~35m)
+// -----------------------------------------------------
+private _interiorGrp = createGroup east;
+DYN_AO_enemyGroups pushBack _interiorGrp;
+_interiorGrp setBehaviour "AWARE";
+_interiorGrp setCombatMode "RED";
+_interiorGrp setSpeedMode "LIMITED";
+
+private _interiorCount = 6 + floor (random 4);  // 6-9 guards inside
+for "_i" from 1 to _interiorCount do {
+    private _p = [_depotPos, 5, 35, 3, 0, 0.5, 0] call BIS_fnc_findSafePos;
+    if (_p isEqualTo [0,0,0] || {surfaceIsWater _p}) then { _p = _depotPos getPos [10 + random 20, random 360]; };
+    private _u = _interiorGrp createUnit [selectRandom _guardPool, _p, [], 0, "FORM"];
+    _u allowFleeing 0;
+    _u setSkill (0.40 + random 0.15);
+    DYN_AO_enemies pushBack _u;
+};
+
+// Tight patrol loop that stays well inside the compound walls
+for "_w" from 1 to 5 do {
+    private _wpPos = [_depotPos, 5, 32, 3, 0, 0.5, 0] call BIS_fnc_findSafePos;
+    if (_wpPos isEqualTo [0,0,0]) then { _wpPos = _depotPos getPos [15 + random 15, _w * 72]; };
+    private _wp = _interiorGrp addWaypoint [_wpPos, 10];
+    _wp setWaypointType "MOVE";
+    _wp setWaypointSpeed "LIMITED";
+    _wp setWaypointBehaviour "AWARE";
+    _wp setWaypointCombatMode "RED";
+};
+(_interiorGrp addWaypoint [_depotPos, 0]) setWaypointType "CYCLE";
+
+diag_log format ["[FUEL] Interior compound guards: %1", _interiorCount];
+
+// -----------------------------------------------------
 // GROUND PATROLS / GUARDS
 // -----------------------------------------------------
 private _guardGrp = createGroup east;
