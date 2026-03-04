@@ -544,16 +544,20 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                 _dealer disableAI "PATH";
                 _dealer setCombatMode "BLUE"; // Passive — won't exit to engage
 
-                // Keep-in-vehicle monitor: force dealer back in if they somehow exit
+                // Keep-in-vehicle monitor: force dealer back in if they somehow exit.
+                // Stops when DYN_ejectDealer is set (driver died — intentional eject).
+                _escapeVeh setVariable ["DYN_ejectDealer", false];
                 [_dealer, _escapeVeh] spawn {
                     params ["_d", "_veh"];
                     while {
                         alive _d && alive _veh
                         && !(_d getVariable ["DYN_dealerCaptured", false])
                         && !(_d getVariable ["DYN_isPrisoner", false])
+                        && !(_veh getVariable ["DYN_ejectDealer", false])
                     } do {
                         sleep 1;
-                        if (alive _d && vehicle _d != _veh && alive _veh) then {
+                        if (alive _d && vehicle _d != _veh && alive _veh
+                            && !(_veh getVariable ["DYN_ejectDealer", false])) then {
                             _d assignAsCargo _veh;
                             _d moveInCargo _veh;
                         };
@@ -577,6 +581,10 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                         sleep 2;
                         private _d = driver _veh;
                         if (isNull _d || {!alive _d}) exitWith {
+                            // Signal keep-in monitor to stand down BEFORE ejecting
+                            _veh setVariable ["DYN_ejectDealer", true];
+                            sleep 0.1; // let monitor thread see the flag
+
                             _veh engineOn false;
                             _veh setFuel 0;
                             _veh lockDriver false;
@@ -585,7 +593,9 @@ diag_log "[GROUND-DEALER] Task created. Mission active.";
                             if (alive _dealer && vehicle _dealer == _veh) then {
                                 unassignVehicle _dealer;
                                 moveOut _dealer;
-                                // Leave him as a normal unit — ACE zip-tie handles capture
+                                // Re-enable movement so dealer can be approached/zip-tied
+                                _dealer enableAI "MOVE";
+                                _dealer enableAI "PATH";
                             };
 
                             diag_log "[GROUND-DEALER] Escape driver killed — vehicle stopped, dealer ejected.";
