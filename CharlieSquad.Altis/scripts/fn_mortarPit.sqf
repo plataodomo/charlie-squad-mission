@@ -384,7 +384,15 @@ private _guardSpots = [
         };
         
         if (_activeMortars isEqualTo []) exitWith {};
-        
+
+        // Resupply any mortar running low — keeps them firing indefinitely
+        {
+            private _magCount = { _x == _ammoType } count (magazines _x);
+            if (_magCount < 3) then {
+                for "_r" from 1 to (4 - _magCount) do { _x addMagazine _ammoType; };
+            };
+        } forEach _activeMortars;
+
         private _players = allPlayers select {
             alive _x
             && {side (group _x) == west}

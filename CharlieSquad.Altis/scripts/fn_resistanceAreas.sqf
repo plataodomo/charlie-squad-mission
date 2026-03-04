@@ -339,6 +339,36 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         (_garrisonGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
     };
 
+    // --- Squad 3: Second patrol covering a wider perimeter ---
+    private _patrol2Grp = createGroup east;
+    _patrol2Grp setBehaviour "AWARE";
+    _patrol2Grp setCombatMode "RED";
+    _areaGroups pushBack _patrol2Grp;
+
+    private _patrol2Count = 3 + floor (random 3);  // 3-5 units
+    for "_i" from 0 to (_patrol2Count - 1) do {
+        private _p = [_lPos, 40, 220, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
+        if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [60 + random 100, random 360]; };
+        private _u = _patrol2Grp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
+        if (!isNull _u) then {
+            _u allowFleeing 0;
+            if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
+            _areaEnemies pushBack _u;
+        };
+    };
+
+    // Wider patrol loop, offset angles so it doesn't overlap Squad 1
+    for "_w" from 1 to 5 do {
+        private _wpPos = [_lPos, 60, 250, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
+        if (surfaceIsWater _wpPos || {_wpPos isEqualTo [0,0,0]}) then { _wpPos = _lPos getPos [80 + random 150, (_w * 72) + 36]; };
+        private _wp = _patrol2Grp addWaypoint [_wpPos, 25];
+        _wp setWaypointType "MOVE";
+        _wp setWaypointSpeed "LIMITED";
+        _wp setWaypointBehaviour "AWARE";
+        _wp setWaypointCombatMode "RED";
+    };
+    (_patrol2Grp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+
     // --- Intel laptop ---
     private _lapPos = [];
 
