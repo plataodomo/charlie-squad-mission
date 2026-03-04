@@ -457,7 +457,9 @@ for "_p" from 1 to _pitCount do {
 
             _gunner setSkill 0.50;
             _gunner allowFleeing 0;
-            { _gunner disableAI _x; } forEach ["PATH", "MOVE", "FSM", "AUTOCOMBAT"];
+            // FSM intentionally NOT disabled — it processes doFire internally.
+            // PATH/MOVE keep the gunner seated; AUTOCOMBAT stops random target switching.
+            { _gunner disableAI _x; } forEach ["PATH", "MOVE", "AUTOCOMBAT"];
 
             [_gunner] spawn {
                 params ["_g"];
@@ -480,7 +482,7 @@ for "_p" from 1 to _pitCount do {
             private _lastTarget = objNull;
 
             while { (missionNamespace getVariable ["DYN_AO_active", true]) && {alive _veh} && {alive _gunner} && {vehicle _gunner == _veh} } do {
-                sleep 3;
+                sleep 1.5;
 
                 // Pre-filter to only air vehicles near this AA
                 private _nearVehs = _veh nearEntities [["Helicopter", "Plane"], _maxRange];
@@ -511,8 +513,10 @@ for "_p" from 1 to _pitCount do {
                 _gunner doWatch _target;
                 _gunner doTarget _target;
                 _gunner doFire _target;
+                // Also command the vehicle itself to engage — covers both turret weapons
                 _veh doWatch _target;
                 _veh doTarget _target;
+                _veh doFire _target;
             };
         };
 
