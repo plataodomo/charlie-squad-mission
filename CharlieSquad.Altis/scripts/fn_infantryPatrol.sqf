@@ -32,7 +32,9 @@ private _infPool = [
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
-    "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",
+    "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",  // Light AT — engages light vehicles
+    "CUP_O_RU_Soldier_AT_Ratnik_Autumn",   // Heavy AT — Metis/Konkurs vs armor
+    "CUP_O_RU_Soldier_AA_Ratnik_Autumn",   // MANPADS — Igla vs helicopters/planes
     "CUP_O_RU_Medic_Ratnik_Autumn"
 ];
 
@@ -41,6 +43,8 @@ private _defenderPool = [
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",
+    "CUP_O_RU_Soldier_AT_Ratnik_Autumn",   // Heavy AT in static defense
+    "CUP_O_RU_Soldier_AA_Ratnik_Autumn",   // AA MANPADS in static defense
     "CUP_O_RU_Soldier_Marksman_Ratnik_Autumn"
 ];
 
@@ -499,7 +503,11 @@ for "_i" from 1 to _infCount do {
     private _squadSize = 5 + floor (random 3);
     for "_j" from 1 to _squadSize do {
         private _u = _grp createUnit [selectRandom _infPool, _spawnPos, [], 2, "NONE"];
-        DYN_AO_enemies pushBack _u;
+        if (!isNull _u) then {
+            _u allowFleeing 0;
+            _u setSkill 0.35 + (random 0.15);
+            DYN_AO_enemies pushBack _u;
+        };
     };
 
     [_grp, _aoPos, _aoRadius] spawn DYN_fnc_patrolCycle;
@@ -531,7 +539,10 @@ for "_i" from 1 to _vehCount do {
     createVehicleCrew _veh;
     (crew _veh) joinSilent _grp;
 
-    { DYN_AO_enemies pushBack _x; } forEach (crew _veh);
+    {
+        DYN_AO_enemies pushBack _x;
+        _x allowFleeing 0;
+    } forEach (crew _veh);
     DYN_AO_enemyGroups pushBack _grp;
 
     [_grp, _aoPos, _aoRadius] spawn DYN_fnc_patrolCycle;
