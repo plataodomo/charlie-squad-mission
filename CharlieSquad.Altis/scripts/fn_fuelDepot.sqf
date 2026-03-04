@@ -301,7 +301,10 @@ private _fn_settleTarget = {
         private _upVec = surfaceNormal _posXY;
         private _terrZ = getTerrainHeightASL _posXY;
 
-        _v setPosASL [_posXY#0, _posXY#1, _terrZ + 0.35];
+        // LandVehicle model origin sits ~1-1.5m above the axle line;
+        // 0.35 drops the wheels underground → explosion on sim enable.
+        private _heightOffset = if (_v isKindOf "LandVehicle") then { 1.5 } else { 0.35 };
+        _v setPosASL [_posXY#0, _posXY#1, _terrZ + _heightOffset];
         _v setVectorDirAndUp [_dir, _upVec];
         _v setVelocity [0,0,0];
 
