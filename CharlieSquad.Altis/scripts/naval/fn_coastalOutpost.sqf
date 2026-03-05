@@ -109,10 +109,13 @@ private _fn_spawnCompObj = {
     private _obj = createVehicle [_class, _pos, [], 0, "CAN_COLLIDE"];
     private _rotVecs = [_dirVec, _upVec, _rot] call _fn_rotDirUp;
     _obj setVectorDirAndUp _rotVecs;
-    
+
+    // Snap to terrain: use 0 for decorative (sim off), 0.05 for interactive (sim on)
+    // to prevent clipping into uneven coastal terrain which causes physics explosions
+    private _snapZ = if (_simEnabled) then { 0.05 } else { 0 };
     private _posATL = getPosATL _obj;
-    _obj setPosATL [_posATL select 0, _posATL select 1, 0];
-    
+    _obj setPosATL [_posATL select 0, _posATL select 1, _snapZ];
+
     if (!_simEnabled) then {
         _obj enableSimulationGlobal false;
     };
@@ -133,22 +136,31 @@ private _fn_spawnCompVeh = {
     _veh allowDamage false;
     _veh setDamage 0;
 
+    // Reset all hit points to prevent pre-existing damage from triggering
+    {
+        _veh setHit [_x, 0, false];
+    } forEach ["hitEngine", "hitFuel", "hitHull", "hitBody"];
+
     // Set rotation
     private _rotVecs = [_dirVec, _upVec, _rot] call _fn_rotDirUp;
     _veh setVectorDirAndUp _rotVecs;
 
-    // Place at correct position, slightly above terrain to avoid clipping
-    _veh setPosATL [_pos select 0, _pos select 1, 0.3];
+    // Place 2.0m above terrain — enough clearance for any vehicle on coastal slopes
+    // The vehicle drops and settles via physics while damage is disabled
+    _veh setPosATL [_pos select 0, _pos select 1, 2.0];
 
     // Kill any velocity from spawn
     _veh setVelocity [0, 0, 0];
 
-    // Re-enable damage after vehicle has settled
+    // Re-enable damage after vehicle has fully settled
     [_veh] spawn {
         params ["_v"];
-        sleep 5;
+        sleep 3;
+        if (!isNull _v) then { _v setVelocity [0, 0, 0] };
+        sleep 9;
         if (!isNull _v && alive _v) then {
             _v setVelocity [0, 0, 0];
+            _v setDamage 0;
             _v allowDamage true;
         };
     };
@@ -571,8 +583,8 @@ if (!isNull _compositionHMG) then {
 };
 
 // ---- Crew the Tigr vehicles ----
-// Wait for vehicles to settle before crewing (damage re-enabled after 5s in _fn_spawnCompVeh)
-sleep 6;
+// Wait for vehicles to settle before crewing (damage re-enabled after 12s in _fn_spawnCompVeh)
+sleep 13;
 
 {
     if (!isNull _x && {_x isKindOf "Car"}) then {
