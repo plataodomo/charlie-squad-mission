@@ -1,25 +1,29 @@
 /*
     scripts\groundMissions\fn_civilianTruckRepair.sqf
-    GROUND MISSION: Civilian Vehicle Recovery
+    GROUND MISSION: Repair Civilian Vehicle
 
-    Intel from local contacts has flagged a stranded civilian vehicle on the
-    outskirts of a settlement. The vehicle is non-operational: a blown wheel
-    and sustained engine damage have left the driver unable to continue.
+    A civilian vehicle has broken down in a settlement outside the AO.
+    The driver is stranded — the vehicle has sustained a destroyed wheel
+    and significant engine damage, likely from road debris or a prior
+    incident on the route.
+
+    An engineering element is required on-site to perform field repairs and
+    return the vehicle to operational condition. Full restoration is not
+    achievable in the field — partial repair only, sufficient to get the
+    vehicle moving.
 
     Two variants spawn at random:
-      PEACEFUL — No enemy contact. Pure engineering and humanitarian support.
-      AMBUSH   — Enemy insurgents are concealed inside nearby buildings,
-                 waiting to exploit the situation. They break cover the
-                 moment friendly forces enter the area.
+      PEACEFUL — No enemy contact. Engineering and humanitarian support only.
+      AMBUSH   — Enemy insurgents are concealed inside nearby buildings.
+                 They break cover when friendly forces enter the area.
 
     ENGINEER TASK:
-      Repair the truck using ACE repair tools. Full restoration is not
-      possible in the field — the objective is to return the vehicle to
-      operational (driveable) condition. Partial repairs are sufficient.
+      Repair the truck using ACE repair tools. Success triggers when the
+      wheel is repaired — this represents the minimum to make the vehicle
+      driveable again. The engine will remain partially damaged.
 
     MEDIC TASK (optional, bonus):
-      If the driver has sustained injuries, treat the casualty for a
-      reputation bonus.
+      If the driver is injured, treat the casualty for a reputation bonus.
 
     REWARDS:
       Truck repaired to operational status:  +10-20 REP
@@ -33,7 +37,7 @@
 */
 if (!isServer) exitWith {};
 
-diag_log "[GROUND-REPAIR] Setting up Civilian Truck Repair mission...";
+diag_log "[GROUND-REPAIR] Setting up Repair Civilian Vehicle mission...";
 
 if (isNil "DYN_ground_enemies")     then { DYN_ground_enemies = [] };
 if (isNil "DYN_ground_enemyVehs")   then { DYN_ground_enemyVehs = [] };
@@ -90,11 +94,9 @@ for "_i" from 1 to 400 do {
         if (_p distance2D _aoCenter < 1500) then { continue };
     };
 
-    // Must be in a populated area with road access
     if (count (_p nearRoads 80) == 0) then { continue };
     if (count (nearestObjects [_p, ["House", "Building"], 120]) < 3) then { continue };
 
-    // Gentle terrain only — truck broke down, not drove off a cliff
     private _heights = [];
     {
         private _chkPos = [_p, 30, _x] call DYN_fnc_posOffset;
@@ -132,8 +134,8 @@ DYN_ground_objects pushBack _truck;
 
 diag_log format ["[GROUND-REPAIR] Truck spawned: %1 at %2", _truckClass, _truckPos];
 
-// --- Damage: remove one wheel + partial engine damage ---
-// The truck is too far gone for a full field repair — partial is the goal.
+// Apply damage: one wheel destroyed + partial engine damage
+// Engine damage is too severe for full field repair — partial only.
 private _allHp   = getAllHitPointsDamage _truck;
 private _hpNames = _allHp select 0;
 private _wheelHp = "";
@@ -142,23 +144,20 @@ private _wheelHp = "";
 } forEach _hpNames;
 
 if (_wheelHp != "") then {
-    _truck setHitPointDamage [_wheelHp, 1.0];  // Wheel is completely gone
-    diag_log format ["[GROUND-REPAIR] Wheel removed: %1", _wheelHp];
+    _truck setHitPointDamage [_wheelHp, 1.0];
+    diag_log format ["[GROUND-REPAIR] Wheel destroyed: %1", _wheelHp];
 } else {
     _truck setDamage 0.35;
-    diag_log "[GROUND-REPAIR] No wheel hitpoint found — applied generic structural damage.";
+    diag_log "[GROUND-REPAIR] No wheel hitpoint found — applied generic damage.";
 };
 
-// Engine damage — partial, can be improved but not fully fixed without a workshop
 _truck setHit ["HitEngine", 0.65];
-
-// Store wheel hitpoint name on vehicle for monitor to reference
 _truck setVariable ["DYN_wheelHp", _wheelHp, false];
 
 diag_log format ["[GROUND-REPAIR] Truck damage after setup: %1", damage _truck];
 
 // =====================================================
-// 4. SPAWN CIVILIAN DRIVER (distressed, standing near truck)
+// 4. SPAWN CIVILIAN DRIVER
 // =====================================================
 private _civPos = [_truckPos, 3 + random 4, random 360] call DYN_fnc_posOffset;
 private _civGrp = createGroup civilian;
@@ -167,26 +166,30 @@ _civilian disableAI "MOVE";
 _civilian disableAI "PATH";
 _civilian disableAI "AUTOCOMBAT";
 _civilian disableAI "TARGET";
-_civilian disableAI "WEAPON";
 _civilian allowFleeing 0;
 _civilian setUnitPos "STAND";
 _civilian setDir (_civPos getDir _truckPos);
 DYN_ground_objects pushBack _civilian;
 
 if (_civIsInjured) then {
-    // Apply ACE unconscious state if available, otherwise raw damage
-    if (!isNil "ace_medical_fnc_setUnconscious") then {
-        [_civilian, true] remoteExec ["ace_medical_fnc_setUnconscious", 0];
-    } else {
-        _civilian setDamage 0.55;
-    };
     _civilian setVariable ["DYN_civNeedsMedic", true, true];
-    diag_log "[GROUND-REPAIR] Civilian driver is injured — medic required.";
+    // Spawn a thread to apply ACE injury after ACE medical has initialized on the unit
+    [_civilian] spawn {
+        params ["_civ"];
+        sleep 3;
+        if (isServer) then {
+            if (!isNil "ace_medical_fnc_setUnconscious") then {
+                [_civ, true] call ace_medical_fnc_setUnconscious;
+            } else {
+                _civ setDamage 0.65;
+            };
+        };
+    };
+    diag_log "[GROUND-REPAIR] Civilian driver injured — medic required.";
 } else {
     _civilian setVariable ["DYN_civNeedsMedic", false, true];
+    diag_log "[GROUND-REPAIR] Civilian driver uninjured.";
 };
-
-diag_log "[GROUND-REPAIR] Civilian driver spawned.";
 
 // =====================================================
 // 5. SPAWN AMBUSH ENEMIES (hidden in buildings, if ambush variant)
@@ -200,7 +203,7 @@ if (_isAmbush) then {
     _grp setCombatMode "RED";
 
     private _nearHouses = nearestObjects [_missionPos, ["House", "Building"], 150];
-    private _enemyCount = 4 + floor (random 5);  // 4-8 insurgents
+    private _enemyCount = 4 + floor (random 5);
 
     for "_i" from 1 to _enemyCount do {
         private _spawnPos = _missionPos;
@@ -228,8 +231,7 @@ if (_isAmbush) then {
     };
 
     _ambushGrp = _grp;
-    diag_log format ["[GROUND-REPAIR] Ambush squad ready: %1 units concealed in %2 structures.",
-        _enemyCount, count _nearHouses];
+    diag_log format ["[GROUND-REPAIR] Ambush squad ready: %1 units in buildings.", _enemyCount];
 };
 
 // =====================================================
@@ -244,15 +246,15 @@ _mkrName setMarkerSize [_zoneRadius, _zoneRadius];
 _mkrName setMarkerColor "ColorOrange";
 _mkrName setMarkerBrush "SolidFull";
 _mkrName setMarkerAlpha 0.2;
-_mkrName setMarkerText "Civilian Assistance";
+_mkrName setMarkerText "Civilian Vehicle";
 DYN_ground_markers pushBack _mkrName;
 
 private _medNote = if (_civIsInjured) then {
-    "<br/><br/><t color='#ffaa44'>MEDIC PRIORITY:</t> The driver has sustained injuries. A trained medic should assess and treat the casualty before he deteriorates further. Treating him earns an additional +5 REP."
+    "<br/><br/>The driver has sustained injuries and requires immediate medical attention. A trained medic should assess and treat the casualty on-site."
 } else { "" };
 
 private _intelNote = if (_isAmbush) then {
-    "<br/><br/><t color='#ff5555'>INTEL WARNING:</t> SIGINT indicates possible insurgent presence in the vicinity. Maintain 360-degree security while repairs are being conducted. Do not get tunnel vision on the vehicle."
+    "<br/><br/>Latest intelligence indicates possible insurgent activity in the settlement. Maintain 360-degree security throughout the operation — do not get tunnel vision on the vehicle."
 } else { "" };
 
 [
@@ -260,13 +262,11 @@ private _intelNote = if (_isAmbush) then {
     _taskId,
     [
         format [
-            "CHARLIE SIX, this is ECHO-2 ACTUAL.<br/><br/>Local contacts have flagged a stranded civilian vehicle on the outskirts of the settlement at grid %1. The driver is unable to continue — the vehicle has sustained a blown wheel and significant engine damage from a previous incident on the route.<br/><br/>We are tasking an engineering element to the location. Get eyes on the vehicle, assess the damage, and perform field repairs using your ACE repair tools. Be advised: the extent of the damage means full restoration is not achievable in the field. Your mission is to return the vehicle to operational condition — get it moving, that is all we ask.<br/><br/><t color='#88ff88'>PRIMARY OBJECTIVE:</t> Repair the civilian truck to driveable condition. (+%2 REP)%3%4<br/><br/>This is a hearts-and-minds operation. Protect the civilian and avoid collateral damage. Time limit: 2 hours. Charlie Six out.",
-            mapGridPosition _missionPos,
-            _repRewardRepair,
+            "A civilian vehicle has been reported broken down in a settlement outside the AO. The driver is unable to continue — the vehicle has sustained a destroyed wheel and significant engine damage, likely from road debris encountered on the route.<br/><br/>An engineering element is required on-site to perform field repairs and return the vehicle to operational condition. Full restoration is not achievable in the field. The objective is partial repair only — enough to get the vehicle moving again.%1%2<br/><br/>Protect the civilian at all costs. ROE is in effect.",
             _medNote,
             _intelNote
         ],
-        "CIVASSIST: Vehicle Recovery",
+        "Repair Civilian Vehicle",
         ""
     ],
     _missionPos,
@@ -281,7 +281,7 @@ DYN_ground_tasks pushBack _taskId;
 diag_log format ["[GROUND-REPAIR] Task created: %1. Mission active.", _taskId];
 
 // =====================================================
-// 7. MONITORING — AMBUSH TRIGGER + REPAIR/MEDIC CHECKS
+// 7. MONITORING — AMBUSH TRIGGER + REPAIR / MEDIC CHECKS
 // =====================================================
 private _localObjects = +DYN_ground_objects;
 private _localEnemies = +DYN_ground_enemies;
@@ -310,9 +310,6 @@ private _localMarkers = +DYN_ground_markers;
     private _civKillPenalized = false;
     private _done             = false;
 
-    ["TaskCreated", ["Civilian Assistance", "Stranded vehicle reported. Engineer and possible medic required."]]
-        remoteExecCall ["BIS_fnc_showNotification", 0];
-
     while { !_done } do {
         sleep 5;
 
@@ -330,12 +327,12 @@ private _localMarkers = +DYN_ground_markers;
         if (!_civKillPenalized && !isNull _civilian && !alive _civilian) then {
             _civKillPenalized = true;
             [_repPenalty, "Civilian Killed"] call DYN_fnc_changeReputation;
-            ["TaskFailed", ["Civilian KIA", format ["%1 REP: The civilian driver was killed.", _repPenalty]]]
+            ["TaskFailed", ["Civilian KIA", format ["%1 REP. The driver was killed.", _repPenalty]]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
-            diag_log format ["[GROUND-REPAIR] Civilian killed. %1 rep penalty.", _repPenalty];
+            diag_log format ["[GROUND-REPAIR] Civilian killed. %1 rep.", _repPenalty];
         };
 
-        // --- Ambush trigger: enemies break cover when players close in ---
+        // --- Ambush trigger: enemies break cover on player proximity ---
         if (_isAmbush && !_ambushFired && !isNull _ambushGrp) then {
             private _playersNear = { alive _x && _x distance2D _mPos < 120 } count allPlayers;
             if (_playersNear > 0) then {
@@ -346,40 +343,42 @@ private _localMarkers = +DYN_ground_markers;
                 _ambushGrp setCombatMode "RED";
                 _ambushGrp setSpeedMode "FULL";
 
-                // SAD waypoint toward nearest player
-                private _nearestPl = allPlayers select { alive _x } select 0;
-                if (!isNil "_nearestPl") then {
-                    private _wp = _ambushGrp addWaypoint [getPos _nearestPl, 0];
+                private _alivePlayers = allPlayers select { alive _x };
+                if (count _alivePlayers > 0) then {
+                    private _wp = _ambushGrp addWaypoint [getPos (_alivePlayers select 0), 0];
                     _wp setWaypointType "SAD";
                 };
 
-                ["TaskFailed", ["AMBUSH!", "Enemy forces have broken from cover — contact in the settlement!"]]
+                ["TaskFailed", ["Ambush", "Enemy forces have broken from cover."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-REPAIR] AMBUSH triggered.";
             };
         };
 
-        // --- Civilian treated: bonus rep, one time ---
-        if (_civIsInjured && !_civHealRewarded && !isNull _civilian && alive _civilian) then {
+        // --- Civilian healed: bonus rep, one time ---
+        // Check starts after 30s to allow ACE injury to be applied first
+        if (_civIsInjured && !_civHealRewarded && alive _civilian
+            && diag_tickTime - _startTime > 30) then {
+
             private _civHealed = false;
 
-            // Primary check: ACE blood volume restored to normal
-            private _bloodVol = _civilian getVariable ["ace_medical_bloodVolume", -1];
-            if (_bloodVol >= 0 && _bloodVol > 5.5) then { _civHealed = true; };
-
-            // Fallback: raw damage cleared
+            // Primary: ACE unconscious state cleared (default true = still injured)
+            if (!(_civilian getVariable ["ACE_isUnconscious", true])) then {
+                _civHealed = true;
+            };
+            // Fallback: raw damage cleared (non-ACE)
             if (!_civHealed && damage _civilian < 0.2) then { _civHealed = true; };
 
             if (_civHealed) then {
                 _civHealRewarded = true;
                 [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
-                ["TaskSucceeded", ["Medic — Good Work", format ["+%1 REP: Driver treated. He'll make it.", _repMedic]]]
+                ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log format ["[GROUND-REPAIR] Civilian treated. +%1 rep.", _repMedic];
             };
         };
 
-        // --- Truck repair success: wheel hitpoint restored (partial repair = mission done) ---
+        // --- Truck repair success: wheel hitpoint restored ---
         if (!_truckSucceeded && !isNull _truck) then {
             private _wheelHp = _truck getVariable ["DYN_wheelHp", ""];
             private _wheelFixed = if (_wheelHp != "") then {
@@ -392,7 +391,7 @@ private _localMarkers = +DYN_ground_markers;
                 _truckSucceeded = true;
                 [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 [_repRepair, "Civilian Truck Repaired"] call DYN_fnc_changeReputation;
-                ["TaskSucceeded", ["Vehicle Recovered", format ["+%1 REP: Truck is operational. Good work, Charlie.", _repRepair]]]
+                ["TaskSucceeded", ["Vehicle Operational", format ["+%1 REP. Vehicle is mobile. Good work.", _repRepair]]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log format ["[GROUND-REPAIR] SUCCESS. Truck repaired. +%1 rep.", _repRepair];
 
@@ -411,7 +410,7 @@ private _localMarkers = +DYN_ground_markers;
 
     DYN_ground_active = false;
 
-    diag_log format ["[GROUND-REPAIR] Despawning entities in %1 seconds.", _despawnDelay];
+    diag_log format ["[GROUND-REPAIR] Despawning in %1 seconds.", _despawnDelay];
     sleep _despawnDelay;
 
     { if (!isNull _x) then { deleteVehicle _x } } forEach _lObjects;
@@ -425,4 +424,4 @@ private _localMarkers = +DYN_ground_markers;
     diag_log "[GROUND-REPAIR] Full cleanup complete.";
 };
 
-diag_log "[GROUND-REPAIR] Civilian Truck Repair mission initialized.";
+diag_log "[GROUND-REPAIR] Repair Civilian Vehicle mission initialized.";
