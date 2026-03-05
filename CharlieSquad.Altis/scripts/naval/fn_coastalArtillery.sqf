@@ -437,6 +437,10 @@ private _bigTowerObj = objNull;
 {
     if (typeOf _x == "Land_Cargo_Tower_V3_F") exitWith { _bigTowerObj = _x };
 } forEach _compObjects;
+// Fallback: search by proximity in case the object wasn't captured in _compObjects
+if (isNull _bigTowerObj) then {
+    _bigTowerObj = nearestObject [_bigTowerWorldPos, "Land_Cargo_Tower_V3_F"];
+};
 
 if (!isNull _bigTowerObj) then {
     private _towerBldgPos = _bigTowerObj buildingPos -1;
@@ -463,6 +467,32 @@ if (!isNull _bigTowerObj) then {
 } else {
     diag_log "[NAVAL-ARTY] WARNING: Could not find big tower object for garrison";
 };
+
+// Interior/base guards — stationed at ground level around the tower structure
+private _grpTowerBase = createGroup east;
+DYN_naval_enemyGroups pushBack _grpTowerBase;
+_grpTowerBase setBehaviour "AWARE";
+_grpTowerBase setCombatMode "RED";
+_grpTowerBase setSpeedMode "LIMITED";
+
+private _towerBaseCount = 2 + floor (random 2); // 2-3 guards at base
+for "_i" from 1 to _towerBaseCount do {
+    private _bp = [_bigTowerWorldPos, 3, 14, 3, 0, 0.3, 0] call BIS_fnc_findSafePos;
+    if (_bp isEqualTo [0,0,0] || {surfaceIsWater _bp}) then { _bp = _bigTowerWorldPos getPos [6 + random 6, _i * 90]; };
+    private _bu = _grpTowerBase createUnit [selectRandom _infPool, _bp, [], 0, "FORM"];
+    _bu allowFleeing 0;
+    _bu setSkill 0.45;
+    DYN_naval_enemies pushBack _bu;
+};
+// Short patrol loop around the tower base
+for "_w" from 1 to 4 do {
+    private _bwp = _grpTowerBase addWaypoint [_bigTowerWorldPos getPos [10, _w * 90], 8];
+    _bwp setWaypointType "MOVE";
+    _bwp setWaypointSpeed "LIMITED";
+};
+(_grpTowerBase addWaypoint [_bigTowerWorldPos, 0]) setWaypointType "CYCLE";
+
+diag_log format ["[NAVAL-ARTY] Tower base guards: %1", _towerBaseCount];
 
 private _grpSmallTower = createGroup east;
 DYN_naval_enemyGroups pushBack _grpSmallTower;
