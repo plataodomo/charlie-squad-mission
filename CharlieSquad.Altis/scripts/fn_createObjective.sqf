@@ -310,7 +310,7 @@ if !(_waterProbe isEqualTo []) then {
     waitUntil {
         sleep 5;
         if ((diag_tickTime - _aoStartT) < 20) exitWith { false };
-        if ((count DYN_AO_sideTasks) < 3) exitWith { false };
+        if ((count DYN_AO_sideTasks) < 1) exitWith { false };
         private _sideDone = ({ [_x] call BIS_fnc_taskCompleted } count DYN_AO_sideTasks) == count DYN_AO_sideTasks;
         private _jamDone = missionNamespace getVariable ["DYN_gpsJammerDisabled", true];
         private _killReq = missionNamespace getVariable ["DYN_AO_killRequired", 0.60];
@@ -334,6 +334,8 @@ if !(_waterProbe isEqualTo []) then {
     [_liberationRep, format ["%1 Liberated", _cityName]] call DYN_fnc_changeReputation;
 
     { if !([_x] call BIS_fnc_taskCompleted) then { [_x, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _x]; }; } forEach DYN_AO_bonusTasks;
+    { [_x] call BIS_fnc_deleteTask } forEach DYN_AO_sideTasks;
+    DYN_AO_sideTasks = [];
     { if (!isNull _x) then { _x hideObjectGlobal false; _x setVariable ["DYN_hiddenByAO", false, false]; }; } forEach DYN_AO_hiddenTerrain;
     DYN_AO_hiddenTerrain = [];
 
