@@ -528,6 +528,7 @@ for "_i" from 1 to _vehCount do {
     private _spawnPos = getPos _road;
 
     if ((_spawnPos distance2D _aoPos) > _aoRadius) then { continue; };
+    if (surfaceIsWater _spawnPos) then { continue; };
 
     private _vehType = selectRandom _vehPool;
     private _veh = createVehicle [_vehType, _spawnPos, [], 0, "NONE"];
@@ -563,6 +564,7 @@ if ((random 1) < _tankChance && {!(_aoRoads isEqualTo [])}) then {
     private _spawnPos = getPos _road;
 
     if ((_spawnPos distance2D _aoPos) <= _aoRadius) then {
+        if (surfaceIsWater _spawnPos) then { continue; };
         private _tank = createVehicle [_tankClass, _spawnPos, [], 0, "NONE"];
         _tank setDir (getDir _road);
         _tank setVectorUp (surfaceNormal _spawnPos);

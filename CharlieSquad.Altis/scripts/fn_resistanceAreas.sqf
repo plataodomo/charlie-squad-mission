@@ -392,14 +392,20 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     _vehGrp setSpeedMode "LIMITED";
 
     private _vDriver = _vehGrp createUnit ["CUP_O_RU_Soldier_Ratnik_Autumn", _vehSpawnPos, [], 0, "NONE"];
-    _vDriver moveInDriver _veh;
-    _vDriver allowFleeing 0;
-    _areaEnemies pushBack _vDriver;
+    if (!isNull _vDriver) then {
+        _vDriver moveInDriver _veh;
+        _vDriver allowFleeing 0;
+        _vDriver setSkill (0.35 + random 0.15);
+        _areaEnemies pushBack _vDriver;
+    };
 
     private _vGunner = _vehGrp createUnit [selectRandom _infantryPool, _vehSpawnPos, [], 0, "NONE"];
-    _vGunner moveInGunner _veh;
-    _vGunner allowFleeing 0;
-    _areaEnemies pushBack _vGunner;
+    if (!isNull _vGunner) then {
+        _vGunner moveInGunner _veh;
+        _vGunner allowFleeing 0;
+        _vGunner setSkill (0.35 + random 0.15);
+        _areaEnemies pushBack _vGunner;
+    };
 
     // Road patrol loop around the area
     for "_w" from 1 to 4 do {
