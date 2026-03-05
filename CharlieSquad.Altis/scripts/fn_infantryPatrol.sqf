@@ -496,6 +496,7 @@ for "_i" from 1 to _infCount do {
 
     if (_spawnPos isEqualTo [0,0,0]) then { continue; };
     if ((_spawnPos distance2D _aoPos) > _aoRadius) then { continue; };
+    if (surfaceIsWater _spawnPos) then { continue; };
 
     private _grp = createGroup east;
     DYN_AO_enemyGroups pushBack _grp;
@@ -675,6 +676,7 @@ for "_i" from 1 to _sniperSquadCount do {
     };
     if (_bestPos isEqualTo [0,0,0]) then { continue; };
     if ((_bestPos distance2D _aoPos) > _aoRadius) then { continue; };
+    if (surfaceIsWater _bestPos) then { continue; };
 
     private _grp = createGroup east;
     DYN_AO_enemyGroups pushBack _grp;
@@ -762,6 +764,7 @@ for "_i" from 1 to _loneWolfCount do {
     };
     if (_bestPos isEqualTo [0,0,0]) then { continue };
     if ((_bestPos distance2D _aoPos) > _aoRadius) then { continue };
+    if (surfaceIsWater _bestPos) then { continue };
 
     private _grp = createGroup east;
     DYN_AO_enemyGroups pushBack _grp;

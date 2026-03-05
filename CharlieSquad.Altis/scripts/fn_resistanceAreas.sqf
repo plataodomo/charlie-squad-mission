@@ -15,7 +15,9 @@ private _infantryPool = [
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn",
-    "CUP_O_RU_Soldier_Marksman_Ratnik_Autumn"
+    "CUP_O_RU_Soldier_Marksman_Ratnik_Autumn",
+    "CUP_O_RUS_M_Soldier_HAT_Ratnik_Autumn",
+    "CUP_O_RUS_M_Soldier_AA_Ratnik_Autumn"
 ];
 
 // =====================================================
@@ -368,6 +370,46 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         _wp setWaypointCombatMode "RED";
     };
     (_patrol2Grp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+
+    // --- Light vehicle patrol ---
+    private _vehPool = ["CUP_O_UAZ_MG_RU", "CUP_O_GAZ_Vodnik_PK_RU"];
+    private _vehClass = selectRandom _vehPool;
+    private _vehSpawnPos = [_lPos, 20, 90, 4, 0, 0.5, 0] call BIS_fnc_findSafePos;
+    if (_vehSpawnPos isEqualTo [0,0,0] || {surfaceIsWater _vehSpawnPos}) then {
+        _vehSpawnPos = _lPos getPos [40, random 360];
+    };
+
+    private _veh = createVehicle [_vehClass, _vehSpawnPos, [], 0, "NONE"];
+    _veh setDir (random 360);
+    _veh setFuel 1;
+    _veh lock 2;
+    if (!isNil "DYN_AO_objects") then { DYN_AO_objects pushBack _veh; };
+
+    private _vehGrp = createGroup east;
+    _areaGroups pushBack _vehGrp;
+    _vehGrp setBehaviour "AWARE";
+    _vehGrp setCombatMode "RED";
+    _vehGrp setSpeedMode "LIMITED";
+
+    private _vDriver = _vehGrp createUnit ["CUP_O_RU_Soldier_Ratnik_Autumn", _vehSpawnPos, [], 0, "NONE"];
+    _vDriver moveInDriver _veh;
+    _vDriver allowFleeing 0;
+    _areaEnemies pushBack _vDriver;
+
+    private _vGunner = _vehGrp createUnit [selectRandom _infantryPool, _vehSpawnPos, [], 0, "NONE"];
+    _vGunner moveInGunner _veh;
+    _vGunner allowFleeing 0;
+    _areaEnemies pushBack _vGunner;
+
+    // Road patrol loop around the area
+    for "_w" from 1 to 4 do {
+        private _vwp = [_lPos, 50, 200, 4, 0, 0.5, 0] call BIS_fnc_findSafePos;
+        if (_vwp isEqualTo [0,0,0] || {surfaceIsWater _vwp}) then { _vwp = _lPos getPos [80 + random 80, _w * 90]; };
+        private _wp = _vehGrp addWaypoint [_vwp, 0];
+        _wp setWaypointType "MOVE";
+        _wp setWaypointSpeed "LIMITED";
+    };
+    (_vehGrp addWaypoint [_vehSpawnPos, 0]) setWaypointType "CYCLE";
 
     // --- Intel laptop ---
     private _lapPos = [];
