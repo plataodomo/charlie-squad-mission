@@ -139,7 +139,8 @@ while {true} do {
     private _missions = [
         "scripts\groundMissions\fn_sniperHunt.sqf",
         "scripts\groundMissions\fn_convoyIntercept.sqf",
-        "scripts\groundMissions\fn_captureArmsDealer.sqf"
+        "scripts\groundMissions\fn_captureArmsDealer.sqf",
+        "scripts\groundMissions\fn_civilianTruckRepair.sqf"
     ];
 
     private _pick = selectRandom _missions;
