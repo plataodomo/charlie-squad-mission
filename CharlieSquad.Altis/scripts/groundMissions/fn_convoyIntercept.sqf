@@ -111,11 +111,12 @@ private _fn_findAheadIdx = {
     _ahead
 };
 
-// 20m completion radius — smooth progression through waypoints, no hunting between nearby guide points
+// 75m minimum spacing — keeps route lean; AI only needs general direction guides between points
 private _fn_refreshWPs = {
     params ["_grp","_rt","_fromIdx","_bhv","_cbt","_spd"];
     for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
-    for "_w" from _fromIdx to ((count _rt)-1) do {
+    private _endIdx = (_fromIdx + 8) min ((count _rt) - 1);
+    for "_w" from _fromIdx to _endIdx do {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
         _wp setWaypointBehaviour _bhv; _wp setWaypointCombatMode _cbt;
@@ -142,7 +143,8 @@ private _fn_assignInitialWPs = {
     };
     if (!_foundAhead) then { _startIdx = (_closest + 2) min ((count _rt)-1) };
     for "_wpDel" from (count waypoints _grp - 1) to 0 step -1 do {deleteWaypoint [_grp,_wpDel]};
-    for "_w" from _startIdx to ((count _rt)-1) do {
+    private _endIdx = (_startIdx + 8) min ((count _rt) - 1);
+    for "_w" from _startIdx to _endIdx do {
         private _wp = _grp addWaypoint [_rt select _w, 5];
         _wp setWaypointType "MOVE"; _wp setWaypointSpeed _spd;
         _wp setWaypointBehaviour _bhv; _wp setWaypointCombatMode _cbt;
@@ -280,7 +282,7 @@ private _fn_spawnGazPickup = {
     [_gaz, _gazGrp]
 };
 
-// 50m minimum spacing — fewer total waypoints; forceFollowRoad handles road curves between points
+// 75m minimum spacing — fewer total waypoints; AI direction guides only, not every road node
 private _fn_buildRoadRoute = {
     params ["_startPos","_endPos"];
     private _route = [];
@@ -310,7 +312,7 @@ private _fn_buildRoadRoute = {
                     if (_bnd < _bestD) then {_bestD=_bnd; _bestR=_x};
                 } forEach _cands;
                 _cur = _bestR; _curP = getPos _cur; _visited pushBack _cur;
-                if (_curP distance2D (_route select (count _route - 1)) > 30) then { _route pushBack _curP };
+                if (_curP distance2D (_route select (count _route - 1)) > 75) then { _route pushBack _curP };
             };
         };
         if (_s % 15 == 0) then { sleep 0.05 };
