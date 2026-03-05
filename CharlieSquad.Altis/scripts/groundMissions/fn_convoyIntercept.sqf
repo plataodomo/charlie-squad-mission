@@ -176,11 +176,13 @@ private _fn_getTurnSpeed = {
     };
     private _effectiveTurn = _maxTurn max _weightedTurn;
     // 6-tier graduated speed: hairpin → gentle curve → straight
-    if (_effectiveTurn > 100) exitWith { 8 };
-    if (_effectiveTurn > 75) exitWith { 14 };
-    if (_effectiveTurn > 55) exitWith { 22 };
-    if (_effectiveTurn > 40) exitWith { 32 };
-    if (_effectiveTurn > 25) exitWith { 55 };
+    // Route is sampled at 75m spacing, so normal road curves/intersections easily produce
+    // 40-60° angles — limits are calibrated for that granularity, not actual road severity
+    if (_effectiveTurn > 100) exitWith { 14 };
+    if (_effectiveTurn > 75)  exitWith { 28 };
+    if (_effectiveTurn > 55)  exitWith { 45 };
+    if (_effectiveTurn > 40)  exitWith { 60 };
+    if (_effectiveTurn > 25)  exitWith { 80 };
     150
 };
 
@@ -661,7 +663,10 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
         if (!isServer) exitWith {};
         private _lastPos = getPos _veh; private _stuckTime = 0; private _recoveries = 0;
         private _label = typeOf _veh; private _l1Done = false; private _l2Done = false;
-        sleep 15; _lastPos = getPos _veh;
+        // 30s warmup: lets convoy naturally spread to road spacing before limitSpeed engages.
+        // 15s was too short — ZSU would clear the first turn and hit full speed while rear
+        // vehicles were still crawling through it, causing the slinky desync.
+        sleep 30; _lastPos = getPos _veh;
         while {!isNull _veh && alive _veh && canMove _veh && !isNull _truck && alive _truck} do {
             sleep 3; [_veh] call _fnEject;
             private _drv = driver _veh;
@@ -725,7 +730,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
     if (!isServer) exitWith {};
     private _takenByPlayer = false; private _lastPos = getPos _truck;
     private _stuckTime = 0; private _recoveries = 0; private _l1Done = false; private _l2Done = false;
-    sleep 15; _lastPos = getPos _truck;
+    sleep 30; _lastPos = getPos _truck;
     while {!isNull _truck && alive _truck && canMove _truck} do {
         sleep 3; if (isNull _truck || !alive _truck) exitWith {};
         [_truck] call _fnEject;
