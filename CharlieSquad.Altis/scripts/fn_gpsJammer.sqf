@@ -501,4 +501,51 @@ DYN_AO_objects pushBack _helper;
 
 [_helper] remoteExec ["DYN_fnc_addGPSJammerHoldAction", 0, true];
 
+// =====================================================
+// CLIENT-SIDE GPS SUPPRESSION
+// When the jammer is active, players inside the AO zone lose GPS.
+// Unassigning ItemGPS removes the HUD widget AND stops the player
+// from appearing on other players' GPS — covers vanilla GPS and C-TAB.
+// =====================================================
+DYN_fnc_startGPSJamEffect = {
+    params ["_jamCenter", "_jamRad"];
+    if (!hasInterface) exitWith {};
+
+    [_jamCenter, _jamRad] spawn {
+        params ["_center", "_rad"];
+
+        private _suppressed = [];  // Items we unassigned for this player
+
+        while { !missionNamespace getVariable ["DYN_gpsJammerDisabled", true] } do {
+            sleep 3;
+            if (!alive player) exitWith {};
+
+            private _inZone = player distance2D _center < _rad;
+
+            if (_inZone && _suppressed isEqualTo []) then {
+                // Enter zone: unassign all GPS-capable items
+                private _toSuppress = assignedItems player select {
+                    _x in ["ItemGPS", "ItemcTabletBig", "ItemcTablet"]
+                };
+                { player unassignItem _x; } forEach _toSuppress;
+                _suppressed = _toSuppress;
+            };
+
+            if (!_inZone && !(_suppressed isEqualTo [])) then {
+                // Left zone: restore items
+                { player assignItem _x; } forEach _suppressed;
+                _suppressed = [];
+            };
+        };
+
+        // Jammer disabled — restore any suppressed items
+        if (!(_suppressed isEqualTo []) && alive player) then {
+            { player assignItem _x; } forEach _suppressed;
+        };
+    };
+};
+publicVariable "DYN_fnc_startGPSJamEffect";
+
+[_aoPos, _aoRadius] remoteExec ["DYN_fnc_startGPSJamEffect", 0];
+
 diag_log format ["[GPS] Jammer spawned at %1, helper offset 1m in front at %2", _jamPos, _helperWorldPos];

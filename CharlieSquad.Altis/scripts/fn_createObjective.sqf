@@ -101,8 +101,18 @@ for "_i" from 0 to (_useCount - 1) do {
     for "_u" from 1 to (3 + floor (random 3)) do {
         private _p = selectRandom _positions;
         private _unit = _grp createUnit [selectRandom _garrisonPool, _p, [], 0, "NONE"];
+        // PATH disabled while AWARE so units hold their building positions
         _unit disableAI "PATH"; _unit setUnitPos (selectRandom ["UP","MIDDLE"]); _unit allowFleeing 0;
         DYN_AO_enemies pushBack _unit;
+    };
+    // When group enters COMBAT (spotted players / took fire), enable PATH so
+    // units can exit the building and engage rather than staying frozen inside
+    [_grp] spawn {
+        params ["_g"];
+        waitUntil { sleep 2; isNull _g || !(alive leader _g) || behaviour leader _g == "COMBAT" };
+        if (!isNull _g && alive leader _g) then {
+            { if (alive _x) then { _x enableAI "PATH"; }; } forEach units _g;
+        };
     };
 };
 
