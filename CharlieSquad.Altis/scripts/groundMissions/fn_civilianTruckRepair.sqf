@@ -78,34 +78,47 @@ diag_log format ["[GROUND-REPAIR] Variant: %1 | Civ injured: %2",
     if (_isAmbush) then {"AMBUSH"} else {"PEACEFUL"}, _civIsInjured];
 
 // =====================================================
-// 2. FIND MISSION POSITION (town / settlement)
+// 2. FIND MISSION POSITION (named village / city)
 // =====================================================
 private _missionPos = [];
 private _mapSz = worldSize;
 
-for "_i" from 1 to 400 do {
-    private _x = 300 + random (_mapSz - 600);
-    private _y = 300 + random (_mapSz - 600);
-    private _p = [_x, _y, 0];
+// Prefer named map locations — they are guaranteed to have settlements
+private _allLocs = nearestLocations [[_mapSz / 2, _mapSz / 2, 0],
+    ["NameCity", "NameCityCapital", "NameVillage"], _mapSz];
+private _shuffledLocs = _allLocs call BIS_fnc_arrayShuffle;
 
-    if (surfaceIsWater _p) then { continue };
-    if (_p distance2D _basePos < 2000) then { continue };
+{
+    private _lPos = locationPosition _x;
+    if (surfaceIsWater _lPos) then { continue };
+    if (_lPos distance2D _basePos < 2000) then { continue };
     if !(_aoCenter isEqualTo [0,0,0]) then {
-        if (_p distance2D _aoCenter < 1500) then { continue };
+        if (_lPos distance2D _aoCenter < 1500) then { continue };
     };
+    if (count (_lPos nearRoads 120) == 0) then { continue };
+    if (count (nearestObjects [_lPos, ["House", "Building"], 150]) < 6) then { continue };
 
-    if (count (_p nearRoads 80) == 0) then { continue };
-    if (count (nearestObjects [_p, ["House", "Building"], 120]) < 3) then { continue };
-
-    private _heights = [];
-    {
-        private _chkPos = [_p, 30, _x] call DYN_fnc_posOffset;
-        _heights pushBack (getTerrainHeightASL _chkPos);
-    } forEach [0, 90, 180, 270];
-    if ((selectMax _heights) - (selectMin _heights) > 5) then { continue };
-
-    _missionPos = _p;
+    _missionPos = _lPos;
     break;
+} forEach _shuffledLocs;
+
+// Fallback: random point search if no named location qualified
+if (_missionPos isEqualTo []) then {
+    diag_log "[GROUND-REPAIR] No named location found — falling back to random search.";
+    for "_i" from 1 to 400 do {
+        private _rx = 300 + random (_mapSz - 600);
+        private _ry = 300 + random (_mapSz - 600);
+        private _p  = [_rx, _ry, 0];
+        if (surfaceIsWater _p) then { continue };
+        if (_p distance2D _basePos < 2000) then { continue };
+        if !(_aoCenter isEqualTo [0,0,0]) then {
+            if (_p distance2D _aoCenter < 1500) then { continue };
+        };
+        if (count (_p nearRoads 80) == 0) then { continue };
+        if (count (nearestObjects [_p, ["House", "Building"], 150]) < 6) then { continue };
+        _missionPos = _p;
+        break;
+    };
 };
 
 if (_missionPos isEqualTo []) exitWith {
@@ -234,7 +247,7 @@ if (_isAmbush) then {
     private _allHouses   = nearestObjects [_missionPos, ["House", "Building"], 150];
     private _validHouses = _allHouses select { count ([_x, 0] call BIS_fnc_buildingPositions) > 0 };
 
-    private _enemyCount = 4 + floor (random 5);
+    private _enemyCount = 8 + floor (random 5);  // 8-12 enemies
 
     for "_i" from 1 to _enemyCount do {
         private _spawnPos = [];
@@ -402,8 +415,6 @@ private _localMarkers = +DYN_ground_markers;
                     _wp setWaypointType "SAD";
                 };
 
-                ["GroundMission", ["Ambush! Enemy forces have broken from cover."]]
-                    remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-REPAIR] AMBUSH triggered.";
             };
         };
@@ -444,9 +455,27 @@ private _localMarkers = +DYN_ground_markers;
                 _truckSucceeded = true;
                 [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 [_repRepair, "Civilian Truck Repaired"] call DYN_fnc_changeReputation;
-                ["TaskSucceeded", ["Vehicle Operational", format ["+%1 REP. Vehicle is mobile. Good work.", _repRepair]]]
-                    remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log format ["[GROUND-REPAIR] SUCCESS. Truck repaired. +%1 rep.", _repRepair];
+
+                // Civilian gets back in truck and drives away
+                [_truck, _civilian] spawn {
+                    params ["_veh", "_civ"];
+                    sleep 4;
+                    if (isNull _civ || isNull _veh) exitWith {};
+                    _civ setUnitPos "AUTO";
+                    _civ enableAI "MOVE";
+                    _civ enableAI "PATH";
+                    _veh setFuel 0.9;
+                    _veh setHit ["HitEngine", 0.05];
+                    _civ moveInDriver _veh;
+                    _veh engineOn true;
+                    private _drivePos = [getPos _veh, 800 + random 400, random 360] call DYN_fnc_posOffset;
+                    _civ doMove _drivePos;
+                    diag_log "[GROUND-REPAIR] Civilian driver heading out.";
+                    sleep 90;
+                    if (!isNull _civ) then { deleteVehicle _civ };
+                    if (!isNull _veh) then { deleteVehicle _veh };
+                };
 
                 sleep 30;
                 _done = true;
