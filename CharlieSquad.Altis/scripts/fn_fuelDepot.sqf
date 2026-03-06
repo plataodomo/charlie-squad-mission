@@ -189,7 +189,7 @@ DYN_AO_sideTasks pushBack _depotTaskId;
 // -----------------------------------------------------
 // Placement helpers
 // -----------------------------------------------------
-private _origCenter = [23351.5, 17381.3];
+private _origCenter = [23353.0, 17382.0];
 
 private _barrierClasses = [
     "Land_HBarrier_Big_F",
@@ -295,17 +295,22 @@ private _fn_settleTarget = {
 
         if (_delay > 0) then { sleep _delay; };
 
-        // Place on terrain with surfaceNormal — sits naturally on slopes
+        // Place on terrain — vehicles use ATL setPos, pods use ASL+offset
         private _posXY = getPos _v;
         private _dir = vectorDir _v;
-        private _upVec = surfaceNormal _posXY;
-        private _terrZ = getTerrainHeightASL _posXY;
 
-        // LandVehicle model origin sits ~1-1.5m above the axle line;
-        // 0.35 drops the wheels underground → explosion on sim enable.
-        private _heightOffset = if (_v isKindOf "LandVehicle") then { 1.5 } else { 0.35 };
-        _v setPosASL [_posXY#0, _posXY#1, _terrZ + _heightOffset];
-        _v setVectorDirAndUp [_dir, _upVec];
+        if (_v isKindOf "LandVehicle") then {
+            // ATL z=1.15 puts the Kamaz model origin at wheel height above terrain.
+            // Using surfaceNormal caused wheel clipping on slopes → stick to flat [0,0,1].
+            // The small drop when sim enables is ~zero, so no impact explosion.
+            _v setPos [_posXY#0, _posXY#1, 1.15];
+            _v setVectorDir _dir;
+        } else {
+            private _upVec = surfaceNormal _posXY;
+            private _terrZ = getTerrainHeightASL _posXY;
+            _v setPosASL [_posXY#0, _posXY#1, _terrZ + 0.35];
+            _v setVectorDirAndUp [_dir, _upVec];
+        };
         _v setVelocity [0,0,0];
 
         // Let engine register the position
@@ -389,23 +394,23 @@ private _struct = [
     ["Land_HBarrier_Big_F", 23330.8,17397.0, [-0.99584,-0.0911162,0], 4.4, true],
 
     // North wall
-    ["Land_HBarrier_Big_F", 23335.6,17400.7, [ 0.0689602,-0.997619,0], 4.4, true],
-    ["Land_HBarrier_Big_F", 23341.9,17401.3, [ 0.0689602,-0.997619,0], 4.4, true],
-    ["Land_HBarrier_Big_F", 23355.7,17399.4, [-0.999591,-0.028612,0],  4.4, true],
+    ["Land_HBarrier_Big_F", 23333.6,17400.5, [ 0.0689602,-0.997619,0], 4.4, true],
+    ["Land_HBarrier_Big_F", 23342.0,17401.1, [ 0.0689602,-0.997619,0], 4.4, true],
+    ["Land_HBarrier_Big_F", 23355.6,17399.5, [-0.999591,-0.028612,0],  4.4, true],
 
     // Interior dividers
     ["Land_HBarrier_Big_F", 23354.1,17367.4, [-0.999591,-0.028612,0],  4.4, true],
-    ["Land_HBarrier_Big_F", 23345.4,17396.7, [-0.999591,-0.028612,0],  4.4, true],
+    ["Land_HBarrier_Big_F", 23345.5,17396.4, [-0.999591,-0.028612,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23338.4,17378.0, [-0.142454, 0.989801,0],  4.4, true],
     ["Land_HBarrier_Big_F", 23346.8,17379.3, [-0.104767, 0.994497,0],  4.4, true],
 
-    // Interior small/medium barriers (new in this layout)
+    // Interior small/medium barriers
     ["Land_HBarrier_3_F",   23357.1,17386.4, [-0.989788,-0.14255,0],   3.98834, true],
     ["Land_HBarrier_5_F",   23356.4,17390.7, [-0.988904,-0.148558,0],  3.93051, true],
-    ["Land_HBarrier_5_F",   23346.3,17389.7, [-0.988904,-0.148558,0],  3.93051, true],
+    ["Land_HBarrier_5_F",   23346.3,17389.5, [-0.988904,-0.148558,0],  3.93051, true],
 
     // Buildings & gate
-    ["Land_Shed_Small_F", 23368.5,17381.6, [ 0.0923531,-0.995726,0], 5.32135, true],
+    ["Land_Shed_Small_F", 23368.6,17381.1, [ 0.0923531,-0.995726,0], 5.32135, true],
     ["Land_Shed_Big_F",   23338.9,17389.7, [-0.104077,  0.994569,0], 6.56814, true],
     ["Land_BarGate_F",    23350.1,17403.5, [-0.103099,  0.994671,0], 7.24028, true]
 ];
@@ -457,16 +462,16 @@ private _depotTargets = [];
 private _podSpots = [
     ["Land_Pod_Heli_Transport_04_fuel_F", 23341.1,17395.9, [ 0.0895167,-0.995985,0],  4.5098],
     ["Land_Pod_Heli_Transport_04_fuel_F", 23335.4,17395.1, [ 0.0890577,-0.996026,0],  4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.7,17389.9, [ 0.0959322,-0.995388,0],  4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.3,17383.5, [ 0.0959322,-0.995388,0],  4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.5,17377.8, [-0.998849, -0.0479624,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.8,17374.4, [-0.999069, -0.0431304,0], 4.5098],
-    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.2,17370.9, [-0.996757, -0.0804717,0], 4.5098]
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.9,17390.4, [ 0.0959322,-0.995388,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.4,17383.0, [ 0.0959322,-0.995388,0],  4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.5,17377.6, [-0.994909,-0.100775,0],   4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23368.8,17373.7, [-0.994673,-0.103077,0],   4.5098],
+    ["Land_Pod_Heli_Transport_04_fuel_F", 23369.3,17370.1, [-0.996757,-0.0804717,0],  4.5098]
 ] call BIS_fnc_arrayShuffle;
 
 private _truckSpots = [
-    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23357.0,17370.9, [-0.107909, 0.994161,0], 5.33867],
-    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23361.6,17371.2, [-0.107909, 0.994161,0], 5.33867]
+    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23342.8,17382.7, [ 0.992636, 0.121135,0], 5.33867],
+    ["CUP_O_Kamaz_6396_fuel_RUS_M", 23360.3,17370.3, [-0.107909, 0.994161,0], 5.33867]
 ] call BIS_fnc_arrayShuffle;
 
 private _podCount   = (2 + floor (random 3)) min (count _podSpots);
@@ -569,8 +574,9 @@ _interiorGrp setSpeedMode "LIMITED";
 
 private _interiorCount = 6 + floor (random 4);  // 6-9 guards inside
 for "_i" from 1 to _interiorCount do {
-    private _p = [_depotPos, 5, 35, 3, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_p isEqualTo [0,0,0] || {surfaceIsWater _p}) then { _p = _depotPos getPos [10 + random 20, random 360]; };
+    // Direct placement within compound — BIS_fnc_findSafePos avoids barriers
+    // and consistently places units OUTSIDE the walls instead of inside.
+    private _p = _depotPos getPos [5 + random 22, random 360];
     private _u = _interiorGrp createUnit [selectRandom _guardPool, _p, [], 0, "FORM"];
     _u allowFleeing 0;
     _u setSkill (0.40 + random 0.15);
@@ -579,8 +585,7 @@ for "_i" from 1 to _interiorCount do {
 
 // Tight patrol loop that stays well inside the compound walls
 for "_w" from 1 to 5 do {
-    private _wpPos = [_depotPos, 5, 32, 3, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if (_wpPos isEqualTo [0,0,0]) then { _wpPos = _depotPos getPos [15 + random 15, _w * 72]; };
+    private _wpPos = _depotPos getPos [8 + random 18, _w * 72];
     private _wp = _interiorGrp addWaypoint [_wpPos, 10];
     _wp setWaypointType "MOVE";
     _wp setWaypointSpeed "LIMITED";
