@@ -173,6 +173,7 @@ private _wreckPos = [];
 private _minDepth = 80;
 private _minDist = 1500;
 private _maxDist = 4000;
+private _mapSz = worldSize;
 
 diag_log "[NAVAL] Searching for deep water position...";
 
@@ -180,7 +181,12 @@ for "_attempt" from 1 to 200 do {
     private _dir = random 360;
     private _dist = _minDist + random (_maxDist - _minDist);
     private _testPos = [_basePos, _dist, _dir] call DYN_fnc_posOffset;
-    
+
+    // Bounds check — positions off the map edge return surfaceIsWater true but
+    // spawn vehicles at [0,0,0] (bottom-left corner of the map)
+    if (_testPos select 0 < 200 || _testPos select 0 > (_mapSz - 200)) then { continue };
+    if (_testPos select 1 < 200 || _testPos select 1 > (_mapSz - 200)) then { continue };
+
     if (!surfaceIsWater _testPos) then { continue };
     
     private _terrainZ = getTerrainHeightASL _testPos;
@@ -283,6 +289,7 @@ private _wreck = createVehicle ["CUP_MH47E_wreck2", [0,0,0], [], 0, "CAN_COLLIDE
 
 private _wreckDir = random 360;
 
+// Initial placement — will be corrected below after bounding box is known
 _wreck setPosASL [_actualWreckPos select 0, _actualWreckPos select 1, _seaFloorZ];
 _wreck setDir _wreckDir;
 
@@ -291,12 +298,22 @@ _wreck enableSimulationGlobal false;
 
 DYN_naval_objects pushBack _wreck;
 
-// Log bounding box for recorder placement
+// Get bounding box (local model space — unaffected by world position)
 private _bb = boundingBoxReal _wreck;
 private _bbMin = _bb select 0;
 private _bbMax = _bb select 1;
-diag_log format ["[NAVAL] Wreck BB - Min: %1, Max: %2, Height: %3m", 
-    _bbMin, _bbMax, (_bbMax select 2) - (_bbMin select 2)];
+
+// Belly depth: how far below the model origin the bottom of the wreck sits
+// e.g. _bbMin select 2 = -2.5 → belly is 2.5m below origin
+private _bellyDepth = abs (_bbMin select 2);
+
+// Reposition wreck so its belly sits ON the seafloor (not buried into it)
+// Add 0.15m clearance so it doesn't clip into terrain geometry
+private _correctedZ = _seaFloorZ + _bellyDepth + 0.15;
+_wreck setPosASL [_actualWreckPos select 0, _actualWreckPos select 1, _correctedZ];
+
+diag_log format ["[NAVAL] Wreck BB - Min: %1, Max: %2 | BellyDepth: %3m | CorrectedZ: %4 (seaFloor: %5)",
+    _bbMin, _bbMax, _bellyDepth, _correctedZ, _seaFloorZ];
 diag_log format ["[NAVAL] Wreck placed at ASL: %1", getPosASL _wreck];
 
 // =====================================================
@@ -306,10 +323,13 @@ sleep 1;
 
 private _recorder = createVehicle ["rhs_flightrecorder_assembled", [0,0,0], [], 0, "CAN_COLLIDE"];
 
+// Place recorder 1.5m above the belly in local model space
+// This puts it inside the wreck cabin, above the seafloor
 private _floorZ = (_bbMin select 2) + 1.5;
-private _attachOffset = [0, 1.0, _floorZ];
+private _attachOffset = [0, 0.5, _floorZ];
 
-diag_log format ["[NAVAL] Recorder attach offset: %1 (floor Z from BB: %2)", _attachOffset, _bbMin select 2];
+diag_log format ["[NAVAL] Recorder attach offset: %1 (belly at local Z %2, ~%3m above seafloor)",
+    _attachOffset, _bbMin select 2, round (_correctedZ + _floorZ - _seaFloorZ)];
 
 _recorder attachTo [_wreck, _attachOffset];
 

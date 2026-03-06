@@ -114,17 +114,21 @@ for "_i" from 1 to _boatCount do {
     _grp setSpeedMode "NORMAL";
 
     for "_w" from 1 to 5 do {
-        private _wpPos = [_waterCenter, 100, _patrolArea * 1.2, 30] call DYN_fnc_findNearbyWater;
-        if (_wpPos isEqualTo []) then {
-            _wpPos = [_waterCenter, 200 + random 400, _w * 72] call DYN_fnc_posOffset;
-        };
+        // Spread patrol waypoints evenly around water center at safe depth
+        private _wpPos = [_waterCenter, 150 + random 250, _w * 72] call DYN_fnc_posOffset;
+        // Skip waypoint if it landed on land — boats can't navigate there
+        if !(surfaceIsWater _wpPos) then { continue };
 
         private _wp = _grp addWaypoint [_wpPos, 0];
         _wp setWaypointType "MOVE";
         _wp setWaypointSpeed "NORMAL";
         _wp setWaypointBehaviour "AWARE";
     };
-    (_grp addWaypoint [_spawnPos, 0]) setWaypointType "CYCLE";
+    // CYCLE back to water center (guaranteed deep water) not spawn pos
+    (_grp addWaypoint [_waterCenter, 0]) setWaypointType "CYCLE";
+
+    // Kick off initial movement so boats don't sit idle at spawn
+    driver _boat doMove ([_waterCenter, 100 + random 200, random 360] call DYN_fnc_posOffset);
 };
 
 private _actualBoats = DYN_naval_enemyVehs select { !isNull _x && alive _x };
