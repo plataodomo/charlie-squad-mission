@@ -147,14 +147,14 @@ DYN_ground_objects pushBack _truck;
 
 diag_log format ["[GROUND-REPAIR] Truck spawned: %1 at %2", _truckClass, _truckPos];
 
-// Apply damage: one wheel destroyed + partial engine damage
-// Engine damage is too severe for full field repair — partial only.
+// Apply damage: one random wheel destroyed + partial engine + optional visual damage
 private _allHp   = getAllHitPointsDamage _truck;
 private _hpNames = _allHp select 0;
-private _wheelHp = "";
-{
-    if (_x find "Wheel" > -1 || _x find "wheel" > -1) exitWith { _wheelHp = _x; };
-} forEach _hpNames;
+
+// Collect ALL wheel hitpoints and pick one at random — previously exitWith always
+// selected the first wheel in config order (same wheel every mission).
+private _wheelHps = _hpNames select { _x find "Wheel" > -1 || _x find "wheel" > -1 };
+private _wheelHp  = if (count _wheelHps > 0) then { selectRandom _wheelHps } else { "" };
 
 if (_wheelHp != "") then {
     _truck setHitPointDamage [_wheelHp, 1.0];
@@ -164,7 +164,17 @@ if (_wheelHp != "") then {
     diag_log "[GROUND-REPAIR] No wheel hitpoint found — applied generic damage.";
 };
 
-_truck setHit ["HitEngine", 0.65];
+_truck setHitPointDamage ["HitEngine", 0.65];
+
+// Random secondary visual damage — broken glass or body dent for variety
+private _visualHps = _hpNames select {
+    _x find "Glass" > -1 || _x find "glass" > -1 ||
+    _x find "Body"  > -1 || _x find "body"  > -1
+};
+if (count _visualHps > 0) then {
+    _truck setHitPointDamage [selectRandom _visualHps, 0.7 + random 0.3];
+};
+
 _truck setVariable ["DYN_wheelHp", _wheelHp, false];
 
 diag_log format ["[GROUND-REPAIR] Truck damage after setup: %1", damage _truck];
@@ -426,12 +436,22 @@ private _localMarkers = +DYN_ground_markers;
 
             private _civHealed = false;
 
-            // Primary: ACE unconscious state cleared (default true = still injured)
-            if (!(_civilian getVariable ["ACE_isUnconscious", true])) then {
-                _civHealed = true;
+            // Require at least one player within 40m of the civilian —
+            // prevents the check from firing when nobody is on-site.
+            private _playerNearCiv = { alive _x && _x distance2D (getPos _civilian) < 40 } count allPlayers > 0;
+
+            if (_playerNearCiv) then {
+                // Primary: ACE unconscious state cleared (default true = still injured)
+                if (!(_civilian getVariable ["ACE_isUnconscious", true])) then {
+                    _civHealed = true;
+                };
+                // Fallback: vanilla damage only — ACE wounds do NOT raise vanilla damage,
+                // so this check must be skipped when ACE medical is loaded, otherwise it
+                // fires immediately after the 30s delay regardless of actual injury state.
+                if (!_civHealed && isNil "ace_medical_fnc_addDamageToUnit" && damage _civilian < 0.2) then {
+                    _civHealed = true;
+                };
             };
-            // Fallback: raw damage cleared (non-ACE)
-            if (!_civHealed && damage _civilian < 0.2) then { _civHealed = true; };
 
             if (_civHealed) then {
                 _civHealRewarded = true;
