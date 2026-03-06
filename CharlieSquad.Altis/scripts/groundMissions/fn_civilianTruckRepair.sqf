@@ -245,7 +245,7 @@ if (_isAmbush) then {
 
     // Pre-filter: only keep buildings that actually have interior slot positions
     private _allHouses   = nearestObjects [_missionPos, ["House", "Building"], 150];
-    private _validHouses = _allHouses select { count ([_x, 0] call BIS_fnc_buildingPositions) > 0 };
+    private _validHouses = _allHouses select { count ([_x] call BIS_fnc_buildingPositions) > 0 };
 
     private _enemyCount = 8 + floor (random 5);  // 8-12 enemies
 
@@ -256,7 +256,7 @@ if (_isAmbush) then {
         if (count _validHouses > 0) then {
             for "_t" from 1 to 10 do {
                 private _bldg     = selectRandom _validHouses;
-                private _bldgPos  = [_bldg, 0] call BIS_fnc_buildingPositions;
+                private _bldgPos  = [_bldg] call BIS_fnc_buildingPositions;
                 if (count _bldgPos > 0) exitWith { _spawnPos = selectRandom _bldgPos; };
             };
         };
@@ -488,7 +488,7 @@ private _localMarkers = +DYN_ground_markers;
 
                     if (alive _civ && vehicle _civ == _veh) then {
                         _veh engineOn true;
-                        private _drivePos = [getPos _veh, 800 + random 400, random 360] call DYN_fnc_posOffset;
+                        private _drivePos = [getPos _veh, 150 + random 100, random 360] call DYN_fnc_posOffset;
                         _civ doMove _drivePos;
                         diag_log "[GROUND-REPAIR] Civilian driver heading out.";
                     };
