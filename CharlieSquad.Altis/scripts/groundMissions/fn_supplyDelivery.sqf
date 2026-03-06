@@ -42,13 +42,13 @@ if (isNil "DYN_ground_tasks")       then { DYN_ground_tasks = [] };
 if (isNil "DYN_ground_markers")     then { DYN_ground_markers = [] };
 
 private _basePos        = getMarkerPos "respawn_west";
-private _deliveryMkrPos = getMarkerPos "Delivery";
+private _supplyMkrPos   = getMarkerPos "supply_delivery";
 private _aoCenter       = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
 
-// Fallback if Delivery marker is missing
-if (_deliveryMkrPos isEqualTo [0,0,0]) then {
-    _deliveryMkrPos = _basePos;
-    diag_log "[GROUND-SUPPLY] WARNING: 'Delivery' marker not found — falling back to respawn_west.";
+// Fallback if supply_delivery marker is missing
+if (_supplyMkrPos isEqualTo [0,0,0]) then {
+    _supplyMkrPos = _basePos;
+    diag_log "[GROUND-SUPPLY] WARNING: 'supply_delivery' marker not found — falling back to respawn_west.";
 };
 
 // =====================================================
@@ -131,13 +131,13 @@ diag_log format ["[GROUND-SUPPLY] Destination: '%1' at %2 (%3 m from base)",
     _destName, _destPos, round (_destPos distance2D _basePos)];
 
 // =====================================================
-// 3. SPAWN SUPPLY ITEMS at Delivery marker
+// 3. SPAWN SUPPLY ITEMS at supply_delivery marker
 // =====================================================
 private _supplyItems = [];
 {
-    // Spread items in a triangle around the Delivery marker
+    // Spread items in a triangle around the supply_delivery marker
     private _angle  = _forEachIndex * 120;
-    private _offset = [_deliveryMkrPos, 1.5 + random 1.0, _angle] call DYN_fnc_posOffset;
+    private _offset = [_supplyMkrPos, 1.5 + random 1.0, _angle] call DYN_fnc_posOffset;
     private _item   = createVehicle [_x, _offset, [], 0, "CAN_COLLIDE"];
     _item setDir (random 360);
 
@@ -155,58 +155,66 @@ private _supplyItems = [];
 } forEach _supplyClasses;
 
 // =====================================================
-// 4. SPAWN ENEMY INTERCEPT GROUPS along the route
+// 4. FIND AMBUSH TOWNS along the route (NO pre-spawn)
 // =====================================================
-// Sample positions at even intervals along the straight-line path from
-// base to destination, then snap each one to the nearest road.
-private _interceptCount = 2 + floor (random 2);  // 2 or 3 groups
+// Enemies only exist when players approach — zero map footprint until then.
+// We find named locations that sit within a 900 m corridor of the straight
+// line between base and destination.  When a player drives within 400 m of
+// one of these towns the ambush group is spawned inside the local buildings.
 
-private _routeSamples = [];
-for "_i" from 1 to 4 do {
-    private _t    = _i / 5.0;
-    private _sPos = [
-        (_basePos#0) + _t * ((_destPos#0) - (_basePos#0)),
-        (_basePos#1) + _t * ((_destPos#1) - (_basePos#1)),
-        0
-    ];
-    private _nearRds = _sPos nearRoads 350;
-    private _usePos  = if (count _nearRds > 0) then {
-        getPos (selectRandom _nearRds)
-    } else {
-        _sPos
-    };
-    if (!surfaceIsWater _usePos) then { _routeSamples pushBack _usePos; };
+// --- Parametric projection helpers (setup only, not passed to spawn) ---
+private _fn_projT = {
+    // Returns 0-1: where _p projects onto the _a→_b segment
+    params ["_p","_a","_b"];
+    private _dx = (_b#0) - (_a#0); private _dy = (_b#1) - (_a#1);
+    private _len2 = _dx*_dx + _dy*_dy;
+    if (_len2 < 1) exitWith { 0.0 };
+    (((_p#0)-(_a#0))*_dx + ((_p#1)-(_a#1))*_dy) / _len2
 };
-_routeSamples = _routeSamples call BIS_fnc_arrayShuffle;
-
-private _interceptData = [];  // [[group, triggerPos], ...]
-for "_i" from 0 to (_interceptCount - 1) do {
-    if (_i >= count _routeSamples) then { break; };
-    private _iPos = _routeSamples select _i;
-
-    private _grp = createGroup east;
-    DYN_ground_enemyGroups pushBack _grp;
-    _grp setBehaviour  "SAFE";
-    _grp setCombatMode "RED";
-
-    private _unitCount = 4 + floor (random 3);  // 4-6 per group
-    for "_u" from 1 to _unitCount do {
-        private _uPos = [_iPos, 5 + random 20, random 360] call DYN_fnc_posOffset;
-        if (surfaceIsWater _uPos) then { _uPos = _iPos; };
-        private _unit = _grp createUnit [selectRandom _enemyPool, _uPos, [], 0, "NONE"];
-        if (!isNull _unit) then {
-            _unit disableAI "MOVE";
-            _unit disableAI "PATH";
-            _unit disableAI "AUTOCOMBAT";
-            _unit allowFleeing 0;
-            _unit setSkill 0.45;
-            DYN_ground_enemies pushBack _unit;
-        };
-    };
-
-    _interceptData pushBack [_grp, _iPos];
-    diag_log format ["[GROUND-SUPPLY] Intercept group %1 ready at %2 (%3 units)", _i + 1, _iPos, _unitCount];
+private _fn_distToLine = {
+    // Perpendicular distance from _p to the finite segment _a→_b
+    params ["_p","_a","_b"];
+    private _t = ([_p,_a,_b] call _fn_projT) max 0.0 min 1.0;
+    private _cx = (_a#0) + _t*((_b#0)-(_a#0));
+    private _cy = (_a#1) + _t*((_b#1)-(_a#1));
+    _p distance2D [_cx,_cy,0]
 };
+
+// Gather all named locations that sit inside the route corridor
+private _ambushPoints = [];
+{
+    private _lPos = locationPosition _x;
+    if (surfaceIsWater _lPos) then { continue };
+    // Must be between 15 % and 85 % along the route (skip near base / dest)
+    private _t = [_lPos, _basePos, _destPos] call _fn_projT;
+    if (_t < 0.15 || _t > 0.85) then { continue };
+    // Must be within 900 m of the straight-line route
+    if (([_lPos, _basePos, _destPos] call _fn_distToLine) > 900) then { continue };
+    // Must have buildings so enemies can occupy them
+    if (count (nearestObjects [_lPos, ["House","Building"], 120]) < 3) then { continue };
+    _ambushPoints pushBack _lPos;
+} forEach (_allLocs call BIS_fnc_arrayShuffle);
+
+// Sort earliest-to-latest along the route and cap at 3 towns
+_ambushPoints = [_ambushPoints, [], { [_x, _basePos, _destPos] call _fn_projT }, "ASCEND"] call BIS_fnc_sortBy;
+if (count _ambushPoints > 3) then { _ambushPoints resize 3; };
+
+// Fallback: if no towns were in corridor, sample road points along the line
+if (count _ambushPoints == 0) then {
+    private _n = 2 + floor (random 2);
+    for "_i" from 1 to _n do {
+        private _t    = _i / (_n + 1.0);
+        private _sPos = [
+            (_basePos#0) + _t * ((_destPos#0) - (_basePos#0)),
+            (_basePos#1) + _t * ((_destPos#1) - (_basePos#1)), 0
+        ];
+        private _nearRds = _sPos nearRoads 400;
+        _ambushPoints pushBack (if (count _nearRds > 0) then { getPos (selectRandom _nearRds) } else { _sPos });
+    };
+    diag_log "[GROUND-SUPPLY] No route towns in corridor — using road-point fallback.";
+};
+
+diag_log format ["[GROUND-SUPPLY] %1 ambush point(s) identified along route.", count _ambushPoints];
 
 // =====================================================
 // 5. TASK + MARKERS
@@ -225,14 +233,13 @@ _mkrDest setMarkerAlpha  0.25;
 _mkrDest setMarkerText   format ["Drop-off: %1", _destName];
 DYN_ground_markers pushBack _mkrDest;
 
-// Orange supply pickup indicator at base
-createMarker [_mkrBase, _deliveryMkrPos];
-_mkrBase setMarkerShape  "ELLIPSE";
-_mkrBase setMarkerSize   [25, 25];
-_mkrBase setMarkerColor  "ColorOrange";
-_mkrBase setMarkerBrush  "SolidFull";
-_mkrBase setMarkerAlpha  0.25;
-_mkrBase setMarkerText   "Supply Pickup";
+// Small icon marker at supply_delivery — task-style, not a zone
+createMarker [_mkrBase, _supplyMkrPos];
+_mkrBase setMarkerShape "ICON";
+_mkrBase setMarkerType  "hd_dot";
+_mkrBase setMarkerColor "ColorOrange";
+_mkrBase setMarkerAlpha 0.9;
+_mkrBase setMarkerText  "Pick up supplies here";
 DYN_ground_markers pushBack _mkrBase;
 
 [
@@ -261,28 +268,29 @@ diag_log format ["[GROUND-SUPPLY] Task '%1' created. Destination: %2", _taskId, 
 // 6. MONITORING
 // =====================================================
 private _localObjects = +DYN_ground_objects;
-private _localEnemies = +DYN_ground_enemies;
-private _localGroups  = +DYN_ground_enemyGroups;
 private _localMarkers = +DYN_ground_markers;
+// No pre-spawned enemies — groups/units are created dynamically inside the spawn block
 
 [
-    _supplyItems, _interceptData, _destPos, _dropRadius,
+    _supplyItems, _ambushPoints, _enemyPool, _destPos, _dropRadius,
     _taskId, _timeout, _cleanupDelay, _repReward,
-    _destName, _localObjects, _localEnemies, _localGroups, _localMarkers
+    _destName, _localObjects, _localMarkers
 ] spawn {
     params [
-        "_items", "_interceptData", "_dPos", "_dRadius",
+        "_items", "_ambushPoints", "_ePool", "_dPos", "_dRadius",
         "_tid", "_tOut", "_despawnDelay", "_rep",
-        "_dName", "_lObjects", "_lEnemies", "_lGroups", "_lMarkers"
+        "_dName", "_lObjects", "_lMarkers"
     ];
 
-    private _startTime     = diag_tickTime;
-    private _done          = false;
-    private _activatedGrps = [];
+    private _startTime       = diag_tickTime;
+    private _done            = false;
+    private _triggeredPoints = [];  // ambush positions already activated
+    private _dynGroups       = [];  // groups spawned dynamically, cleaned up at end
+    private _dynEnemies      = [];  // units spawned dynamically
 
-    // Returns true if the item has been unloaded physically inside the drop-off zone.
-    // An item still loaded in ACE cargo keeps its original world position (base),
-    // so the distance check naturally fails until it is actually unloaded on-site.
+    // True when an item has been physically unloaded inside the drop-off zone.
+    // ACE cargo freezes a loaded item's world position at its base spawn point,
+    // so the distance check fails naturally until the crate is actually set down.
     private _fn_itemDelivered = {
         params ["_item", "_dPos", "_dR"];
         if (isNull _item) exitWith { false };
@@ -303,41 +311,63 @@ private _localMarkers = +DYN_ground_markers;
             continue;
         };
 
-        // --- Intercept trigger: activate when any player drives within 150 m ---
+        // --- Dynamic ambush spawn: create group when player reaches town ---
+        // Nothing exists on the map until this fires — proper ambush feel.
         {
-            _x params ["_grp", "_gPos"];
-            if (!isNull _grp && !(_grp in _activatedGrps)) then {
-                private _playersNear = { alive _x && _x distance2D _gPos < 150 } count allPlayers;
-                if (_playersNear > 0) then {
-                    _activatedGrps pushBack _grp;
+            if (_x in _triggeredPoints) then { continue };
+            private _aPos = _x;
+            if ({ alive _x && _x distance2D _aPos < 400 } count allPlayers == 0) then { continue };
 
-                    { if (alive _x) then {
-                        _x enableAI "MOVE";
-                        _x enableAI "PATH";
-                        _x enableAI "AUTOCOMBAT";
-                    }; } forEach units _grp;
+            // Mark triggered before spawning so a double-tick can't double-spawn
+            _triggeredPoints pushBack _aPos;
 
-                    _grp setBehaviour  "COMBAT";
-                    _grp setCombatMode "RED";
-                    _grp setSpeedMode  "FULL";
+            private _grp = createGroup east;
+            _dynGroups pushBack _grp;
+            _grp setBehaviour  "AWARE";
+            _grp setCombatMode "RED";
 
-                    // SAD waypoint toward nearest alive player
-                    private _alivePlayers = allPlayers select { alive _x };
-                    if (count _alivePlayers > 0) then {
-                        private _nearest = _alivePlayers select 0;
-                        { if (_x distance2D _gPos < _nearest distance2D _gPos) then { _nearest = _x; }; } forEach _alivePlayers;
-                        private _wp = _grp addWaypoint [getPos _nearest, 0];
-                        _wp setWaypointType "SAD";
+            // Prefer interior building positions so they look like occupiers
+            private _allHouses   = nearestObjects [_aPos, ["House","Building"], 150];
+            private _validHouses = _allHouses select { count ([_x] call BIS_fnc_buildingPositions) > 0 };
+            private _unitCount   = 4 + floor (random 3);  // 4-6 per town
+
+            for "_u" from 1 to _unitCount do {
+                private _spawnPos = [];
+
+                if (count _validHouses > 0) then {
+                    for "_t" from 1 to 8 do {
+                        private _bldg    = selectRandom _validHouses;
+                        private _bldgPos = [_bldg] call BIS_fnc_buildingPositions;
+                        if (count _bldgPos > 0) exitWith { _spawnPos = selectRandom _bldgPos; };
                     };
+                };
 
-                    diag_log format ["[GROUND-SUPPLY] Intercept group activated at %1.", _gPos];
+                if (_spawnPos isEqualTo []) then {
+                    _spawnPos = [_aPos, 5 + random 30, random 360] call DYN_fnc_posOffset;
+                };
+
+                private _unit = _grp createUnit [selectRandom _ePool, _spawnPos, [], 0, "NONE"];
+                if (!isNull _unit) then {
+                    _unit allowFleeing 0;
+                    _unit setSkill (0.40 + random 0.15);
+                    _dynEnemies pushBack _unit;
                 };
             };
-        } forEach _interceptData;
+
+            // SAD waypoint on nearest player
+            private _alive = allPlayers select { alive _x };
+            if (count _alive > 0) then {
+                private _nearest = _alive select 0;
+                { if (_x distance2D _aPos < _nearest distance2D _aPos) then { _nearest = _x; }; } forEach _alive;
+                private _wp = _grp addWaypoint [getPos _nearest, 0];
+                _wp setWaypointType "SAD";
+            };
+
+            diag_log format ["[GROUND-SUPPLY] Ambush spawned at %1 (%2 units).", _aPos, _unitCount];
+        } forEach _ambushPoints;
 
         // --- Delivery check: all items unloaded inside drop-off zone ---
-        private _deliveredCount = { [_x, _dPos, _dRadius] call _fn_itemDelivered } count _items;
-        if (_deliveredCount == count _items) then {
+        if ({ [_x, _dPos, _dRadius] call _fn_itemDelivered } count _items == count _items) then {
             [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             [_rep, format ["Supplies Delivered to %1", _dName]] call DYN_fnc_changeReputation;
             ["TaskSucceeded", ["Supplies Delivered", format ["+%1 REP. Cargo arrived in %2.", _rep, _dName]]]
@@ -361,12 +391,10 @@ private _localMarkers = +DYN_ground_markers;
     sleep _despawnDelay;
 
     { if (!isNull _x) then { deleteVehicle _x } } forEach _lObjects;
-    { if (!isNull _x) then { deleteVehicle _x } } forEach _lEnemies;
-    { if (!isNull _x) then { deleteGroup  _x } } forEach _lGroups;
+    { if (!isNull _x) then { deleteVehicle _x } } forEach _dynEnemies;
+    { if (!isNull _x) then { deleteGroup  _x } } forEach _dynGroups;
 
-    DYN_ground_objects     = DYN_ground_objects     - _lObjects;
-    DYN_ground_enemies     = DYN_ground_enemies     - _lEnemies;
-    DYN_ground_enemyGroups = DYN_ground_enemyGroups - _lGroups;
+    DYN_ground_objects = DYN_ground_objects - _lObjects;
 
     diag_log "[GROUND-SUPPLY] Full cleanup complete.";
 };
