@@ -147,7 +147,7 @@ DYN_ground_objects pushBack _truck;
 
 diag_log format ["[GROUND-REPAIR] Truck spawned: %1 at %2", _truckClass, _truckPos];
 
-// Apply damage: one random wheel destroyed + partial engine + optional visual damage
+// Apply damage: one random wheel destroyed + partial engine damage
 private _allHp   = getAllHitPointsDamage _truck;
 private _hpNames = _allHp select 0;
 
@@ -165,15 +165,6 @@ if (_wheelHp != "") then {
 };
 
 _truck setHitPointDamage ["HitEngine", 0.65];
-
-// Random secondary visual damage — broken glass or body dent for variety
-private _visualHps = _hpNames select {
-    _x find "Glass" > -1 || _x find "glass" > -1 ||
-    _x find "Body"  > -1 || _x find "body"  > -1
-};
-if (count _visualHps > 0) then {
-    _truck setHitPointDamage [selectRandom _visualHps, 0.7 + random 0.3];
-};
 
 _truck setVariable ["DYN_wheelHp", _wheelHp, false];
 
