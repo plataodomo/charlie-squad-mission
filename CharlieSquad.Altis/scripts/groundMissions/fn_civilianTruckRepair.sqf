@@ -172,22 +172,50 @@ _civilian setDir (_civPos getDir _truckPos);
 DYN_ground_objects pushBack _civilian;
 
 if (_civIsInjured) then {
-    _civilian setVariable ["DYN_civNeedsMedic", true, true];
-    // Spawn a thread to apply ACE injury after ACE medical has initialized on the unit
+    _civilian setVariable ["DYN_isCivilian",  true, true];
+    _civilian setVariable ["DYN_isWounded",   true, true];
+    _civilian setVariable ["DYN_repAwarded",  false, true];
+    _civilian setCaptive true;
+    _civilian setUnitPos "DOWN";
+    [_civilian, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
+
     [_civilian] spawn {
         params ["_civ"];
-        sleep 3;
-        if (isServer) then {
-            if (!isNil "ace_medical_fnc_setUnconscious") then {
-                [_civ, true] call ace_medical_fnc_setUnconscious;
-            } else {
-                _civ setDamage 0.65;
-            };
+        sleep 1;
+        if (isNull _civ || !alive _civ) exitWith {};
+
+        _civ setVariable ["ACE_isUnconscious",      true,  true];
+        _civ setVariable ["ace_medical_ai_healSelf", false, true];
+        _civ setUnconscious true;
+
+        if (!isNil "ace_medical_fnc_addDamageToUnit") then {
+            [_civ, 0.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_civ, 0.4, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            diag_log "[GROUND-REPAIR] ACE wounds applied to civilian driver.";
+        } else {
+            _civ setDamage 0.6;
+            diag_log "[GROUND-REPAIR] Vanilla fallback damage applied (no ACE).";
+        };
+
+        // Enforce lying animation until treated
+        for "_i" from 1 to 5 do {
+            sleep 1;
+            if (isNull _civ || !alive _civ) exitWith {};
+            _civ setUnitPos "DOWN";
+            [_civ, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
+        };
+
+        while { !isNull _civ && alive _civ && (_civ getVariable ["ACE_isUnconscious", false]) } do {
+            sleep 30;
+            if (isNull _civ || !alive _civ) exitWith {};
+            _civ setUnitPos "DOWN";
+            [_civ, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
         };
     };
+
     diag_log "[GROUND-REPAIR] Civilian driver injured — medic required.";
 } else {
-    _civilian setVariable ["DYN_civNeedsMedic", false, true];
+    _civilian setVariable ["DYN_isCivilian", true, true];
     diag_log "[GROUND-REPAIR] Civilian driver uninjured.";
 };
 
@@ -202,27 +230,37 @@ if (_isAmbush) then {
     _grp setBehaviour "SAFE";
     _grp setCombatMode "RED";
 
-    private _nearHouses = nearestObjects [_missionPos, ["House", "Building"], 150];
+    // Pre-filter: only keep buildings that actually have interior slot positions
+    private _allHouses   = nearestObjects [_missionPos, ["House", "Building"], 150];
+    private _validHouses = _allHouses select { count ([_x, 0] call BIS_fnc_buildingPositions) > 0 };
+
     private _enemyCount = 4 + floor (random 5);
 
     for "_i" from 1 to _enemyCount do {
-        private _spawnPos = _missionPos;
+        private _spawnPos = [];
 
-        if (count _nearHouses > 0) then {
-            private _bldg = selectRandom _nearHouses;
-            private _bldgPositions = [_bldg, 0] call BIS_fnc_buildingPositions;
-            _spawnPos = if (count _bldgPositions > 0) then {
-                selectRandom _bldgPositions
-            } else {
-                [getPos _bldg, 4 + random 8, random 360] call DYN_fnc_posOffset
+        // Try up to 10 times to get a valid interior slot
+        if (count _validHouses > 0) then {
+            for "_t" from 1 to 10 do {
+                private _bldg     = selectRandom _validHouses;
+                private _bldgPos  = [_bldg, 0] call BIS_fnc_buildingPositions;
+                if (count _bldgPos > 0) exitWith { _spawnPos = selectRandom _bldgPos; };
             };
-        } else {
-            _spawnPos = [_missionPos, 25 + random 80, random 360] call DYN_fnc_posOffset;
+        };
+
+        // Fallback: exterior of any house, or general area
+        if (_spawnPos isEqualTo []) then {
+            if (count _allHouses > 0) then {
+                _spawnPos = [getPos (selectRandom _allHouses), 3 + random 6, random 360] call DYN_fnc_posOffset;
+            } else {
+                _spawnPos = [_missionPos, 20 + random 60, random 360] call DYN_fnc_posOffset;
+            };
         };
 
         private _u = _grp createUnit [selectRandom _enemyPool, _spawnPos, [], 0, "NONE"];
         if (!isNull _u) then {
             _u disableAI "MOVE";
+            _u disableAI "PATH";
             _u disableAI "AUTOCOMBAT";
             _u allowFleeing 0;
             _u setSkill 0.45;
@@ -231,7 +269,7 @@ if (_isAmbush) then {
     };
 
     _ambushGrp = _grp;
-    diag_log format ["[GROUND-REPAIR] Ambush squad ready: %1 units in buildings.", _enemyCount];
+    diag_log format ["[GROUND-REPAIR] Ambush squad ready: %1 units. Valid buildings: %2", _enemyCount, count _validHouses];
 };
 
 // =====================================================
@@ -332,24 +370,39 @@ private _localMarkers = +DYN_ground_markers;
             diag_log format ["[GROUND-REPAIR] Civilian killed. %1 rep.", _repPenalty];
         };
 
-        // --- Ambush trigger: enemies break cover on player proximity ---
+        // --- Ambush trigger: enemies break cover when players approach the truck ---
         if (_isAmbush && !_ambushFired && !isNull _ambushGrp) then {
-            private _playersNear = { alive _x && _x distance2D _mPos < 120 } count allPlayers;
+            private _truckPos2D = getPos _truck;
+            private _playersNear = { alive _x && _x distance2D _truckPos2D < 80 } count allPlayers;
             if (_playersNear > 0) then {
                 _ambushFired = true;
 
-                { if (alive _x) then { _x enableAI "MOVE"; _x enableAI "AUTOCOMBAT"; }; } forEach units _ambushGrp;
+                {
+                    if (alive _x) then {
+                        _x enableAI "MOVE";
+                        _x enableAI "PATH";
+                        _x enableAI "AUTOCOMBAT";
+                    };
+                } forEach units _ambushGrp;
+
                 _ambushGrp setBehaviour "COMBAT";
                 _ambushGrp setCombatMode "RED";
                 _ambushGrp setSpeedMode "FULL";
 
+                // SAD waypoint on the nearest alive player
                 private _alivePlayers = allPlayers select { alive _x };
                 if (count _alivePlayers > 0) then {
-                    private _wp = _ambushGrp addWaypoint [getPos (_alivePlayers select 0), 0];
+                    private _nearestPlayer = _alivePlayers select 0;
+                    {
+                        if (_x distance2D _truckPos2D < _nearestPlayer distance2D _truckPos2D) then {
+                            _nearestPlayer = _x;
+                        };
+                    } forEach _alivePlayers;
+                    private _wp = _ambushGrp addWaypoint [getPos _nearestPlayer, 0];
                     _wp setWaypointType "SAD";
                 };
 
-                ["TaskFailed", ["Ambush", "Enemy forces have broken from cover."]]
+                ["GroundMission", ["Ambush! Enemy forces have broken from cover."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-REPAIR] AMBUSH triggered.";
             };
