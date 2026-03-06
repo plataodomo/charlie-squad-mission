@@ -167,7 +167,7 @@ _civilian disableAI "PATH";
 _civilian disableAI "AUTOCOMBAT";
 _civilian disableAI "TARGET";
 _civilian allowFleeing 0;
-_civilian setUnitPos "STAND";
+_civilian setUnitPos "UP";
 _civilian setDir (_civPos getDir _truckPos);
 DYN_ground_objects pushBack _civilian;
 
@@ -249,12 +249,12 @@ _mkrName setMarkerAlpha 0.2;
 _mkrName setMarkerText "Civilian Vehicle";
 DYN_ground_markers pushBack _mkrName;
 
+// Nearest town name for the description
+private _nearLocs = nearestLocations [_missionPos, ["NameCity","NameCityCapital","NameVillage"], 600];
+private _cityName = if (count _nearLocs > 0) then { text (_nearLocs select 0) } else { "a nearby settlement" };
+
 private _medNote = if (_civIsInjured) then {
     "<br/><br/>The driver has sustained injuries and requires immediate medical attention. A trained medic should assess and treat the casualty on-site."
-} else { "" };
-
-private _intelNote = if (_isAmbush) then {
-    "<br/><br/>Latest intelligence indicates possible insurgent activity in the settlement. Maintain 360-degree security throughout the operation — do not get tunnel vision on the vehicle."
 } else { "" };
 
 [
@@ -262,9 +262,9 @@ private _intelNote = if (_isAmbush) then {
     _taskId,
     [
         format [
-            "A civilian vehicle has been reported broken down in a settlement outside the AO. The driver is unable to continue — the vehicle has sustained a destroyed wheel and significant engine damage, likely from road debris encountered on the route.<br/><br/>An engineering element is required on-site to perform field repairs and return the vehicle to operational condition. Full restoration is not achievable in the field. The objective is partial repair only — enough to get the vehicle moving again.%1%2<br/><br/>Protect the civilian at all costs. ROE is in effect.",
-            _medNote,
-            _intelNote
+            "A civilian vehicle has been reported broken down near %1. The driver is unable to continue — the vehicle has sustained a destroyed wheel and significant engine damage, likely from road debris encountered on the route.<br/><br/>An engineering element is required on-site to perform field repairs and return the vehicle to operational condition.%2",
+            _cityName,
+            _medNote
         ],
         "Repair Civilian Vehicle",
         ""
