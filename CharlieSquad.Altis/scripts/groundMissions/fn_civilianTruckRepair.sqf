@@ -457,21 +457,42 @@ private _localMarkers = +DYN_ground_markers;
                 [_repRepair, "Civilian Truck Repaired"] call DYN_fnc_changeReputation;
                 diag_log format ["[GROUND-REPAIR] SUCCESS. Truck repaired. +%1 rep.", _repRepair];
 
-                // Civilian gets back in truck and drives away
+                // Civilian stands up, walks to the truck, and drives away
                 [_truck, _civilian] spawn {
                     params ["_veh", "_civ"];
-                    sleep 4;
+                    sleep 2;
                     if (isNull _civ || isNull _veh) exitWith {};
+
                     _civ setUnitPos "AUTO";
                     _civ enableAI "MOVE";
                     _civ enableAI "PATH";
                     _veh setFuel 0.9;
                     _veh setHit ["HitEngine", 0.05];
-                    _civ moveInDriver _veh;
-                    _veh engineOn true;
-                    private _drivePos = [getPos _veh, 800 + random 400, random 360] call DYN_fnc_posOffset;
-                    _civ doMove _drivePos;
-                    diag_log "[GROUND-REPAIR] Civilian driver heading out.";
+
+                    // Walk to vehicle — same pattern as arms dealer boarding
+                    _civ assignAsDriver _veh;
+                    [_civ] orderGetIn true;
+
+                    private _boardTime = diag_tickTime + 30;
+                    waitUntil {
+                        sleep 1;
+                        (vehicle _civ == _veh)
+                        || isNull _civ || !alive _civ
+                        || diag_tickTime > _boardTime
+                    };
+
+                    // Force seat if they didn't make it in time
+                    if (alive _civ && vehicle _civ != _veh) then {
+                        _civ moveInDriver _veh;
+                    };
+
+                    if (alive _civ && vehicle _civ == _veh) then {
+                        _veh engineOn true;
+                        private _drivePos = [getPos _veh, 800 + random 400, random 360] call DYN_fnc_posOffset;
+                        _civ doMove _drivePos;
+                        diag_log "[GROUND-REPAIR] Civilian driver heading out.";
+                    };
+
                     sleep 90;
                     if (!isNull _civ) then { deleteVehicle _civ };
                     if (!isNull _veh) then { deleteVehicle _veh };
