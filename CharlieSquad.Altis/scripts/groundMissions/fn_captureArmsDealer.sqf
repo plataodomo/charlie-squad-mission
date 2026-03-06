@@ -215,16 +215,26 @@ private _pilotUnit = objNull;
 
 if (_escapeIsHeli) then {
     // === HELICOPTER VARIANT ===
-    // Find flat spot close to dealer for helicopter
-    // Manual search — BIS_fnc_findSafePos returns 2D [x,y] which breaks isEqualTo [0,0,0] checks
-    private _heliPos = "";
+    // Find flat, tree-free spot for helicopter — rotor needs ~15 m clear radius
+    private _heliPos = [];
     private _heliFound = false;
-    for "_try" from 0 to 11 do {
-        private _testPos = [_missionPos, 30 + (_try mod 4) * 10, _try * 30] call DYN_fnc_posOffset;
-        if (!surfaceIsWater _testPos) then { _heliPos = _testPos; _heliFound = true; };
-        if (_heliFound) exitWith {};
+    for "_try" from 0 to 59 do {
+        private _dist    = 25 + (_try mod 8) * 10;   // 25 m … 95 m from dealer
+        private _dir     = _try * 6;                   // sweep full 360° over attempts
+        private _testPos = [_missionPos, _dist, _dir] call DYN_fnc_posOffset;
+        if (surfaceIsWater _testPos) then { continue };
+        // Reject if any tree/bush is within rotor-clearance radius
+        private _trees = nearestTerrainObjects [_testPos, ["TREE", "SMALL TREE", "BUSH"], 15, false];
+        if (count _trees > 0) then { continue };
+        _heliPos  = _testPos;
+        _heliFound = true;
+        break;
     };
-    if (!_heliFound) then { _heliPos = [_missionPos, 50, random 360] call DYN_fnc_posOffset; };
+    // Fallback: just pick a clear-ish spot (rare edge case)
+    if (!_heliFound) then {
+        _heliPos  = [_missionPos, 80, random 360] call DYN_fnc_posOffset;
+        diag_log "[GROUND-DEALER] WARNING: No tree-free heli spot found — using fallback.";
+    };
 
     _escapeVeh = createVehicle [_heliClass, _heliPos, [], 0, "NONE"];
     _escapeVeh setDir (_heliPos getDir _missionPos);
