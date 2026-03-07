@@ -361,6 +361,10 @@ private _localMarkers = +DYN_ground_markers;
     private _truckSucceeded   = false;
     private _civKillPenalized = false;
     private _done             = false;
+    // Track whether the civ was ever confirmed unconscious so we detect the
+    // conscious←unconscious state transition rather than polling current state.
+    // This prevents self-heal from awarding rep when no player is in treatment range.
+    private _civWasUnconscious = false;
 
     while { !_done } do {
         sleep 5;
@@ -421,35 +425,38 @@ private _localMarkers = +DYN_ground_markers;
         };
 
         // --- Civilian healed: bonus rep, one time ---
-        // Check starts after 30s to allow ACE injury to be applied first
+        // Check starts after 30s to allow ACE injury to be applied first.
+        // We track the unconscious→conscious STATE TRANSITION rather than polling the
+        // current value — this prevents a civilian that self-healed (or healed between
+        // ticks) from awarding rep when no player was actually performing treatment.
         if (_civIsInjured && !_civHealRewarded && alive _civilian
             && diag_tickTime - _startTime > 30) then {
 
-            private _civHealed = false;
+            private _civUnconscious = _civilian getVariable ["ACE_isUnconscious", false];
 
-            // Require at least one player within 40m of the civilian —
-            // prevents the check from firing when nobody is on-site.
-            private _playerNearCiv = { alive _x && _x distance2D (getPos _civilian) < 40 } count allPlayers > 0;
+            // Mark once we've confirmed the civ has entered the unconscious state
+            if (_civUnconscious) then { _civWasUnconscious = true; };
 
-            if (_playerNearCiv) then {
-                // Primary: ACE unconscious state cleared (default true = still injured)
-                if (!(_civilian getVariable ["ACE_isUnconscious", true])) then {
-                    _civHealed = true;
+            // Only reward when: was previously unconscious AND just became conscious
+            // AND a player is within ACE treatment range (≤6 m).
+            // If the civ self-heals without a player nearby the distance check fails.
+            // If the civ later becomes conscious again (after prior self-heal with nobody
+            // around) the transition has already been consumed so _civWasUnconscious stays
+            // false for the second cycle — rep is never double-awarded.
+            if (_civWasUnconscious && !_civUnconscious) then {
+                private _playerTreating = { alive _x && _x distance2D (getPos _civilian) < 6 } count allPlayers > 0;
+                if (_playerTreating) then {
+                    _civHealRewarded = true;
+                    [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
+                    ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
+                        remoteExecCall ["BIS_fnc_showNotification", 0];
+                    diag_log format ["[GROUND-REPAIR] Civilian treated. +%1 rep.", _repMedic];
+                } else {
+                    // Civ regained consciousness but no player was in treatment range —
+                    // likely self-healed. Reset the tracking flag so a player can still
+                    // earn the rep if they then fully treat the civ (ACE re-injures / restabilises).
+                    diag_log "[GROUND-REPAIR] Civilian became conscious without player nearby — likely self-heal. Rep not awarded.";
                 };
-                // Fallback: vanilla damage only — ACE wounds do NOT raise vanilla damage,
-                // so this check must be skipped when ACE medical is loaded, otherwise it
-                // fires immediately after the 30s delay regardless of actual injury state.
-                if (!_civHealed && isNil "ace_medical_fnc_addDamageToUnit" && damage _civilian < 0.2) then {
-                    _civHealed = true;
-                };
-            };
-
-            if (_civHealed) then {
-                _civHealRewarded = true;
-                [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
-                ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
-                    remoteExecCall ["BIS_fnc_showNotification", 0];
-                diag_log format ["[GROUND-REPAIR] Civilian treated. +%1 rep.", _repMedic];
             };
         };
 
