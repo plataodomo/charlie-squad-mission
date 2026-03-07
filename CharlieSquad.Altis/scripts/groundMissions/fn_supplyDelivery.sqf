@@ -237,7 +237,7 @@ DYN_ground_markers pushBack _mkrDest;
 // Small icon marker at supply_delivery — task-style, not a zone
 createMarker [_mkrBase, _supplyMkrPos];
 _mkrBase setMarkerShape "ICON";
-_mkrBase setMarkerType  "b_support_log";
+_mkrBase setMarkerType  "b_support";
 _mkrBase setMarkerColor "ColorOrange";
 _mkrBase setMarkerAlpha 0.9;
 DYN_ground_markers pushBack _mkrBase;
@@ -374,7 +374,7 @@ private _localMarkers = +DYN_ground_markers;
             _repAwarded = true;
             [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             [_rep, format ["Supplies Delivered to %1", _dName]] call DYN_fnc_changeReputation;
-            ["TaskSucceeded", ["Supplies Delivered", format ["+%1 REP. Cargo arrived in %2.", _rep, _dName]]]
+            ["TaskSucceeded", ["Supplies Delivered", format ["+%1 REP.", _rep]]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
             diag_log format ["[GROUND-SUPPLY] SUCCESS. All supplies at %1. +%2 rep.", _dName, _rep];
             _done = true;
