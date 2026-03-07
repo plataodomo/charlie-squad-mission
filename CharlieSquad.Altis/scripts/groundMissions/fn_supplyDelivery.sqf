@@ -185,18 +185,19 @@ private _ambushPoints = [];
 {
     private _lPos = locationPosition _x;
     if (surfaceIsWater _lPos) then { continue };
-    // Must be between 15 % and 85 % along the route (skip near base / dest)
+    // Must be between 10 % and 90 % along the route (skip near base / dest)
     private _t = [_lPos, _basePos, _destPos] call _fn_projT;
-    if (_t < 0.15 || _t > 0.85) then { continue };
-    // Must be within 900 m of the straight-line route
-    if (([_lPos, _basePos, _destPos] call _fn_distToLine) > 900) then { continue };
+    if (_t < 0.10 || _t > 0.90) then { continue };
+    // Must be within 2000 m of the straight-line route (wide corridor catches curved roads)
+    if (([_lPos, _basePos, _destPos] call _fn_distToLine) > 2000) then { continue };
     // Must have buildings so enemies can occupy them
     if (count (nearestObjects [_lPos, ["House","Building"], 120]) < 3) then { continue };
     _ambushPoints pushBack _lPos;
 } forEach (_allLocs call BIS_fnc_arrayShuffle);
 
-// Sort earliest-to-latest along the route and cap at 3 towns
-_ambushPoints = [_ambushPoints, [], { [_x, _basePos, _destPos] call _fn_projT }, "ASCEND"] call BIS_fnc_sortBy;
+// Shuffle and cap at 3 towns — ordering doesn't matter because the monitoring loop
+// checks all points every tick; BIS_fnc_sortBy cannot access private local vars (_fn_projT etc.)
+_ambushPoints = _ambushPoints call BIS_fnc_arrayShuffle;
 if (count _ambushPoints > 3) then { _ambushPoints resize 3; };
 
 // Fallback: if no towns were in corridor, sample road points along the line
@@ -236,10 +237,9 @@ DYN_ground_markers pushBack _mkrDest;
 // Small icon marker at supply_delivery — task-style, not a zone
 createMarker [_mkrBase, _supplyMkrPos];
 _mkrBase setMarkerShape "ICON";
-_mkrBase setMarkerType  "hd_dot";
+_mkrBase setMarkerType  "b_support_log";
 _mkrBase setMarkerColor "ColorOrange";
 _mkrBase setMarkerAlpha 0.9;
-_mkrBase setMarkerText  "Pick up supplies here";
 DYN_ground_markers pushBack _mkrBase;
 
 [
@@ -284,6 +284,7 @@ private _localMarkers = +DYN_ground_markers;
 
     private _startTime       = diag_tickTime;
     private _done            = false;
+    private _repAwarded      = false;  // guard against double rep/notification on success
     private _triggeredPoints = [];  // ambush positions already activated
     private _dynGroups       = [];  // groups spawned dynamically, cleaned up at end
     private _dynEnemies      = [];  // units spawned dynamically
@@ -316,7 +317,7 @@ private _localMarkers = +DYN_ground_markers;
         {
             if (_x in _triggeredPoints) then { continue };
             private _aPos = _x;
-            if ({ alive _x && _x distance2D _aPos < 400 } count allPlayers == 0) then { continue };
+            if ({ alive _x && _x distance2D _aPos < 700 } count allPlayers == 0) then { continue };
 
             // Mark triggered before spawning so a double-tick can't double-spawn
             _triggeredPoints pushBack _aPos;
@@ -329,7 +330,7 @@ private _localMarkers = +DYN_ground_markers;
             // Prefer interior building positions so they look like occupiers
             private _allHouses   = nearestObjects [_aPos, ["House","Building"], 150];
             private _validHouses = _allHouses select { count ([_x] call BIS_fnc_buildingPositions) > 0 };
-            private _unitCount   = 4 + floor (random 3);  // 4-6 per town
+            private _unitCount   = 6 + floor (random 5);  // 6-10 per town
 
             for "_u" from 1 to _unitCount do {
                 private _spawnPos = [];
@@ -367,7 +368,10 @@ private _localMarkers = +DYN_ground_markers;
         } forEach _ambushPoints;
 
         // --- Delivery check: all items unloaded inside drop-off zone ---
-        if ({ [_x, _dPos, _dRadius] call _fn_itemDelivered } count _items == count _items) then {
+        // _repAwarded guard ensures this block fires exactly once even if the loop
+        // ticks again before _done takes effect.
+        if (!_repAwarded && { [_x, _dPos, _dRadius] call _fn_itemDelivered } count _items == count _items) then {
+            _repAwarded = true;
             [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             [_rep, format ["Supplies Delivered to %1", _dName]] call DYN_fnc_changeReputation;
             ["TaskSucceeded", ["Supplies Delivered", format ["+%1 REP. Cargo arrived in %2.", _rep, _dName]]]

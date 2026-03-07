@@ -2,7 +2,7 @@
     scripts\fn_resistanceAreas.sqf
     Spawns 1-3 small enemy resistance areas near the main AO.
     Each area has a handful of enemies guarding an intel laptop.
-    Area completes when 80% of enemies are eliminated.
+    Area completes when ALL enemies are eliminated (100% kill required).
     The intel laptop awards reputation points when secured via ACE interact.
     Server only.
 */
@@ -455,14 +455,10 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         waitUntil {
             sleep 5;
             private _alive = { !isNull _x && alive _x } count _enemies;
-            private _total = count _enemies;
-            private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
-            _ratio >= 0.80 || {!(missionNamespace getVariable ["DYN_AO_active", false])}
+            _alive == 0 || {!(missionNamespace getVariable ["DYN_AO_active", false])}
         };
         private _alive = { !isNull _x && alive _x } count _enemies;
-        private _total = count _enemies;
-        private _ratio = if (_total > 0) then { 1 - (_alive / _total) } else { 1 };
-        if (_ratio >= 0.80) then {
+        if (_alive == 0) then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
             ["TaskSucceeded", [format ["Resistance in %1 eliminated.", _name], "Area cleared."]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
