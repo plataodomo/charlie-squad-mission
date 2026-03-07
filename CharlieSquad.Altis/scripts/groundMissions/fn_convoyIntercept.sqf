@@ -377,11 +377,11 @@ private _objectiveTruckClass = ""; private _objectiveAction = ""; private _repRe
 if (_objectiveType == "AMMO") then {
     _objectiveTruckClass = "O_Truck_03_ammo_F"; _objectiveAction = "DESTROY";
     _repReward = 20 + floor random 6;
-    _taskDescription = format ["Intelligence reports an enemy ammunition convoy departing from the vicinity of %1. The convoy carries high-priority munitions bound for frontline resupply operations.<br/><br/>The convoy's exact route and destination are unknown. You will not receive GPS tracking or route markers. Locate the convoy through reconnaissance, road patrols, and map knowledge.<br/><br/>Intercept and destroy the ammunition truck before it reaches its destination. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
+    _taskDescription = format ["Intelligence reports an enemy ammunition convoy departing from the vicinity of %1. The convoy carries high-priority munitions bound for frontline resupply operations.<br/><br/>Intercept and destroy the ammunition truck before it reaches its destination. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
 } else {
     _objectiveTruckClass = "O_T_Truck_03_device_ghex_F"; _objectiveAction = "CAPTURE";
     _repReward = 35 + floor random 11;
-    _taskDescription = format ["Intelligence indicates an enemy convoy departing from the vicinity of %1 is transporting a classified electronic device containing critical encryption hardware.<br/><br/>The convoy's exact route and destination are unknown. You will not receive GPS tracking or route markers. Locate the convoy through reconnaissance, road patrols, and map knowledge.<br/><br/>Intercept the convoy, eliminate the crew, and capture the device truck intact. Drive it back to the delivery point at base.<br/><br/>Warning: enemy reinforcements will pursue if the truck is captured. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
+    _taskDescription = format ["Intelligence indicates an enemy convoy departing from the vicinity of %1 is transporting a classified electronic device containing critical encryption hardware.<br/><br/>Intercept the convoy, eliminate the crew, and capture the device truck intact. Drive it back to the delivery point at base.<br/><br/>Warning: enemy reinforcements will pursue if the truck is captured. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
 };
 
 private _infPool = [
@@ -399,6 +399,35 @@ diag_log format ["[GROUND-CONVOY] %1(%2) Rep:%3 BTR:%4 | %5->%6", _objectiveType
 private _routePoints = [_startRoadPos, _endRoadPos] call _fn_buildRoadRoute;
 _routePoints = _routePoints select { !(surfaceIsWater _x) };
 if (count _routePoints < 2) then { _routePoints = [_startRoadPos, _endRoadPos] };
+
+// =====================================================
+// ROUTE MARKERS — 50% chance signals intel reveals the route
+// Places 5 arrow markers evenly along the route (yellow = unknown side)
+// Cleaned up at mission end via the monitoring spawn block.
+// =====================================================
+private _routeMarkers = [];
+if (random 1 < 0.5 && { count _routePoints > 4 }) then {
+    private _total = count _routePoints;
+    for "_mi" from 0 to 4 do {
+        private _idx = round (_mi * (_total - 1) / 4);
+        if (_idx >= _total - 1) then { _idx = _total - 2 };  // need a "next" point for direction
+        private _p     = _routePoints select _idx;
+        private _pNext = _routePoints select (_idx + 1);
+        private _mkName = format ["convoy_arrow_%1_%2", round (diag_tickTime * 1000), _mi];
+        createMarker [_mkName, _p];
+        _mkName setMarkerShape "ICON";
+        _mkName setMarkerType  "mil_arrow";
+        _mkName setMarkerColor "ColorYellow";
+        _mkName setMarkerDir   (_p getDir _pNext);
+        _mkName setMarkerAlpha 0.8;
+        _routeMarkers pushBack _mkName;
+    };
+    _taskDescription = _taskDescription + "<br/><br/><t color='#FFCC00'>Signals intelligence</t> has traced the convoy's approximate route. Arrow markers have been plotted on your map.";
+    diag_log format ["[GROUND-CONVOY] Route markers spawned (%1 arrows, %2->%3)", count _routeMarkers, _startName, _endName];
+} else {
+    _taskDescription = _taskDescription + "<br/><br/>Route information is unavailable. Locate the convoy through road patrols and map knowledge.";
+    diag_log "[GROUND-CONVOY] No route markers this mission (50% miss or too few route points).";
+};
 
 private _turnAngles = [];
 {
@@ -1127,8 +1156,8 @@ if (_objectiveAction == "CAPTURE") then {
 private _deliveryPos = getMarkerPos "blackbox_delivery";
 if (_deliveryPos isEqualTo [0,0,0]) then { _deliveryPos = _basePos };
 
-[_taskId, _timeout, _repReward, _objTruck, _objectiveAction, _endRoadPos, _deliveryPos, _startName, _endName] spawn {
-    params ["_tid","_tOut","_rep","_objTruck","_action","_dest","_delPos","_from","_to"];
+[_taskId, _timeout, _repReward, _objTruck, _objectiveAction, _endRoadPos, _deliveryPos, _startName, _endName, _routeMarkers] spawn {
+    params ["_tid","_tOut","_rep","_objTruck","_action","_dest","_delPos","_from","_to","_rMkrs"];
     if (!isServer) exitWith {}; private _startT = diag_tickTime; private _result = "PENDING";
     while {_result == "PENDING"} do { sleep 3;
         if ((diag_tickTime - _startT) > _tOut) exitWith {_result="TIMEOUT"};
@@ -1168,6 +1197,7 @@ if (_deliveryPos isEqualTo [0,0,0]) then { _deliveryPos = _basePos };
         };
     };
     sleep 5; [_tid] call BIS_fnc_deleteTask;
+    { deleteMarker _x } forEach _rMkrs;  // route arrow markers (empty array if none were spawned)
     private _aV = +DYN_ground_enemyVehs; private _aE = +DYN_ground_enemies; private _aG = +DYN_ground_enemyGroups;
     { if (!isNull _x) then { { if (!isNull _x) then { _x setPosATL [0,0,0]; deleteVehicle _x } } forEach crew _x; deleteVehicle _x } } forEach _aV;
     { if (!isNull _x) then { deleteVehicle _x } } forEach _aE;

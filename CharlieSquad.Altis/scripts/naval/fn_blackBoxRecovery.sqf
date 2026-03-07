@@ -353,12 +353,16 @@ sleep 0.5;
 // TASK
 // =====================================================
 private _taskId = format ["naval_blackbox_%1", round (diag_tickTime * 1000)];
+private _wreckGrid = mapGridPosition _wreckPos;
 
 [
     west,
     _taskId,
     [
-        "Following the loss of a friendly aircraft over coastal waters, satellite scans have confirmed the wreck lies submerged offshore.<br/>The flight recorder contains sensitive operational data. Enemy combat divers have been detected in the area.<br/><br/>Locate the wreck, retrieve the black box, and prevent hostile acquisition at all costs.",
+        format [
+            "Following the loss of a friendly aircraft over coastal waters, satellite scans have confirmed the wreck lies submerged offshore.<br/>The flight recorder contains sensitive operational data. Enemy combat divers have been detected in the area.<br/><br/>Locate the wreck, retrieve the black box, and prevent hostile acquisition at all costs.<br/><br/><t color='#FFCC00'>Search area:</t> Grid <t color='#FFFFFF'>%1</t>",
+            _wreckGrid
+        ],
         "Recover Flight Recorder",
         ""
     ],
