@@ -361,10 +361,10 @@ private _localMarkers = +DYN_ground_markers;
     private _truckSucceeded   = false;
     private _civKillPenalized = false;
     private _done             = false;
-    // Track whether the civ was ever confirmed unconscious so we detect the
-    // conscious←unconscious state transition rather than polling current state.
-    // This prevents self-heal from awarding rep when no player is in treatment range.
-    private _civWasUnconscious = false;
+    // Last tick a player was within 10 m of the civilian.
+    // Rep is only awarded if this was recent (< 30 s ago), so Zeus healing
+    // from afar or a self-heal with nobody on-site cannot trigger the reward.
+    private _lastPlayerNearTime = -1;
 
     while { !_done } do {
         sleep 5;
@@ -425,38 +425,42 @@ private _localMarkers = +DYN_ground_markers;
         };
 
         // --- Civilian healed: bonus rep, one time ---
-        // Check starts after 30s to allow ACE injury to be applied first.
-        // We track the unconscious→conscious STATE TRANSITION rather than polling the
-        // current value — this prevents a civilian that self-healed (or healed between
-        // ticks) from awarding rep when no player was actually performing treatment.
+        // Always track whether any player is within treatment range (10 m), even
+        // before the heal check window opens.  This timestamp is used below to
+        // confirm a player was actively on-site when healing occurred, blocking
+        // Zeus remote-heals and AI self-heals that happen with nobody nearby.
+        if (_civIsInjured && !_civHealRewarded && alive _civilian) then {
+            if ({ alive _x && _x distance2D (getPos _civilian) < 10 } count allPlayers > 0) then {
+                _lastPlayerNearTime = diag_tickTime;
+            };
+        };
+
+        // Heal check opens after 30 s (ACE wounds need time to be applied server-side).
+        // Civilian is considered "treated" when:
+        //   ACE loaded  → no longer unconscious (conscious = stabilised / revived)
+        //   Vanilla only → vanilla damage below 0.2
+        // PLUS a player must have been within 10 m in the last 30 seconds.
+        // This correctly handles: full blood + revived (conscious), partial heal, and
+        // blocks Zeus heal / self-heal with no player on-site.
         if (_civIsInjured && !_civHealRewarded && alive _civilian
             && diag_tickTime - _startTime > 30) then {
 
-            private _civUnconscious = _civilian getVariable ["ACE_isUnconscious", false];
+            private _civHealed = if (!isNil "ace_medical_fnc_addDamageToUnit") then {
+                // ACE: civ is conscious (ACE_isUnconscious default true = still injured)
+                !(_civilian getVariable ["ACE_isUnconscious", true])
+            } else {
+                // Vanilla fallback only — ACE wounds don't raise vanilla damage value
+                damage _civilian < 0.2
+            };
 
-            // Mark once we've confirmed the civ has entered the unconscious state
-            if (_civUnconscious) then { _civWasUnconscious = true; };
-
-            // Only reward when: was previously unconscious AND just became conscious
-            // AND a player is within ACE treatment range (≤6 m).
-            // If the civ self-heals without a player nearby the distance check fails.
-            // If the civ later becomes conscious again (after prior self-heal with nobody
-            // around) the transition has already been consumed so _civWasUnconscious stays
-            // false for the second cycle — rep is never double-awarded.
-            if (_civWasUnconscious && !_civUnconscious) then {
-                private _playerTreating = { alive _x && _x distance2D (getPos _civilian) < 6 } count allPlayers > 0;
-                if (_playerTreating) then {
-                    _civHealRewarded = true;
-                    [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
-                    ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
-                        remoteExecCall ["BIS_fnc_showNotification", 0];
-                    diag_log format ["[GROUND-REPAIR] Civilian treated. +%1 rep.", _repMedic];
-                } else {
-                    // Civ regained consciousness but no player was in treatment range —
-                    // likely self-healed. Reset the tracking flag so a player can still
-                    // earn the rep if they then fully treat the civ (ACE re-injures / restabilises).
-                    diag_log "[GROUND-REPAIR] Civilian became conscious without player nearby — likely self-heal. Rep not awarded.";
-                };
+            if (_civHealed
+                && _lastPlayerNearTime > 0
+                && (diag_tickTime - _lastPlayerNearTime) < 30) then {
+                _civHealRewarded = true;
+                [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
+                ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
+                    remoteExecCall ["BIS_fnc_showNotification", 0];
+                diag_log format ["[GROUND-REPAIR] Civilian treated. +%1 rep.", _repMedic];
             };
         };
 
