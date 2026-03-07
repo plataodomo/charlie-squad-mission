@@ -46,6 +46,12 @@ DYN_shopVehicles = [
     ["B_MRAP_01_gmg_F", "Hunter GMG", 12, "Cars"],
     ["B_LSV_01_armed_F", "Prowler Armed", 8, "Cars"],
     ["B_LSV_01_unarmed_F", "Prowler Unarmed", 3, "Cars"],
+    // --- Bundeswehr (BWA3) protected vehicles ---
+    ["BWA3_Eagle_Tropen", "Eagle IV", 6, "Cars"],
+    ["BWA3_Eagle_FLW100_Tropen", "Eagle IV FLW100 (Remote HMG)", 12, "Cars"],
+    ["BWA3_Dingo2_FLW100_MG3_CG13_Tropen", "Dingo 2 FLW100 MG3", 10, "Cars"],
+    ["BWA3_Dingo2_FLW200_M2_CG13_Tropen", "Dingo 2 FLW200 M2", 13, "Cars"],
+    ["BWA3_Dingo2_FLW200_GMW_CG13_Tropen", "Dingo 2 FLW200 GMG", 15, "Cars"],
 
     // ===== TRUCKS =====
     ["CUP_B_MTVR_USA", "MTVR Transport", 4, "Trucks"],
@@ -86,6 +92,11 @@ DYN_shopVehicles = [
     ["B_APC_Tracked_01_AA_F", "Cheetah AA", 35, "Armor"],
     ["B_MBT_01_cannon_F", "Slammer Tank", 50, "Armor"],
     ["B_MBT_01_TUSK_F", "Slammer TUSK", 55, "Armor"],
+    // --- Bundeswehr (BWA3) / community armor ---
+    ["Redd_Marder_1A5_Tropentarn", "Marder 1A5 IFV", 28, "Armor"],
+    ["rnt_sppz_2a2_luchs_tropentarn", "SPPz 2 Luchs (Recon)", 22, "Armor"],
+    ["BWA3_Puma_Tropen", "Puma IFV", 40, "Armor"],
+    ["BWA3_Leopard2_Tropen", "Leopard 2 MBT", 60, "Armor"],
 
     // ===== HELICOPTERS =====
     ["CUP_B_MH6M_USA", "MH-6M Little Bird", 10, "Helicopters"],
@@ -96,6 +107,9 @@ DYN_shopVehicles = [
     ["CUP_B_AW159_RN_Blackcat", "AW159 Wildcat", 30, "Helicopters"],
     ["CUP_B_Apache_AH1_GB", "Apache AH1", 55, "Helicopters"],
     ["B_Heli_Attack_01_dynamicLoadout_F", "AH-99 Blackfoot", 60, "Helicopters"],
+    // --- Bundeswehr (BWA3) helicopters ---
+    ["BWA3_NH90_TTH_M3M_Tropen", "NH-90 TTH (Armed)", 28, "Helicopters"],
+    ["BWA3_Tiger_RMK", "Tiger RMK (Attack)", 55, "Helicopters"],
 
     // ===== JETS =====
     ["CFP_B_USMC_AV_8B_Harrier_II_DES_01", "AV-8B Harrier II", 100, "Jets"],
