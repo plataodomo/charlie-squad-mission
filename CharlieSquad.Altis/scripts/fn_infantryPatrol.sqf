@@ -305,10 +305,10 @@ private _innerHouses = _goodHouses select { (_x distance2D _aoPos) <= (_aoRadius
 private _midHouses   = _goodHouses select { (_x distance2D _aoPos) > (_aoRadius * 0.40) && (_x distance2D _aoPos) <= (_aoRadius * 0.65) };
 private _outerHouses = _goodHouses select { (_x distance2D _aoPos) > (_aoRadius * 0.65) };
 
-// Occupy more inner, fewer outer — density gradient
-private _innerUse = (12 min count _innerHouses);
-private _midUse   = (10 min count _midHouses);
-private _outerUse = (6 min count _outerHouses);
+// Occupy more inner, fewer outer — density gradient (reduced from 12/10/6 for performance)
+private _innerUse = (8 min count _innerHouses);
+private _midUse   = (6 min count _midHouses);
+private _outerUse = (3 min count _outerHouses);
 
 private _housesToOccupy = [];
 for "_i" from 0 to (_innerUse - 1) do { if (_i < count _innerHouses) then { _housesToOccupy pushBack (_innerHouses select _i); }; };
@@ -327,8 +327,8 @@ private _buildingDefCount = 0;
     _grp setBehaviour "AWARE";
     _grp setCombatMode "RED";
 
-    // 2-4 soldiers per building
-    private _count = 2 + floor (random 3);
+    // 2-3 soldiers per building (reduced from 2-4 for performance)
+    private _count = 2 + floor (random 2);
     _count = _count min (count _positions);
 
     _positions = _positions call BIS_fnc_arrayShuffle;
@@ -357,7 +357,7 @@ diag_log format ["[PATROL] Building defenders: %1 soldiers in %2 buildings", _bu
 // Hold position, engage at range
 // =====================================================
 private _baseHeight = getTerrainHeightASL _aoPos;
-private _hilltopCount = 4 + floor (random 3);  // 4-6 positions
+private _hilltopCount = 2 + floor (random 2);  // 2-3 positions (reduced from 4-6 for performance)
 private _hilltopPositions = [];
 private _hilltopTeamCount = 0;
 
@@ -475,7 +475,7 @@ diag_log format ["[PATROL] Hilltop fire teams: %1 soldiers in %2 positions", _hi
 // =====================================================
 // 5. SPAWN INFANTRY PATROLS (CLAMPED TO AO)
 // =====================================================
-private _infCount = 18 + floor (random 5);
+private _infCount = 10 + floor (random 4);  // reduced from 18-22 for performance
 
 for "_i" from 1 to _infCount do {
     private _spawnPos = [];
@@ -517,7 +517,7 @@ for "_i" from 1 to _infCount do {
 // =====================================================
 // 6. SPAWN VEHICLES (CLAMPED TO AO)
 // =====================================================
-private _vehCount = 10 + floor (random 6);
+private _vehCount = 6 + floor (random 4);  // reduced from 10-15 for performance
 
 private _aoRoads = (_aoPos nearRoads _aoRadius) select { (getPos _x) distance2D _aoPos <= (_aoRadius * 0.9) };
 
@@ -651,7 +651,7 @@ if (!_tankSpawned) then {
 // =====================================================
 // 7. ELITE SNIPER TEAMS (CLAMPED TO AO)
 // =====================================================
-private _sniperSquadCount = 1 + floor (random 3);
+private _sniperSquadCount = 1 + floor (random 2);  // reduced from 1-3
 
 for "_i" from 1 to _sniperSquadCount do {
 
@@ -732,7 +732,7 @@ for "_i" from 1 to _sniperSquadCount do {
 // =====================================================
 // 8. LONE WOLF SNIPERS - HIGH GROUND AMBUSH (CLAMPED TO AO)
 // =====================================================
-private _loneWolfCount = 2 + floor (random 5);
+private _loneWolfCount = 1 + floor (random 3);  // reduced from 2-6
 private _loneWolfClass = "CUP_O_RU_Sniper_Ratnik_Autumn";
 
 for "_i" from 1 to _loneWolfCount do {
