@@ -406,7 +406,7 @@ private _localMarkers = +DYN_ground_markers;
                 [-3, "Hostage KIA"] call DYN_fnc_changeReputation;
                 ["TaskUpdated", ["A hostage has been killed. -3 REP."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
-                diag_log "[GROUND-HOSTAGE] Hostage killed. -5 rep applied.";
+                diag_log "[GROUND-HOSTAGE] Hostage killed. -3 rep applied.";
             };
         };
 
