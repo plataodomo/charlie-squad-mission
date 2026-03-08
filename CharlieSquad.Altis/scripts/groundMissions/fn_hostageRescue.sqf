@@ -307,9 +307,6 @@ _zoneMkr setMarkerColor "colorOPFOR";
 _zoneMkr setMarkerAlpha 0.25;
 DYN_ground_markers pushBack _zoneMkr;
 
-["GroundMission", [format ["Hostage Rescue | %1", _locName]]]
-    remoteExecCall ["BIS_fnc_showNotification", 0];
-
 diag_log format ["[GROUND-HOSTAGE] Mission active. %1 hostage(s) in %2. Task: %3",
     _hostageCount, _locName, _taskId];
 
