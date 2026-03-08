@@ -18,11 +18,11 @@
     Fail:       All hostages killed before rescue, or 40-min timeout with 0 saved.
     Partial:    Timeout with 1+ already rescued counts as success.
 
-    Reward:     18 + (7 × rescued) rep, +8 bonus if every hostage saved
-                  1 saved  : ~23–31 rep
-                  2 saved  : ~30–38 rep
-                  3 saved  : ~37–45 rep
-    Penalty:    -5 rep (one-time) the first time any hostage is killed
+    Reward:     10 + (4 × rescued) + random 3 rep
+                  1 saved  : ~14–17 rep
+                  2 saved  : ~18–21 rep
+                  3 saved  : ~22–25 rep
+    Penalty:    -3 rep (one-time) the first time any hostage is killed
 
     Notes:
         - Hostages use ACE zip-tie state if ace_captives is loaded; kneeling anim fallback
@@ -142,7 +142,7 @@ for "_i" from 1 to _hostageCount do {
 
     // ACE zip-tie if loaded (sets proper restrained animation and state)
     if (_hasACECaptives) then {
-        [_civ, objNull] call ace_captives_fnc_setHandcuffed;
+        [_civ, true] call ace_captives_fnc_setHandcuffed;
     };
 
     // State tracking (broadcast = true for MP sync)
@@ -328,11 +328,9 @@ private _localMarkers = +DYN_ground_markers;
                 _civ setVariable ["DYN_hostageFreed",  true,  true];
                 _civ setVariable ["DYN_freeRequested", false, true];
 
-                // Release ACE restraint (toggle off)
+                // Release ACE restraint
                 if (_hasACE) then {
-                    if (_civ getVariable ["ace_captives_isHandcuffed", false]) then {
-                        [_civ, objNull] call ace_captives_fnc_setHandcuffed;
-                    };
+                    [_civ, false] call ace_captives_fnc_setHandcuffed;
                 };
 
                 // Restore AI and route to base
@@ -383,8 +381,8 @@ private _localMarkers = +DYN_ground_markers;
             }) != -1;
             if (_anyDead) then {
                 _penalized = true;
-                [-5, "Hostage KIA"] call DYN_fnc_changeReputation;
-                ["TaskUpdated", ["A hostage has been killed. -5 REP."]]
+                [-3, "Hostage KIA"] call DYN_fnc_changeReputation;
+                ["TaskUpdated", ["A hostage has been killed. -3 REP."]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log "[GROUND-HOSTAGE] Hostage killed. -5 rep applied.";
             };
@@ -424,9 +422,7 @@ private _localMarkers = +DYN_ground_markers;
 
     switch (_outcome) do {
         case "SUCCESS": {
-            private _repBase  = 18 + (7 * _rescued);
-            private _repBonus = if (_rescued >= count _hostages) then { 8 } else { 0 };
-            private _rep      = _repBase + _repBonus + round (random 5);
+            private _rep = 10 + (4 * _rescued) + round (random 3);
 
             [_rep, "Hostages Rescued"] call DYN_fnc_changeReputation;
             [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
@@ -434,8 +430,7 @@ private _localMarkers = +DYN_ground_markers;
                 _rescued, count _hostages, _rep]]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
 
-            diag_log format ["[GROUND-HOSTAGE] SUCCESS. +%1 rep (%2 base + %3 bonus).",
-                _rep, _repBase, _repBonus];
+            diag_log format ["[GROUND-HOSTAGE] SUCCESS. +%1 rep.", _rep];
 
             // Rescued civilians despawn after 5 minutes
             {
