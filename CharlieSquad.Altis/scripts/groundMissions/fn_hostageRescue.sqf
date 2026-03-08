@@ -117,12 +117,13 @@ for "_i" from 1 to _hostageCount do {
 
     private _bldgIdx  = floor (random (count _availBldgs));
     private _bldg     = _availBldgs deleteAt _bldgIdx;
-    _usedBldgs pushBack [_bldg, _spawnPos]; // [building, hostagePos] — guards use both
 
     private _allPos   = [_bldg] call BIS_fnc_buildingPositions;
     // Prefer upper floors (height > 2.5 m above local ground)
     private _upperPos = _allPos select { (_x select 2) > 2.5 };
     private _spawnPos = if (_upperPos isEqualTo []) then { selectRandom _allPos } else { selectRandom _upperPos };
+
+    _usedBldgs pushBack [_bldg, _spawnPos]; // [building, hostagePos] — guards use both
 
     // Civilian in their own group for independent waypoint control
     private _civGrp = createGroup civilian;
@@ -203,7 +204,7 @@ if (_hostages isEqualTo []) exitWith {
 // Interior: guards per hostage building
 // 2 guards placed at the hostage's exact room position + 2-3 spread across other floors
 {
-    params ["_bldg", "_hostagePos"];
+    _x params ["_bldg", "_hostagePos"];
     private _allPos = [_bldg] call BIS_fnc_buildingPositions;
     if (_allPos isEqualTo []) then { continue };
 
