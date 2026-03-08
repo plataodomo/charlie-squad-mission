@@ -176,14 +176,9 @@ DYN_fnc_monitorCivHealing = {
     _civ setVariable ["DYN_isMonitored", true, true];
 
     private _startTime = diag_tickTime;
+    private _hasACE = !isNil "ace_medical_status_fnc_isInStableCondition";
 
-    // Snapshot initial state
-    private _initialOpenCount = [_civ, "ace_medical_openWounds"] call DYN_fnc_countACEWounds;
-    private _initialBleeding  = _civ getVariable ["ace_medical_woundBleeding", 0];
-    private _hasACE = (_initialOpenCount > 0) || (_initialBleeding > 0);
-
-    diag_log format ["[REP] Monitoring %1 | ACE:%2 | OpenWounds:%3 | Bleed:%4",
-        _civ, _hasACE, _initialOpenCount, _initialBleeding];
+    diag_log format ["[REP] Monitoring %1 | ACE:%2", _civ, _hasACE];
 
     // Monitor loop — 30 min timeout
     while {
@@ -199,21 +194,11 @@ DYN_fnc_monitorCivHealing = {
         private _stabilized = false;
 
         if (_hasACE) then {
-            // === ACE MEDICAL STABILIZATION CHECK ===
-            private _bleeding     = _civ getVariable ["ace_medical_woundBleeding", 0];
-            private _openCount    = [_civ, "ace_medical_openWounds"] call DYN_fnc_countACEWounds;
-            private _bandageCount = [_civ, "ace_medical_bandagedWounds"] call DYN_fnc_countACEWounds;
-            private _inCardiac    = _civ getVariable ["ace_medical_inCardiacArrest", false];
-            private _bloodVol     = _civ getVariable ["ace_medical_bloodVolume", 6.0];
-
-            // Blue triage = all wounds bandaged + no bleeding + not dying + decent blood
-            _stabilized = (
-                (_openCount == 0)
-                && {_bleeding <= 0}
-                && {!_inCardiac}
-                && {_bandageCount > 0}
-                && {_bloodVol > 4.2}
-            );
+            // === ACE MEDICAL STABILIZATION CHECK (official API) ===
+            // isInStableCondition: blood volume recovered, wounds treated
+            // isAwake: unit is conscious
+            _stabilized = (_civ call ace_medical_status_fnc_isInStableCondition) &&
+                          ([_civ] call ace_common_fnc_isAwake);
         } else {
             // === FALLBACK: vanilla damage check (no ACE medical) ===
             if (damage _civ < 0.3) then {
@@ -315,13 +300,15 @@ DYN_fnc_spawnWoundedCivilian = {
         _c setVariable ["ace_medical_ai_healSelf", false, true];
         _c setUnconscious true;
 
-        // Apply ACE wounds — this handles all damage/bleeding properly
+        // Apply ACE wounds — values must be heavy enough for ACE to maintain
+        // blood loss below the unconscious threshold until a medic treats them.
+        // Light values (0.5/0.4) were insufficient; ACE would reset consciousness.
         if (!isNil "ace_medical_fnc_addDamageToUnit") then {
-            [_c, 0.5, "body", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            [_c, 0.4, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_c, 1.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_c, 1.2, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
             if (_sev >= 3) then {
-                [_c, 0.3, "rightleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-                [_c, 0.2, "rightarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+                [_c, 0.8, "rightleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+                [_c, 0.6, "rightarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
             };
             diag_log format ["[REP] ACE wounds applied sev %1", _sev];
         } else {
