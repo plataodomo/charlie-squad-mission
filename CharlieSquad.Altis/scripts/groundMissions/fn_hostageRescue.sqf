@@ -150,41 +150,9 @@ for "_i" from 1 to _hostageCount do {
     _civ setVariable ["DYN_isHostage",      true,  true];
     _civ setVariable ["DYN_hostageFreed",   false, true];
     _civ setVariable ["DYN_hostageRescued", false, true];
-    _civ setVariable ["DYN_freeRequested",  false, true];
     _civ setVariable ["DYN_hostageIdx",     _i,    false];
 
-    // "Cut Zip Ties" — ACE interact menu preferred, addAction fallback
-    if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
-        private _cutAction = [
-            "DYN_cutZipTies",
-            "Cut Zip Ties",
-            "\a3\ui_f\data\GUI\Cfg\holdAction\holdAction_release_ca.paa",
-            {
-                params ["_target", "_player", "_params"];
-                if (!(_target getVariable ["DYN_hostageFreed", false])) then {
-                    _target setVariable ["DYN_freeRequested", true, true];
-                };
-            },
-            {
-                params ["_target", "_player", "_params"];
-                (_target getVariable ["DYN_isHostage", false]) &&
-                !(_target getVariable ["DYN_hostageFreed", false])
-            }
-        ] call ace_interact_menu_fnc_createAction;
-        [_civ, 0, ["ACE_MainActions"], _cutAction] call ace_interact_menu_fnc_addActionToObject;
-    } else {
-        _civ addAction [
-            "<t color='#00FF88'>Cut Zip Ties</t>",
-            {
-                params ["_target", "_caller"];
-                if (!(_target getVariable ["DYN_hostageFreed", false])) then {
-                    _target setVariable ["DYN_freeRequested", true, true];
-                };
-            },
-            nil, 6, true, true, "",
-            "(_target getVariable ['DYN_isHostage', false]) && {!(_target getVariable ['DYN_hostageFreed', false])}"
-        ];
-    };
+    // ACE "Free Prisoner" action appears automatically on handcuffed units — no custom action needed.
 
     _hostages  pushBack _civ;
     _civGroups pushBack _civGrp;
@@ -283,7 +251,7 @@ private _taskId = format ["hr_%1", round time];
     _taskId,
     [
         format [
-            "Enemy forces are holding <b>%1 civilian(s)</b> captive inside buildings in <b>%2</b>. Hostages are zip-tied and may be on any floor — search thoroughly.<br/><br/>Locate every hostage, cut their zip ties, and escort them back to the <b>medical zone</b> at base.",
+            "Enemy forces are holding <b>%1 civilian(s)</b> captive inside buildings in <b>%2</b>. Hostages may be on any floor — search thoroughly.<br/><br/>Locate every hostage, use ACE to free them, then escort them back to the <b>medical zone</b> at base.",
             _hostageCount, _locName
         ],
         "Hostage Rescue",
@@ -339,21 +307,15 @@ private _localMarkers = +DYN_ground_markers;
     while { !_done } do {
         sleep 4;
 
-        // --- Process free requests (server-side release) ---
+        // --- Detect ACE free prisoner (ace_captives_isHandcuffed flips to false) ---
         {
             private _civ = _x;
             if (
                 alive _civ &&
-                (_civ getVariable ["DYN_freeRequested",  false]) &&
-                !(_civ getVariable ["DYN_hostageFreed",  false])
+                !(_civ getVariable ["ace_captives_isHandcuffed", true]) &&
+                !(_civ getVariable ["DYN_hostageFreed", false])
             ) then {
-                _civ setVariable ["DYN_hostageFreed",  true,  true];
-                _civ setVariable ["DYN_freeRequested", false, true];
-
-                // Release ACE restraint
-                if (_hasACE) then {
-                    [_civ, false] call ace_captives_fnc_setHandcuffed;
-                };
+                _civ setVariable ["DYN_hostageFreed", true, true];
 
                 // Restore AI and route to base
                 _civ enableAI "ANIM";
