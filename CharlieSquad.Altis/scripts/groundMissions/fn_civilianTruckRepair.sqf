@@ -458,9 +458,12 @@ private _localMarkers = +DYN_ground_markers;
         if (_civIsInjured && !_civHealRewarded && alive _civilian
             && diag_tickTime - _startTime > 30) then {
 
-            private _civHealed = if (!isNil "ace_medical_fnc_addDamageToUnit") then {
-                // ACE: civ is conscious (ACE_isUnconscious default true = still injured)
-                !(_civilian getVariable ["ACE_isUnconscious", true])
+            private _civHealed = if (!isNil "ace_medical_status_fnc_isInStableCondition") then {
+                // ACE: use the official API — civ must be both medically stable
+                // (blood volume recovered, wounds treated) AND conscious.
+                // More reliable than reading the internal ACE_isUnconscious variable.
+                (_civilian call ace_medical_status_fnc_isInStableCondition) &&
+                ([_civilian] call ace_common_fnc_isAwake)
             } else {
                 // Vanilla fallback only — ACE wounds don't raise vanilla damage value
                 damage _civilian < 0.2
