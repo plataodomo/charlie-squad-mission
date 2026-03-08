@@ -189,6 +189,11 @@ if (_civIsInjured) then {
     _civilian setVariable ["DYN_isCivilian",  true, true];
     _civilian setVariable ["DYN_isWounded",   true, true];
     _civilian setVariable ["DYN_repAwarded",  false, true];
+    // DYN_civDown: mission-owned flag that keeps the civ lying.
+    // We clear it explicitly when rep is awarded or the truck is repaired.
+    // This avoids any dependency on ACE_isUnconscious, which ACE can reset at any
+    // time based on its own blood-volume/wound model.
+    _civilian setVariable ["DYN_civDown",     true, true];
     _civilian setCaptive true;
     _civilian setUnitPos "DOWN";
     [_civilian, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
@@ -198,39 +203,47 @@ if (_civIsInjured) then {
         sleep 1;
         if (isNull _civ || !alive _civ) exitWith {};
 
-        _civ setVariable ["ACE_isUnconscious",      true,  true];
+        // Prevent ACE AI self-treatment
         _civ setVariable ["ace_medical_ai_healSelf", false, true];
-        _civ setUnconscious true;
 
+        // Apply serious wounds so ACE3 registers a genuine critical patient.
+        // Heavier values (1.5 / 1.2 / 0.8) cause enough blood loss to push
+        // blood volume well below ACE's unconscious threshold over time, so
+        // ACE_isUnconscious stays true until a medic actually treats the wounds.
         if (!isNil "ace_medical_fnc_addDamageToUnit") then {
-            [_civ, 0.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            [_civ, 0.4, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            diag_log "[GROUND-REPAIR] ACE wounds applied to civilian driver.";
+            [_civ, 1.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_civ, 1.2, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_civ, 0.8, "leftarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            diag_log "[GROUND-REPAIR] ACE wounds applied to civilian driver (serious).";
         } else {
             _civ setDamage 0.6;
             diag_log "[GROUND-REPAIR] Vanilla fallback damage applied (no ACE).";
         };
 
-        // Enforce lying animation until treated
-        for "_i" from 1 to 5 do {
-            sleep 1;
+        // setUnconscious works with both vanilla and ACE (ACE hooks it)
+        _civ setUnconscious true;
+        _civ setVariable ["ACE_isUnconscious", true, true];
+
+        // Keep civ on the ground while DYN_civDown is true.
+        // Runs every 5 s — much more reliable than relying on ACE_isUnconscious
+        // because we control when this flag is cleared.
+        while { !isNull _civ && alive _civ && (_civ getVariable ["DYN_civDown", false]) } do {
+            sleep 5;
             if (isNull _civ || !alive _civ) exitWith {};
             _civ setUnitPos "DOWN";
             [_civ, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
         };
 
-        while { !isNull _civ && alive _civ && (_civ getVariable ["ACE_isUnconscious", false]) } do {
-            sleep 30;
-            if (isNull _civ || !alive _civ) exitWith {};
-            _civ setUnitPos "DOWN";
-            [_civ, "Acts_LyingWounded_01"] remoteExec ["switchMove", 0];
+        // Flag was cleared — let the civ stand if still alive
+        if (!isNull _civ && alive _civ) then {
+            _civ setUnitPos "AUTO";
         };
     };
 
     diag_log "[GROUND-REPAIR] Civilian driver injured — medic required.";
 } else {
     _civilian setVariable ["DYN_isCivilian", true, true];
-    diag_log "[GROUND-REPAIR] Civilian driver uninjured.";
+    diag_log "[GROUND-REPAIR] Civilian driver uninjured — standing by truck.";
 };
 
 // =====================================================
@@ -457,6 +470,8 @@ private _localMarkers = +DYN_ground_markers;
                 && _lastPlayerNearTime > 0
                 && (diag_tickTime - _lastPlayerNearTime) < 30) then {
                 _civHealRewarded = true;
+                // Clear the lying-down flag so the animation loop lets the civ stand up
+                _civilian setVariable ["DYN_civDown", false, true];
                 [_repMedic, "Civilian Driver Treated"] call DYN_fnc_changeReputation;
                 ["TaskSucceeded", ["Casualty Treated", format ["+%1 REP. Driver is stable.", _repMedic]]]
                     remoteExecCall ["BIS_fnc_showNotification", 0];
@@ -475,6 +490,10 @@ private _localMarkers = +DYN_ground_markers;
 
             if (_wheelFixed) then {
                 _truckSucceeded = true;
+                // Stop the lying-animation loop before boarding starts — without this
+                // the loop would fight setUnitPos "AUTO" every 5 s and the civ would
+                // flicker between standing and lying during the boarding sequence.
+                _civilian setVariable ["DYN_civDown", false, true];
                 [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 [_repRepair, "Civilian Truck Repaired"] call DYN_fnc_changeReputation;
                 diag_log format ["[GROUND-REPAIR] SUCCESS. Truck repaired. +%1 rep.", _repRepair];
