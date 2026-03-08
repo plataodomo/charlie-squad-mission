@@ -79,7 +79,7 @@ diag_log format ["[GROUND-HOSTAGE] Location: %1 at %2", _locName, _locPos];
 // =====================================================
 // 2. BUILDING SELECTION — multi-story houses
 // =====================================================
-private _allBuildings = nearestObjects [_locPos, ["House"], 350];
+private _allBuildings = nearestObjects [_locPos, ["House"], 170];
 
 // Prefer large buildings (>=8 interior positions); fall back to medium (>=4)
 private _largeBuildings = _allBuildings select {
@@ -117,7 +117,7 @@ for "_i" from 1 to _hostageCount do {
 
     private _bldgIdx  = floor (random (count _availBldgs));
     private _bldg     = _availBldgs deleteAt _bldgIdx;
-    _usedBldgs pushBack _bldg;
+    _usedBldgs pushBack [_bldg, _spawnPos]; // [building, hostagePos] — guards use both
 
     private _allPos   = [_bldg] call BIS_fnc_buildingPositions;
     // Prefer upper floors (height > 2.5 m above local ground)
@@ -152,18 +152,38 @@ for "_i" from 1 to _hostageCount do {
     _civ setVariable ["DYN_freeRequested",  false, true];
     _civ setVariable ["DYN_hostageIdx",     _i,    false];
 
-    // "Cut Zip Ties" action — runs on client, signals server monitor via global variable
-    _civ addAction [
-        "<t color='#00FF88'>Cut Zip Ties</t>",
-        {
-            params ["_target", "_caller"];
-            if (!(_target getVariable ["DYN_hostageFreed", false])) then {
-                _target setVariable ["DYN_freeRequested", true, true];
-            };
-        },
-        nil, 6, true, true, "",
-        "(_target getVariable ['DYN_isHostage', false]) && {!(_target getVariable ['DYN_hostageFreed', false])}"
-    ];
+    // "Cut Zip Ties" — ACE interact menu preferred, addAction fallback
+    if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
+        private _cutAction = [
+            "DYN_cutZipTies",
+            "Cut Zip Ties",
+            "\a3\ui_f\data\GUI\Cfg\holdAction\holdAction_release_ca.paa",
+            {
+                params ["_target", "_player", "_params"];
+                if (!(_target getVariable ["DYN_hostageFreed", false])) then {
+                    _target setVariable ["DYN_freeRequested", true, true];
+                };
+            },
+            {
+                params ["_target", "_player", "_params"];
+                (_target getVariable ["DYN_isHostage", false]) &&
+                !(_target getVariable ["DYN_hostageFreed", false])
+            }
+        ] call ace_interact_menu_fnc_createAction;
+        [_civ, 0, ["ACE_MainActions"], _cutAction] call ace_interact_menu_fnc_addActionToObject;
+    } else {
+        _civ addAction [
+            "<t color='#00FF88'>Cut Zip Ties</t>",
+            {
+                params ["_target", "_caller"];
+                if (!(_target getVariable ["DYN_hostageFreed", false])) then {
+                    _target setVariable ["DYN_freeRequested", true, true];
+                };
+            },
+            nil, 6, true, true, "",
+            "(_target getVariable ['DYN_isHostage', false]) && {!(_target getVariable ['DYN_hostageFreed', false])}"
+        ];
+    };
 
     _hostages  pushBack _civ;
     _civGroups pushBack _civGrp;
@@ -180,17 +200,28 @@ if (_hostages isEqualTo []) exitWith {
 // =====================================================
 // 4. GUARDS
 // =====================================================
-// Interior: 3-5 guards per hostage building, distributed across building positions
+// Interior: guards per hostage building
+// 2 guards placed at the hostage's exact room position + 2-3 spread across other floors
 {
-    private _bldg   = _x;
+    params ["_bldg", "_hostagePos"];
     private _allPos = [_bldg] call BIS_fnc_buildingPositions;
     if (_allPos isEqualTo []) then { continue };
 
-    private _indoorGrp  = createGroup east;
+    private _indoorGrp = createGroup east;
     DYN_ground_enemyGroups pushBack _indoorGrp;
 
-    private _guardCount = 3 + round (random 2); // 3-5
-    for "_g" from 1 to _guardCount do {
+    // 2 guards in the same room as the hostage
+    for "_g" from 1 to 2 do {
+        private _u = _indoorGrp createUnit [selectRandom _guardPool, _hostagePos, [], 0, "NONE"];
+        _u setDir (random 360);
+        _u allowFleeing 0;
+        [_u] call DYN_fnc_boostOpforAwareness;
+        DYN_ground_enemies pushBack _u;
+    };
+
+    // 2-3 additional guards spread across other positions in the building
+    private _extraCount = 2 + round (random 1);
+    for "_g" from 1 to _extraCount do {
         private _gPos = selectRandom _allPos;
         private _u    = _indoorGrp createUnit [selectRandom _guardPool, _gPos, [], 0, "NONE"];
         _u setDir (random 360);
@@ -199,24 +230,24 @@ if (_hostages isEqualTo []) exitWith {
         DYN_ground_enemies pushBack _u;
     };
 
-    // SENTRY — hold in/around building, engage on sight
-    private _wp = _indoorGrp addWaypoint [getPosATL (leader _indoorGrp), 15];
+    // SENTRY — hold position, engage on sight
+    private _wp = _indoorGrp addWaypoint [_hostagePos, 10];
     _wp setWaypointType "SENTRY";
     _wp setWaypointBehaviour "AWARE";
     _wp setWaypointCombatMode "RED";
 
 } forEach _usedBldgs;
 
-// Exterior: 1-2 patrol groups of 4-6, looping around the location
-private _patrolGroupCount = 1 + round (random 1); // 1-2
+// Exterior: 2-3 patrol groups of 5-7, contained within the zone
+private _patrolGroupCount = 2 + round (random 1); // 2-3
 for "_p" from 1 to _patrolGroupCount do {
     private _patrolGrp = createGroup east;
     DYN_ground_enemyGroups pushBack _patrolGrp;
 
-    private _pBase = [_locPos, 20 + random 60, random 360] call DYN_fnc_posOffset;
+    private _pBase = [_locPos, 15 + random 40, random 360] call DYN_fnc_posOffset;
     if (surfaceIsWater _pBase) then { _pBase = _locPos };
 
-    private _patrolSize = 4 + round (random 2); // 4-6
+    private _patrolSize = 5 + round (random 2); // 5-7
     for "_u" from 1 to _patrolSize do {
         private _unit = _patrolGrp createUnit [selectRandom _guardPool, _pBase, [], 0, "NONE"];
         _unit allowFleeing 0;
@@ -224,9 +255,9 @@ for "_p" from 1 to _patrolGroupCount do {
         DYN_ground_enemies pushBack _unit;
     };
 
-    // 3-point patrol loop + cycle
-    for "_w" from 1 to 3 do {
-        private _wPos = [_locPos, 35 + random 100, random 360] call DYN_fnc_posOffset;
+    // Patrol loop — waypoints kept within ~130 m of location centre (inside 200 m zone)
+    for "_w" from 1 to 4 do {
+        private _wPos = [_locPos, 20 + random 110, random 360] call DYN_fnc_posOffset;
         if (surfaceIsWater _wPos) then { _wPos = _locPos };
         private _wp = _patrolGrp addWaypoint [_wPos, 15];
         _wp setWaypointType "MOVE";
@@ -244,14 +275,14 @@ diag_log format ["[GROUND-HOSTAGE] Guards spawned: %1 units, %2 groups",
 // =====================================================
 // 5. TASK & MARKERS
 // =====================================================
-private _taskId = format ["hostage_rescue_%1", round (diag_tickTime * 10)];
+private _taskId = format ["hr_%1", round time];
 
 [
     west,
     _taskId,
     [
         format [
-            "Enemy forces are holding <b>%1 civilian(s)</b> captive inside buildings in <b>%2</b>. Hostages are zip-tied and scattered across multiple floors — search thoroughly.<br/><br/>Locate every hostage, cut their zip ties, and escort them back to the <b>medical zone</b> at base. Expect heavy resistance.",
+            "Enemy forces are holding <b>%1 civilian(s)</b> captive inside buildings in <b>%2</b>. Hostages are zip-tied and may be on any floor — search thoroughly.<br/><br/>Locate every hostage, cut their zip ties, and escort them back to the <b>medical zone</b> at base.",
             _hostageCount, _locName
         ],
         "Hostage Rescue",
@@ -261,13 +292,13 @@ private _taskId = format ["hostage_rescue_%1", round (diag_tickTime * 10)];
     "CREATED",
     3,
     true,
-    "rescue"
+    "search"
 ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_ground_tasks pushBack _taskId;
 
 // Zone ellipse
-private _zoneMkr = createMarker [format ["hostage_zone_%1", round (diag_tickTime * 10)], _locPos];
+private _zoneMkr = createMarker [format ["hr_zone_%1", round time], _locPos];
 _zoneMkr setMarkerShape "ELLIPSE";
 _zoneMkr setMarkerSize [200, 200];
 _zoneMkr setMarkerBrush "SolidBorder";
@@ -275,14 +306,7 @@ _zoneMkr setMarkerColor "colorOPFOR";
 _zoneMkr setMarkerAlpha 0.25;
 DYN_ground_markers pushBack _zoneMkr;
 
-// Objective flag
-private _flagMkr = createMarker [format ["hostage_flag_%1", round (diag_tickTime * 10)], _locPos];
-_flagMkr setMarkerType "hd_flag";
-_flagMkr setMarkerColor "colorOPFOR";
-_flagMkr setMarkerText format ["Hostages: %1", _locName];
-DYN_ground_markers pushBack _flagMkr;
-
-["GroundMission", [format ["Hostage Rescue | %1 — Locate hostages and cut their zip ties.", _locName]]]
+["GroundMission", [format ["Hostage Rescue | %1", _locName]]]
     remoteExecCall ["BIS_fnc_showNotification", 0];
 
 diag_log format ["[GROUND-HOSTAGE] Mission active. %1 hostage(s) in %2. Task: %3",
