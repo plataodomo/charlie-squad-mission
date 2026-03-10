@@ -94,6 +94,16 @@ DYN_fnc_findForestPos = {
 };
 
 // =====================================================
+// HELPER: Check position is clear of active resistance areas
+// =====================================================
+DYN_fnc_isClearOfResAreas = {
+    params ["_pos", ["_minDist", 400]];
+    private _resPos = missionNamespace getVariable ["DYN_resistanceAreaPositions", []];
+    if (_resPos isEqualTo []) exitWith { true };
+    (_resPos findIf { _pos distance2D _x < _minDist }) == -1
+};
+
+// =====================================================
 // CLEANUP FUNCTION
 // =====================================================
 DYN_fnc_groundCleanup = {

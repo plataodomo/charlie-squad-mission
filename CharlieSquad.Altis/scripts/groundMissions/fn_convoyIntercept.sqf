@@ -339,7 +339,7 @@ private _allCities = [];
             if (_pos distance2D _basePos > 1500) then {
                 private _aoOk = true;
                 if !(_aoCenter isEqualTo [0,0,0]) then { if (_pos distance2D _aoCenter < 1000) then {_aoOk=false} };
-                if (_aoOk && {count(_pos nearRoads 150) > 0}) then { _allCities pushBack [_pos, text _x, _type] };
+                if (_aoOk && {count(_pos nearRoads 150) > 0} && {[_pos] call DYN_fnc_isClearOfResAreas}) then { _allCities pushBack [_pos, text _x, _type] };
             };
         };
     };

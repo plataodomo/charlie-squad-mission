@@ -227,6 +227,11 @@ _candidates = _candidates call BIS_fnc_arrayShuffle;
 private _areaCount = (1 + floor (random 3)) min (count _candidates);
 private _selectedAreas = _candidates select [0, _areaCount];
 
+// Broadcast selected positions so ground missions can avoid spawning on top of them
+if (isNil "DYN_resistanceAreaPositions") then { DYN_resistanceAreaPositions = []; };
+{ DYN_resistanceAreaPositions pushBackUnique (locationPosition _x); } forEach _selectedAreas;
+publicVariable "DYN_resistanceAreaPositions";
+
 diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaCount];
 
 // =====================================================
