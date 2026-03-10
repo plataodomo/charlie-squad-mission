@@ -222,9 +222,10 @@ diag_log format ["[GROUND-SUPPLY] %1 ambush point(s) identified along route.", c
 // =====================================================
 // 5. TASK + MARKERS
 // =====================================================
-private _taskId  = format ["ground_supply_%1", round (diag_tickTime * 1000)];
-private _mkrDest = format ["supply_dest_%1",   round (diag_tickTime * 1000)];
-private _mkrBase = format ["supply_base_%1",   round (diag_tickTime * 1000)];
+private _taskId       = format ["ground_supply_%1",        round (diag_tickTime * 1000)];
+private _pickupTaskId = format ["ground_supply_pickup_%1", round (diag_tickTime * 1000)];
+private _mkrDest = format ["supply_dest_%1", round (diag_tickTime * 1000)];
+private _mkrBase = format ["supply_base_%1", round (diag_tickTime * 1000)];
 
 // Green drop-off zone at destination
 createMarker [_mkrDest, _destPos];
@@ -244,6 +245,25 @@ _mkrBase setMarkerColor "ColorOrange";
 _mkrBase setMarkerAlpha 0.9;
 DYN_ground_markers pushBack _mkrBase;
 
+// Pick-up task at base logistics point (shown first — higher priority)
+[
+    west,
+    _pickupTaskId,
+    [
+        "Supplies are staged at the logistics point. Load them onto a transport vehicle before moving out.",
+        "Pick Up Supplies",
+        ""
+    ],
+    _supplyMkrPos,
+    "ASSIGNED",
+    3,
+    true,
+    "collect"
+] remoteExec ["BIS_fnc_taskCreate", 0, _pickupTaskId];
+
+DYN_ground_tasks pushBack _pickupTaskId;
+
+// Delivery task at destination
 [
     west,
     _taskId,
@@ -259,7 +279,7 @@ DYN_ground_markers pushBack _mkrBase;
     "ASSIGNED",
     2,
     true,
-    "move"
+    "container"
 ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
 DYN_ground_tasks pushBack _taskId;
@@ -275,17 +295,18 @@ private _localMarkers = +DYN_ground_markers;
 
 [
     _supplyItems, _ambushPoints, _enemyPool, _destPos, _dropRadius,
-    _taskId, _timeout, _cleanupDelay, _repReward,
+    _taskId, _pickupTaskId, _supplyMkrPos, _timeout, _cleanupDelay, _repReward,
     _destName, _localObjects, _localMarkers
 ] spawn {
     params [
         "_items", "_ambushPoints", "_ePool", "_dPos", "_dRadius",
-        "_tid", "_tOut", "_despawnDelay", "_rep",
+        "_tid", "_pickupTid", "_supplyPos", "_tOut", "_despawnDelay", "_rep",
         "_dName", "_lObjects", "_lMarkers"
     ];
 
     private _startTime       = diag_tickTime;
     private _done            = false;
+    private _pickupDone      = false;
     private _repAwarded      = false;  // guard against double rep/notification on success
     private _triggeredPoints = [];  // ambush positions already activated
     private _dynGroups       = [];  // groups spawned dynamically, cleaned up at end
@@ -369,6 +390,17 @@ private _localMarkers = +DYN_ground_markers;
             diag_log format ["[GROUND-SUPPLY] Ambush spawned at %1 (%2 units).", _aPos, _unitCount];
         } forEach _ambushPoints;
 
+        // --- Pickup task: complete when all items have left the supply marker ---
+        if (!_pickupDone) then {
+            private _allPickedUp = (_items findIf {
+                !(_x getVariable ["ace_cargo_isLoaded", false]) && (_x distance2D _supplyPos < 40)
+            }) == -1;
+            if (_allPickedUp) then {
+                _pickupDone = true;
+                [_pickupTid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _pickupTid];
+            };
+        };
+
         // --- Delivery check: all items unloaded inside drop-off zone ---
         // _repAwarded guard ensures this block fires exactly once even if the loop
         // ticks again before _done takes effect.
@@ -389,7 +421,8 @@ private _localMarkers = +DYN_ground_markers;
     DYN_ground_markers = DYN_ground_markers - _lMarkers;
 
     sleep 15;
-    [_tid] call BIS_fnc_deleteTask;
+    [_tid]        call BIS_fnc_deleteTask;
+    [_pickupTid]  call BIS_fnc_deleteTask;
 
     DYN_ground_active = false;
 
