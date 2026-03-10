@@ -74,6 +74,12 @@ DYN_fnc_notifySquad = {
     } forEach units _grp;
 };
 
+// Invalidate local cache and refresh menu if open — safe to remoteExec
+DYN_fnc_invalidateMenuCache = {
+    DYN_cacheHash = "";
+    if (!isNull findDisplay 9500) then { [] call DYN_fnc_fullMenuRefresh; };
+};
+
 // =====================================================
 // NOTIFICATION WRAPPERS
 // =====================================================
@@ -968,12 +974,18 @@ DYN_fnc_squadAcceptInvite = {
 
     private _myName = name player;
 
+    // Capture existing members BEFORE join so we know who to notify
+    private _existingMembers = (units _grp) select { isPlayer _x && _x != player };
+
     [player] joinSilent _grp;
 
     DYN_expandedSquads pushBackUnique _squadName;
     [_squadName] call DYN_fnc_notifySquadJoined;
 
     [_grp, "SquadMemberJoined", format ["%1 joined the squad", _myName], player] call DYN_fnc_notifySquad;
+
+    // Force immediate menu refresh on all existing members (inviter + any others already in squad)
+    { [] remoteExec ["DYN_fnc_invalidateMenuCache", _x]; } forEach _existingMembers;
 
     DYN_cacheHash = "";
     [] call DYN_fnc_fullMenuRefresh;
@@ -1027,6 +1039,8 @@ DYN_fnc_squadLeave = {
     private _isLeader = leader _grp == player;
     private _myName = name player;
 
+    private _remainingMembers = (units _grp) select { isPlayer _x && _x != player };
+
     if (_isLeader) then {
         {
             if (_x != player && isPlayer _x) then {
@@ -1037,6 +1051,8 @@ DYN_fnc_squadLeave = {
     } else {
         [_grp, "SquadMemberLeft", format ["%1 left the squad", _myName], player] call DYN_fnc_notifySquad;
         [_squadName] call DYN_fnc_notifySquadLeft;
+        // Refresh remaining members immediately (beKickedWithNotify already handles the leader-disband case)
+        { [] remoteExec ["DYN_fnc_invalidateMenuCache", _x]; } forEach _remainingMembers;
     };
 
     [player] joinSilent (createGroup [playerSide, true]);
