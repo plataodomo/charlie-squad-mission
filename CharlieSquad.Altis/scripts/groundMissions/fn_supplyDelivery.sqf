@@ -225,7 +225,6 @@ diag_log format ["[GROUND-SUPPLY] %1 ambush point(s) identified along route.", c
 private _taskId       = format ["ground_supply_%1",        round (diag_tickTime * 1000)];
 private _pickupTaskId = format ["ground_supply_pickup_%1", round (diag_tickTime * 1000)];
 private _mkrDest = format ["supply_dest_%1", round (diag_tickTime * 1000)];
-private _mkrBase = format ["supply_base_%1", round (diag_tickTime * 1000)];
 
 // Green drop-off zone at destination
 createMarker [_mkrDest, _destPos];
@@ -236,14 +235,6 @@ _mkrDest setMarkerBrush  "SolidFull";
 _mkrDest setMarkerAlpha  0.25;
 _mkrDest setMarkerText   format ["Drop-off: %1", _destName];
 DYN_ground_markers pushBack _mkrDest;
-
-// Small icon marker at supply_delivery — task-style, not a zone
-createMarker [_mkrBase, _supplyMkrPos];
-_mkrBase setMarkerShape "ICON";
-_mkrBase setMarkerType  "b_support";
-_mkrBase setMarkerColor "ColorOrange";
-_mkrBase setMarkerAlpha 0.9;
-DYN_ground_markers pushBack _mkrBase;
 
 // Pick-up task at base logistics point (shown first — higher priority)
 [
@@ -258,7 +249,7 @@ DYN_ground_markers pushBack _mkrBase;
     "ASSIGNED",
     3,
     true,
-    "collect"
+    "container"
 ] remoteExec ["BIS_fnc_taskCreate", 0, _pickupTaskId];
 
 DYN_ground_tasks pushBack _pickupTaskId;
