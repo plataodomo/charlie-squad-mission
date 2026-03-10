@@ -94,6 +94,7 @@ private _shuffledLocs = _allLocs call BIS_fnc_arrayShuffle;
     if !(_aoCenter isEqualTo [0,0,0]) then {
         if (_lPos distance2D _aoCenter < 1500) then { continue };
     };
+    if (!([_lPos] call DYN_fnc_isClearOfResAreas)) then { continue };
     if (count (_lPos nearRoads 150) == 0) then { continue };
     if (count (nearestObjects [_lPos, ["House","Building"], 150]) < 4) then { continue };
 
@@ -114,6 +115,7 @@ if (_destPos isEqualTo []) then {
         if !(_aoCenter isEqualTo [0,0,0]) then {
             if (_p distance2D _aoCenter < 1500) then { continue };
         };
+        if (!([_p] call DYN_fnc_isClearOfResAreas)) then { continue };
         if (count (_p nearRoads 80) == 0) then { continue };
         if (count (nearestObjects [_p, ["House","Building"], 120]) < 4) then { continue };
         _destPos  = _p;

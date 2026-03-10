@@ -59,10 +59,12 @@ private _guardPool = [
 private _locations = nearestLocations [_basePos, ["NameVillage", "NameCity", "NameCityCapital"], 40000];
 _locations = _locations select {
     private _d = _x distance _basePos;
+    private _lp = getPos _x;
     _d > 1800 &&
     { _d < 8000 } &&
-    { !surfaceIsWater (getPos _x) } &&
-    { _aoCenter isEqualTo [0,0,0] || { _x distance _aoCenter > 600 } }
+    { !surfaceIsWater _lp } &&
+    { _aoCenter isEqualTo [0,0,0] || { _x distance _aoCenter > 600 } } &&
+    { [_lp] call DYN_fnc_isClearOfResAreas }
 };
 
 if (_locations isEqualTo []) exitWith {
