@@ -130,13 +130,11 @@ publicVariable "DYN_shopVehicles";
 // =====================================================
 DYN_fnc_getVehiclePic = {
     params ["_classname"];
-    private _pic = getText (configFile >> "CfgVehicles" >> _classname >> "editorPreview");
-    if (_pic == "") then {
-        _pic = getText (configFile >> "CfgVehicles" >> _classname >> "picture");
-    };
-    if (_pic == "") then {
-        _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa";
-    };
+    private _cfg = configFile >> "CfgVehicles" >> _classname;
+    private _pic = getText (_cfg >> "editorPreview");
+    if (_pic == "") then { _pic = getText (_cfg >> "overviewPicture"); };
+    if (_pic == "") then { _pic = getText (_cfg >> "picture"); };
+    if (_pic == "") then { _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa"; };
     _pic
 };
 publicVariable "DYN_fnc_getVehiclePic";
