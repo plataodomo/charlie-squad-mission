@@ -165,67 +165,62 @@ publicVariable "DYN_fnc_getShopSpawnPos";
 // =====================================================
 DYN_fnc_getSpawnPosByCategory = {
     params ["_category"];
-    
+
     private _pos = [0,0,0];
     private _dir = random 360;
     private _err = "";
-    
-    if (_category == "Jets") then {
-        private _pos1 = getMarkerPos "jet_spawn_1";
-        private _pos2 = getMarkerPos "jet_spawn_2";
-        private _free1 = false;
-        private _free2 = false;
-        
-        if (!(_pos1 isEqualTo [0,0,0])) then {
-            if (count (nearestObjects [_pos1, ["Plane", "Air"], 25]) == 0) then {
-                _free1 = true;
-            };
+
+    switch (_category) do {
+        case "Jets": {
+            private _pos1 = getMarkerPos "jet_spawn_1";
+            private _pos2 = getMarkerPos "jet_spawn_2";
+            private _free1 = !(_pos1 isEqualTo [0,0,0]) && { count nearestObjects [_pos1, ["Plane","Air"], 25] == 0 };
+            private _free2 = !(_pos2 isEqualTo [0,0,0]) && { count nearestObjects [_pos2, ["Plane","Air"], 25] == 0 };
+
+            if (_free1) then { _pos = _pos1; _dir = markerDir "jet_spawn_1"; }
+            else { if (_free2) then { _pos = _pos2; _dir = markerDir "jet_spawn_2"; }
+            else { _err = "Both jet hangars are currently occupied!"; }; };
         };
-        
-        if (!(_pos2 isEqualTo [0,0,0])) then {
-            if (count (nearestObjects [_pos2, ["Plane", "Air"], 25]) == 0) then {
-                _free2 = true;
-            };
-        };
-        
-        if (_free1) then {
-            _pos = _pos1;
-            _dir = markerDir "jet_spawn_1";
-        } else {
-            if (_free2) then {
-                _pos = _pos2;
-                _dir = markerDir "jet_spawn_2";
-            } else {
-                _err = "Both jet hangars are currently occupied!";
-            };
-        };
-    } else {
-        if (_category == "Helicopters") then {
+        case "Helicopters": {
             private _hPos = getMarkerPos "heli_spawn";
-            if (!(_hPos isEqualTo [0,0,0])) then {
-                _pos = _hPos;
-                _dir = markerDir "heli_spawn";
-            } else {
+            if (_hPos isEqualTo [0,0,0]) then {
                 _pos = [] call DYN_fnc_getShopSpawnPos;
                 diag_log "[SHOP] WARNING: heli_spawn marker not found, using ground spawn";
+            } else {
+                if (count nearestObjects [_hPos, ["Air"], 20] > 0) then {
+                    _err = "Helicopter pad is occupied!";
+                } else {
+                    _pos = _hPos;
+                    _dir = markerDir "heli_spawn";
+                };
             };
-        } else {
-            if (_category == "Boats") then {
-                private _bPos = getMarkerPos "boat_spawn";
-                if (!(_bPos isEqualTo [0,0,0])) then {
+        };
+        case "Boats": {
+            private _bPos = getMarkerPos "boat_spawn";
+            if (_bPos isEqualTo [0,0,0]) then {
+                _err = "No boat_spawn marker found! Place a 'boat_spawn' marker near water in the editor.";
+            } else {
+                if (count nearestObjects [_bPos, ["Ship"], 15] > 0) then {
+                    _err = "Boat spawn is occupied!";
+                } else {
                     _pos = _bPos;
                     _dir = markerDir "boat_spawn";
-                } else {
-                    _err = "No boat_spawn marker found! Place a 'boat_spawn' marker near water in the editor.";
                 };
+            };
+        };
+        default {
+            // Cars, Trucks, Armor
+            private _gPos = [] call DYN_fnc_getShopSpawnPos;
+            if (count nearestObjects [_gPos, ["LandVehicle"], 10] > 0) then {
+                _err = "Vehicle spawn is occupied! Move any parked vehicles.";
             } else {
-                _pos = [] call DYN_fnc_getShopSpawnPos;
+                _pos = _gPos;
                 private _shopDir = markerDir "shop_spawn";
                 if (_shopDir != 0) then { _dir = _shopDir; };
             };
         };
     };
-    
+
     [_pos, _dir, _err]
 };
 publicVariable "DYN_fnc_getSpawnPosByCategory";
@@ -305,9 +300,10 @@ DYN_fnc_purchaseVehicle = {
     private _negCost = _cost * -1;
     [_negCost, format ["Purchased %1", _name]] call DYN_fnc_changeReputation;
     
-    // Create vehicle
-    private _veh = createVehicle [_classname, _spawnPos, [], 0, "NONE"];
-    
+    // Create vehicle — jets get +0.5 m Z offset to clear hangar floor and prevent clipping/explosion
+    private _finalPos = if (_cat == "Jets") then { [_spawnPos#0, _spawnPos#1, (_spawnPos#2) + 0.5] } else { _spawnPos };
+    private _veh = createVehicle [_classname, _finalPos, [], 0, "NONE"];
+
     if (isNull _veh) exitWith {
         diag_log "[SHOP] Failed to create vehicle";
         if (!isNull _buyer) then {
@@ -317,7 +313,7 @@ DYN_fnc_purchaseVehicle = {
     };
     
     _veh setDir _spawnDir;
-    _veh setPos _spawnPos;
+    _veh setPos _finalPos;
     
     // === TRACK FOR PERSISTENCE ===
     if (!isNil "DYN_fnc_trackShopVehicle") then {
