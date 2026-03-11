@@ -50,7 +50,9 @@ publicVariable "DYN_AO_radius";
 publicVariable "DYN_AO_hiddenObjectives";
 
 missionNamespace setVariable ["DYN_gpsJammerDisabled", true, true];
-missionNamespace setVariable ["DYN_dataLinkDisabled", true, true];
+missionNamespace setVariable ["DYN_dataLinkDisabled",  true, true];
+missionNamespace setVariable ["DYN_jammerPos",         [], true];
+missionNamespace setVariable ["DYN_jammerRadius",       0, true];
 
 // =====================
 // MARKER & TASK
