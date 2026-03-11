@@ -82,7 +82,7 @@ DYN_fnc_rulesDialogLoad = {
                 ];
             } else {
                 _txt = _txt + format [
-                    "<t color='#BEBEBE'>  %1</t><br/>",
+                    "<t color='#BEBEBE'>  • %1</t><br/>",
                     (_x select 0)
                 ];
             };
