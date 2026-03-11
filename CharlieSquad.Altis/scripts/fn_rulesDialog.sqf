@@ -73,19 +73,17 @@ DYN_fnc_rulesDialogLoad = {
         params ["_rules"];
         private _txt = "";
         {
-            private _text     = _x select 0;
-            private _isHeader = _x select 1;
-            if (_isHeader) then {
+            if (_x select 1) then {
                 // Blank line before each header (except the very first entry)
                 if (_txt != "") then { _txt = _txt + "<br/>"; };
                 _txt = _txt + format [
                     "<t color='#E0A830' font='RobotoCondensedBold'>  %1</t><br/>",
-                    _text
+                    (_x select 0)
                 ];
             } else {
                 _txt = _txt + format [
                     "<t color='#BEBEBE'>  %1</t><br/>",
-                    _text
+                    (_x select 0)
                 ];
             };
         } forEach _rules;
