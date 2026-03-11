@@ -91,6 +91,6 @@ DYN_fnc_rulesDialogLoad = {
     };
 
     private _display = findDisplay 9700;
-    (_display displayCtrl 9701) ctrlSetStructuredText parseText (_rulesLeft  call _fnBuild);
-    (_display displayCtrl 9702) ctrlSetStructuredText parseText (_rulesRight call _fnBuild);
+    (_display displayCtrl 9701) ctrlSetStructuredText parseText ([_rulesLeft]  call _fnBuild);
+    (_display displayCtrl 9702) ctrlSetStructuredText parseText ([_rulesRight] call _fnBuild);
 };
