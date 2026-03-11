@@ -111,6 +111,7 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
         };
 
         deleteVehicle _laptop;
+    };
     publicVariable "DYN_fnc_serverResIntelUsed";
 };
 
