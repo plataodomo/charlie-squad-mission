@@ -166,9 +166,11 @@ if ((_jamPos distance2D _aoPos) > _aoRadius) exitWith {
 // Register objective position
 DYN_OBJ_centers pushBack _jamPos;
 
-// Broadcast jammer location so clients can hide jammed players on the map
-// (read by the Draw handler in initPlayerLocal.sqf)
-missionNamespace setVariable ["DYN_jammerPos",   _jamPos,   true];
+// Broadcast the AO center + radius so the map Draw handler (initPlayerLocal.sqf)
+// hides player icons inside the jamming zone.
+// We use _aoPos (AO center) not _jamPos (terminal), because the black marker that
+// blacks out the map is centred on the AO, not the terminal.
+missionNamespace setVariable ["DYN_jammerPos",   _aoPos,    true];
 missionNamespace setVariable ["DYN_jammerRadius", _aoRadius, true];
 
 private _jamDir = random 360;

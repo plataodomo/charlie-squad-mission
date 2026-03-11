@@ -95,9 +95,11 @@ if (_sitePos isEqualTo []) then { _sitePos = [0,  90, 300] call _fn_findSite; };
 
 if (_sitePos isEqualTo []) then {
     _sitePos = [_aoPos, _minDist, _maxDist, 25, 1, 0.50, 0] call BIS_fnc_findSafePos;
+    // BIS_fnc_findSafePos can return positions beyond maxDist — reject anything outside the AO
+    if ((_sitePos distance2D _aoPos) > _maxInside) then { _sitePos = []; };
 };
 
-if (_sitePos isEqualTo [0,0,0] || {surfaceIsWater _sitePos}) exitWith {};
+if (_sitePos isEqualTo [] || {_sitePos isEqualTo [0,0,0]} || {surfaceIsWater _sitePos}) exitWith {};
 
 private _siteDir = random 360;
 
