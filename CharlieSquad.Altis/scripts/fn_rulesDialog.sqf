@@ -23,7 +23,7 @@ DYN_fnc_rulesDialogLoad = {
     // ====================================================================
     private _rulesLeft = [
         ["RESPECT EACH OTHER", true],
-        ["Treat all players with respect. Toxic behavior, insults, or harassment will not be tolerated.", false],
+        ["Treat all players with respect. Toxic behaviour, insults, or harassment will not be tolerated.", false],
 
         ["NO EXPLOITING", true],
         ["Exploiting bugs, glitches, or game mechanics to gain an unfair advantage is strictly prohibited.", false],
@@ -61,7 +61,7 @@ DYN_fnc_rulesDialogLoad = {
         ["Jets may only engage targets they were requested for.", false],
         ["Attack helicopters are exempt but must report the targets they are engaging.", false],
 
-        ["TEAMPLAY FIRST", true],
+        ["TEAM PLAY FIRST", true],
         ["Teamwork is the top priority. Admins may kick players who refuse to cooperate with the team, as unnecessary respawning disrupts medic gameplay.", false]
     ];
     // ====================================================================
