@@ -72,6 +72,10 @@ DYN_fnc_trackShopVehicle = {
         _veh setVariable ["DYN_shopPurchased", false, true];
         DYN_shopTrackedVehicles = DYN_shopTrackedVehicles - [_veh];
 
+        // Save immediately so the vehicle isn't in profileNamespace if the
+        // server restarts before the next auto-save cycle runs
+        [] call DYN_fnc_saveBaseVehicles;
+
         diag_log format ["[PERSISTENCE] Vehicle destroyed: %1 (%2) - will be cleaned up in 5 min", _type, _cat];
 
         // Notify all players
