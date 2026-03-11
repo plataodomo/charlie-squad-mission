@@ -26,6 +26,17 @@
 */
 
 // =====================================================
+// SERVER RULES DIALOG — shown to every player on join
+// =====================================================
+[] spawn {
+    waitUntil { !isNull player };
+    sleep 5;
+    // Wait for fn_rulesDialog.sqf to finish loading (init.sqf execVM)
+    waitUntil { !isNil "DYN_fnc_rulesDialogLoad" };
+    createDialog "DYN_RulesDialog";
+};
+
+// =====================================================
 // GPS JAMMER — SELECTIVE MAP ICON DRAW
 // =====================================================
 [] spawn {
