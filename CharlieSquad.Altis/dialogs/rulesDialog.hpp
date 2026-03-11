@@ -52,6 +52,9 @@ class DYN_RulesDialog {
         class RulesText {
             idc = 9701;
             type = 13;
+            style = 0x10;
+            text = "";
+            size = 0.028;
             x = 0.165; y = 0.155; w = 0.665; h = 0.670;
             colorBackground[] = {0.08, 0.08, 0.08, 1};
             font = "RobotoCondensed"; sizeEx = 0.028;
