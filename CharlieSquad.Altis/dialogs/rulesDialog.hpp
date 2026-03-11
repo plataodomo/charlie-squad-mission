@@ -5,7 +5,7 @@ class DYN_RulesDialog {
     idd = 9700;
     movingEnable = false;
     enableSimulation = true;
-    onLoad = "[] call DYN_fnc_rulesDialogLoad;";
+    onLoad = "[] spawn DYN_fnc_rulesDialogLoad;";
 
     class ControlsBackground {
         class MainBG {
