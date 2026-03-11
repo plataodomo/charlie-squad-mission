@@ -1,27 +1,27 @@
 /*
     scripts\fn_rulesDialog.sqf
-    SERVER RULES DIALOG — runs on each client, defines the populate function
-    called by DYN_RulesDialog's onLoad event.
+    SERVER RULES DIALOG — runs on each client, called by DYN_RulesDialog's onLoad event.
 
     -----------------------------------------------------------------------
     HOW TO EDIT YOUR RULES
     -----------------------------------------------------------------------
-    Each entry in _rules is an array:  ["Text", isHeader]
+    _rulesLeft  → shown in the LEFT  column (rules 1–6)
+    _rulesRight → shown in the RIGHT column (rules 7–12)
 
-      isHeader = true  → bold gold section heading
-      isHeader = false → bullet-point rule underneath it
+    Each entry: ["Text", isHeader]
+      isHeader = true  → gold bold section heading
+      isHeader = false → rule description underneath it
 
-    Add, remove, or reorder entries freely. The dialog scrolls automatically
-    if the content is taller than the text area.
+    Keep each column roughly balanced in length for a clean look.
     -----------------------------------------------------------------------
 */
 
 DYN_fnc_rulesDialogLoad = {
 
     // ====================================================================
-    //  YOUR SERVER RULES — EDIT THIS ARRAY
+    //  LEFT COLUMN — rules 1 to 6
     // ====================================================================
-    private _rules = [
+    private _rulesLeft = [
         ["RESPECT EACH OTHER", true],
         ["Treat all players with respect. Toxic behavior, insults, or harassment will not be tolerated.", false],
 
@@ -38,8 +38,13 @@ DYN_fnc_rulesDialogLoad = {
         ["After using a helicopter, it must either be destroyed or marked on the map and returned to base after the mission is completed.", false],
 
         ["NO EXPLOSIVES IN BASE", true],
-        ["The use of explosives or explosive ammunition inside the base is strictly forbidden (except when engaging enemies).", false],
+        ["The use of explosives or explosive ammunition inside the base is strictly forbidden (except when engaging enemies).", false]
+    ];
 
+    // ====================================================================
+    //  RIGHT COLUMN — rules 7 to 12
+    // ====================================================================
+    private _rulesRight = [
         ["PURCHASED ASSETS", true],
         ["Assets bought with points must be returned to base if they were not destroyed.", false],
 
@@ -61,18 +66,32 @@ DYN_fnc_rulesDialogLoad = {
     ];
     // ====================================================================
 
-    // Build scrollable structured text from the rules array
-    private _txt = "";
-    {
-        _x params ["_text", "_isHeader"];
-        if (_isHeader) then {
-            _txt = _txt + format ["<br/><t color='#DDAA44' size='1.0' font='RobotoCondensedBold'>  %1</t><br/>", _text];
-            _txt = _txt + "<t color='#5A3A20' size='0.55'>  ─────────────────────────────────────────</t><br/>";
-        } else {
-            _txt = _txt + format ["<t color='#C0C0C0' size='0.9'>     •  %1</t><br/>", _text];
-        };
-    } forEach _rules;
+    // Build structured text from a rules array.
+    // NOTE: All text uses size='1.0' (the control's base size = 0.028).
+    //       Never use fractional sizes — they cause pixelation in Arma 3.
+    private _fnBuild = {
+        params ["_rules"];
+        private _txt = "";
+        {
+            _x params ["_text", "_isHeader"];
+            if (_isHeader) then {
+                // Blank line before each header (except the very first entry)
+                if (_txt != "") then { _txt = _txt + "<br/>"; };
+                _txt = _txt + format [
+                    "<t color='#E0A830' font='RobotoCondensedBold'>  %1</t><br/>",
+                    _text
+                ];
+            } else {
+                _txt = _txt + format [
+                    "<t color='#BEBEBE'>  %1</t><br/>",
+                    _text
+                ];
+            };
+        } forEach _rules;
+        _txt
+    };
 
-    private _ctrl = (findDisplay 9700) displayCtrl 9701;
-    _ctrl ctrlSetStructuredText parseText _txt;
+    private _display = findDisplay 9700;
+    (_display displayCtrl 9701) ctrlSetStructuredText parseText (_rulesLeft  call _fnBuild);
+    (_display displayCtrl 9702) ctrlSetStructuredText parseText (_rulesRight call _fnBuild);
 };
