@@ -73,7 +73,8 @@ DYN_fnc_rulesDialogLoad = {
         params ["_rules"];
         private _txt = "";
         {
-            _x params ["_text", "_isHeader"];
+            private _text     = _x select 0;
+            private _isHeader = _x select 1;
             if (_isHeader) then {
                 // Blank line before each header (except the very first entry)
                 if (_txt != "") then { _txt = _txt + "<br/>"; };
