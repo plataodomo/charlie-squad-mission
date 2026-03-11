@@ -50,12 +50,13 @@ if (hasInterface) then {
     [] spawn {
         waitUntil { !isNull player };
         waitUntil { alive player };
-        
+
         // Wait for reputation to sync from server (JIP fix)
         waitUntil { !isNil {missionNamespace getVariable "DYN_Reputation"} };
-        
+
         sleep 1;
         execVM "scripts\fn_squadMenu.sqf";
+        execVM "scripts\fn_rulesDialog.sqf";
     };
 };
 
