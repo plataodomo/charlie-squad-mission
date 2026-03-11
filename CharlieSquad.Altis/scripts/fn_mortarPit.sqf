@@ -347,7 +347,7 @@ private _fn_dirFromVec = {
 private _guardSpots = [
     [23342.5,18127.5,[1,0,0]],
     [23327.0,18112.0,[0,1,0]],
-    [23323.0,18129.0,[0,1,0]]
+    [23317.0,18129.0,[0,1,0]]  // moved 6m west — was on top of HBarrier at [23323.3,18129.2]
 ];
 
 {
