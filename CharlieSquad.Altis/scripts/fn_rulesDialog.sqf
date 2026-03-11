@@ -62,14 +62,14 @@ DYN_fnc_rulesDialogLoad = {
     // ====================================================================
 
     // Build scrollable structured text from the rules array
-    private _txt = "<t color='#111111' size='0.1'> </t>";  // top padding
+    private _txt = "";
     {
         _x params ["_text", "_isHeader"];
         if (_isHeader) then {
-            _txt = _txt + format ["<br/><t color='#DDAA44' size='1.1' font='RobotoCondensedBold'>  %1</t><br/>", _text];
-            _txt = _txt + "<t color='#4A2E1A'>  ──────────────────────────────────────</t><br/>";
+            _txt = _txt + format ["<br/><t color='#DDAA44' size='1.0' font='RobotoCondensedBold'>  %1</t><br/>", _text];
+            _txt = _txt + "<t color='#5A3A20' size='0.55'>  ─────────────────────────────────────────</t><br/>";
         } else {
-            _txt = _txt + format ["<t color='#BBBBBB'>     •  %1</t><br/>", _text];
+            _txt = _txt + format ["<t color='#C0C0C0' size='0.9'>     •  %1</t><br/>", _text];
         };
     } forEach _rules;
 
