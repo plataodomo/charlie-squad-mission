@@ -166,6 +166,11 @@ if ((_jamPos distance2D _aoPos) > _aoRadius) exitWith {
 // Register objective position
 DYN_OBJ_centers pushBack _jamPos;
 
+// Broadcast jammer location so clients can hide jammed players on the map
+// (read by the Draw handler in initPlayerLocal.sqf)
+missionNamespace setVariable ["DYN_jammerPos",   _jamPos,   true];
+missionNamespace setVariable ["DYN_jammerRadius", _aoRadius, true];
+
 private _jamDir = random 360;
 
 diag_log format ["[GPS] Jammer position: %1, %2m from AO center, %3 trees nearby", _jamPos, round (_jamPos distance2D _aoPos), count (nearestTerrainObjects [_jamPos, ["TREE", "SMALL TREE"], 30, false])];
@@ -325,6 +330,10 @@ DYN_fnc_disableGPSJammer = {
 
     _terminal setVariable ["gpsDisabled", true, true];
     missionNamespace setVariable ["DYN_gpsJammerDisabled", true, true];
+
+    // Restore map icons — clear jammer zone so clients draw all players again
+    missionNamespace setVariable ["DYN_jammerPos",   [], true];
+    missionNamespace setVariable ["DYN_jammerRadius",  0, true];
 
     private _mkr = _terminal getVariable ["gpsBlackMarker", ""];
     if (_mkr != "" && {(getMarkerPos _mkr) isNotEqualTo [0,0,0]}) then {
