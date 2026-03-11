@@ -22,40 +22,42 @@ DYN_fnc_rulesDialogLoad = {
     //  YOUR SERVER RULES — EDIT THIS ARRAY
     // ====================================================================
     private _rules = [
-        ["GENERAL CONDUCT", true],
-        ["Treat all players with respect. No racism, harassment, or hate speech.", false],
-        ["No griefing — do not intentionally ruin the experience for other players.", false],
-        ["No cheating, exploiting, or using mods that give an unfair advantage.", false],
-        ["English in side-chat so everyone can communicate.", false],
-        ["Do not argue with admins in public chat. Raise disputes calmly and privately.", false],
+        ["RESPECT EACH OTHER", true],
+        ["Treat all players with respect. Toxic behavior, insults, or harassment will not be tolerated.", false],
 
-        ["TEAMKILLING", true],
-        ["Intentional teamkilling is an immediate ban — zero tolerance.", false],
-        ["Accidental TKs must be acknowledged and apologized for in chat.", false],
-        ["Friendly fire during an active engagement must be reported to your squad leader.", false],
+        ["NO EXPLOITING", true],
+        ["Exploiting bugs, glitches, or game mechanics to gain an unfair advantage is strictly prohibited.", false],
 
-        ["VEHICLES & ASSETS", true],
-        ["Do not steal, destroy, or abandon friendly vehicles.", false],
-        ["Return all vehicles to base when no longer in use. Abandoned vehicles may be deleted.", false],
-        ["Jets and helicopters require competent piloting. Do not take high-value aircraft if you cannot fly them safely.", false],
-        ["Destroyed shop vehicles are permanently lost — they cost squad reputation to replace, so use them wisely.", false],
-        ["Do not block spawn points or vehicle pads.", false],
+        ["DYNAMIC OBJECTS", true],
+        ["The unnecessary placement of dynamic objects (e.g. trenches) is not allowed.", false],
 
-        ["COMBAT & OPERATIONS", true],
-        ["Coordinate with your squad before attacking the main AO.", false],
-        ["Do not fire weapons inside the base safe zone at any time.", false],
-        ["Do not waste expensive assets on soft targets infantry can handle.", false],
-        ["Follow squad leader orders during active operations. If you disagree, discuss it after the op.", false],
+        ["COMMUNICATION", true],
+        ["When 4 or more players are online, communication must take place via TeamSpeak using TFAR.", false],
 
-        ["REPUTATION SYSTEM", true],
-        ["Reputation is earned by completing objectives and is shared across the server.", false],
-        ["Admins may deduct reputation for rule violations without prior warning.", false],
-        ["Do not exploit reputation mechanics, AO triggers, or mission scripts.", false],
+        ["HELICOPTER USAGE", true],
+        ["After using a helicopter, it must either be destroyed or marked on the map and returned to base after the mission is completed.", false],
 
-        ["ADMIN & ENFORCEMENT", true],
-        ["Admin decisions are final. Persistent disputes will result in removal.", false],
-        ["Report rule violations to an admin — do not take matters into your own hands.", false],
-        ["Bans are issued for: intentional TK, cheating, repeated conduct violations, or admin disrespect.", false]
+        ["NO EXPLOSIVES IN BASE", true],
+        ["The use of explosives or explosive ammunition inside the base is strictly forbidden (except when engaging enemies).", false],
+
+        ["PURCHASED ASSETS", true],
+        ["Assets bought with points must be returned to base if they were not destroyed.", false],
+
+        ["NO FRIENDLY FIRE", true],
+        ["Friendly fire is not allowed. Mutual agreement between players is the only exception.", false],
+
+        ["ARSENAL CLEANLINESS", true],
+        ["Do not leave inventory items lying around in the arsenal building.", false],
+
+        ["ARTILLERY USAGE", true],
+        ["Firing artillery at friendly units without request is prohibited.", false],
+
+        ["AIR SUPPORT RULES", true],
+        ["Jets may only engage targets they were requested for.", false],
+        ["Attack helicopters are exempt but must report the targets they are engaging.", false],
+
+        ["TEAMPLAY FIRST", true],
+        ["Teamwork is the top priority. Admins may kick players who refuse to cooperate with the team, as unnecessary respawning disrupts medic gameplay.", false]
     ];
     // ====================================================================
 
