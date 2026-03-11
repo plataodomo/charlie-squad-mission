@@ -58,52 +58,69 @@ private _maxDist = (_aoRadius * 0.80) min _maxInside;
 
 for "_attempt" from 1 to 80 do {
     private _testPos = [_pos, _minDist, _maxDist, 35, 0, 0.15, 0] call BIS_fnc_findSafePos;
-    
+
     if ((_testPos distance2D _pos) > _maxInside) then { continue };
     if (surfaceIsWater _testPos) then { continue };
-    if ((count (nearestObjects [_testPos, ["House","Building"], 80])) > 0) then { continue };
-    
+    if ((count (nearestObjects [_testPos, ["House","Building"], 100])) > 0) then { continue };
+
     // Check spacing from other objectives
     if !([_testPos, _avoid, _minFromObj] call _fn_farEnough) then { continue };
-    
+
     private _g1 = abs ((getTerrainHeightASL _testPos) - (getTerrainHeightASL (_testPos getPos [18, 0])));
     private _g2 = abs ((getTerrainHeightASL _testPos) - (getTerrainHeightASL (_testPos getPos [18, 90])));
     if ((_g1 > 2) || (_g2 > 2)) then { continue };
-    
+
     _mortarPos = _testPos;
     break;
 };
 
+// Pass 2: open elevated ground — score candidates by elevation above surroundings
+// so mortar pits prefer hilltops and open fields over city edges
 if (_mortarPos isEqualTo []) then {
-    for "_attempt" from 1 to 80 do {
-        private _testPos = [_pos, (_aoRadius * 0.20), _maxInside, 40, 0, 0.12, 0] call BIS_fnc_findSafePos;
-        
-        if ((_testPos distance2D _pos) > _maxInside) then { continue };
+    private _bestElev = -1e9;
+    for "_attempt" from 1 to 120 do {
+        private _dist = _minDist + random (_maxInside - _minDist);
+        private _testPos = _pos getPos [_dist, random 360];
+
         if (surfaceIsWater _testPos) then { continue };
-        if ((count (nearestObjects [_testPos, ["House","Building"], 80])) > 0) then { continue };
-        
-        // Check spacing
+        if ((_testPos distance2D _pos) > _maxInside) then { continue };
+        if ((count (nearestObjects [_testPos, ["House","Building"], 100])) > 0) then { continue };
         if !([_testPos, _avoid, _minFromObj] call _fn_farEnough) then { continue };
-        
-        _mortarPos = _testPos;
-        break;
+
+        // Relaxed gradient — hills are fine, just not sheer cliffs
+        private _g1 = abs ((getTerrainHeightASL _testPos) - (getTerrainHeightASL (_testPos getPos [18, 0])));
+        private _g2 = abs ((getTerrainHeightASL _testPos) - (getTerrainHeightASL (_testPos getPos [18, 90])));
+        if ((_g1 > 4) || (_g2 > 4)) then { continue };
+
+        // Elevation score: average height of 8 surrounding sample points vs self
+        // Positive = hilltop, negative = valley — prefer hilltops
+        private _selfH = getTerrainHeightASL _testPos;
+        private _surroundH = 0;
+        { _surroundH = _surroundH + (getTerrainHeightASL (_testPos getPos [80, _x])); } forEach [0,45,90,135,180,225,270,315];
+        private _elevScore = _selfH - (_surroundH / 8);
+
+        if (_elevScore > _bestElev) then {
+            _bestElev = _elevScore;
+            _mortarPos = _testPos;
+        };
     };
 };
 
-// FALLBACK — if still no position, try multiple directions on land
-if ((_mortarPos isEqualTo []) || {(_mortarPos distance2D _pos) > _maxInside} || {surfaceIsWater _mortarPos}) then {
+// Fallback: sweep all angles at multiple distances — building check still enforced
+if (_mortarPos isEqualTo []) then {
     private _fallbackFound = false;
-    for "_a" from 0 to 330 step 30 do {
-        private _tryPos = _pos getPos [_maxInside, _a];
-        if !(surfaceIsWater _tryPos) then {
+    for "_a" from 0 to 350 step 10 do {
+        for "_d" from (_aoRadius * 0.25) to _maxInside step 80 do {
+            private _tryPos = _pos getPos [_d, _a];
+            if (surfaceIsWater _tryPos) then { continue };
+            if ((count (nearestObjects [_tryPos, ["House","Building"], 60])) > 0) then { continue };
             _mortarPos = _tryPos;
             _fallbackFound = true;
         };
         if (_fallbackFound) exitWith {};
     };
-    // If every direction is water, abort — don't spawn in the ocean
     if (!_fallbackFound) exitWith {
-        diag_log format ["[MORTAR] ABORTED — all fallback positions are water near %1", _pos];
+        diag_log format ["[MORTAR] ABORTED — no clear land position found near %1", _pos];
     };
 };
 
