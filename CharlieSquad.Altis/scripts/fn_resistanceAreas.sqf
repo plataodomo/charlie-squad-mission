@@ -109,7 +109,8 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
             private _repGain = 5 + floor (random 6);
             [_repGain, "Enemy Intel Secured"] call DYN_fnc_changeReputation;
         };
-    };
+
+        deleteVehicle _laptop;
     publicVariable "DYN_fnc_serverResIntelUsed";
 };
 
