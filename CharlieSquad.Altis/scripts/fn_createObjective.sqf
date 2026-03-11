@@ -261,6 +261,7 @@ for "_i" from 1 to 4 do {
 // VEHICLES
 // =====================
 private _vehCount = 3 + floor (random 4);
+private _sectorAngle = 360 / _vehCount;
 for "_i" from 1 to _vehCount do {
     private _vehClass = selectRandom _vehPool;
     private _vehPos = [_pos, _aoRadius * 0.55, _aoRadius * 1.05, 10, 0, 0.35, 0] call BIS_fnc_findSafePos;
@@ -275,11 +276,15 @@ for "_i" from 1 to _vehCount do {
     private _grp = group (driver _veh);
     DYN_AO_enemyGroups pushBack _grp;
 
+    // Each vehicle patrols its own sector to prevent routes crossing
+    private _sectorBase = (_i - 1) * _sectorAngle;
     for "_w" from 1 to 3 do {
-        private _wpPos = [_pos, 150, _spawnRadius, 10, 0, 0.4, 0] call BIS_fnc_findSafePos;
+        private _wpPos = _pos getPos [(_aoRadius * 0.3) + random (_aoRadius * 0.55), _sectorBase + random _sectorAngle];
+        if (surfaceIsWater _wpPos) then { _wpPos = [_pos, 150, _spawnRadius, 10, 0, 0.4, 0] call BIS_fnc_findSafePos; };
         private _wp = _grp addWaypoint [_wpPos, 0];
         _wp setWaypointType "MOVE";
         _wp setWaypointSpeed "LIMITED";
+        _wp setWaypointCompletionRadius 80;
     };
     (_grp addWaypoint [_vehPos, 0]) setWaypointType "CYCLE";
 };
