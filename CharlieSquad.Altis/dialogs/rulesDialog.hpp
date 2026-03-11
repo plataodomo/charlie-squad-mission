@@ -10,21 +10,21 @@ class DYN_RulesDialog {
     class ControlsBackground {
         class MainBG {
             idc = -1; type = 0; style = 0;
-            x = 0.15; y = 0.05; w = 0.70; h = 0.90;
+            x = 0.10; y = 0.02; w = 0.80; h = 0.96;
             colorBackground[] = {0.10, 0.10, 0.10, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
         class HeaderBG {
             idc = -1; type = 0; style = 0;
-            x = 0.15; y = 0.05; w = 0.70; h = 0.11;
+            x = 0.10; y = 0.02; w = 0.80; h = 0.12;
             colorBackground[] = {0.22, 0.06, 0.06, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
         class BottomBG {
             idc = -1; type = 0; style = 0;
-            x = 0.15; y = 0.84; w = 0.70; h = 0.11;
+            x = 0.10; y = 0.878; w = 0.80; h = 0.102;
             colorBackground[] = {0.13, 0.13, 0.13, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
@@ -34,19 +34,19 @@ class DYN_RulesDialog {
     class Controls {
         class HeaderTitle {
             idc = -1; type = 0; style = 2;
-            x = 0.15; y = 0.062; w = 0.70; h = 0.055;
+            x = 0.10; y = 0.030; w = 0.80; h = 0.052;
             colorBackground[] = {0,0,0,0};
             colorText[] = {1.0, 0.85, 0.85, 1};
             text = "SERVER RULES";
-            font = "RobotoCondensedBold"; sizeEx = 0.055; shadow = 2;
+            font = "RobotoCondensedBold"; sizeEx = 0.050; shadow = 2;
         };
         class SubTitle {
             idc = -1; type = 0; style = 2;
-            x = 0.15; y = 0.118; w = 0.70; h = 0.026;
+            x = 0.10; y = 0.085; w = 0.80; h = 0.024;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.65, 0.50, 0.50, 1};
+            colorText[] = {0.60, 0.44, 0.44, 1};
             text = "Read carefully before playing. Violations may result in removal from the server.";
-            font = "RobotoCondensed"; sizeEx = 0.023; shadow = 0;
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
         };
         // Scrollable structured text — IDC 9701
         class RulesText {
@@ -54,28 +54,28 @@ class DYN_RulesDialog {
             type = 13;
             style = 0x10;
             text = "";
-            size = 0.028;
-            x = 0.165; y = 0.155; w = 0.665; h = 0.670;
+            size = 0.024;
+            x = 0.113; y = 0.152; w = 0.773; h = 0.712;
             colorBackground[] = {0.08, 0.08, 0.08, 1};
-            font = "RobotoCondensed"; sizeEx = 0.028;
+            font = "RobotoCondensed"; sizeEx = 0.024;
             class VScrollbar {
-                color[] = {1, 1, 1, 0.45};
+                color[] = {1, 1, 1, 0.40};
                 colorActive[] = {1, 1, 1, 0.85};
-                colorDisabled[] = {1, 1, 1, 0.2};
+                colorDisabled[] = {1, 1, 1, 0.15};
                 thumb = "\A3\ui_f\data\gui\cfg\scrollbar\thumb_ca.paa";
                 arrowFull = "\A3\ui_f\data\gui\cfg\scrollbar\arrowFull_ca.paa";
                 arrowEmpty = "\A3\ui_f\data\gui\cfg\scrollbar\arrowEmpty_ca.paa";
                 border = "\A3\ui_f\data\gui\cfg\scrollbar\border_ca.paa";
-                scrollSpeed = 0.06;
-                width = 0.018;
-                height = 0.018;
+                scrollSpeed = 0.15;
+                width = 0.022;
+                height = 0.022;
                 autoScrollEnabled = false;
             };
         };
         class AcknowledgeBtn {
             idc = -1;
             type = 1; style = 2;
-            x = 0.33; y = 0.858; w = 0.34; h = 0.055;
+            x = 0.30; y = 0.895; w = 0.40; h = 0.055;
             colorBackground[] = {0.14, 0.28, 0.14, 1};
             colorBackgroundActive[] = {0.22, 0.42, 0.22, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
