@@ -23,7 +23,7 @@ DYN_fnc_rulesDialogLoad = {
     // ====================================================================
     private _rulesLeft = [
         ["RESPECT EACH OTHER", true],
-        ["Treat all players with respect. Toxic behaviour, insults, or harassment will not be tolerated.", false],
+        ["Treat all players with respect. Toxic behavior, insults, or harassment will not be tolerated.", false],
 
         ["NO EXPLOITING", true],
         ["Exploiting bugs, glitches, or game mechanics to gain an unfair advantage is strictly prohibited.", false],
