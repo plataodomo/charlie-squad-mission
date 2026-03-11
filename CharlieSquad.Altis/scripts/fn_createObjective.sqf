@@ -297,9 +297,9 @@ if !(_waterProbe isEqualTo []) then {
         _boat setPosASL [(_spawnW # 0), (_spawnW # 1), 0];
         { deleteVehicle _x } forEach crew _boat;
         private _grp = createGroup east;
-        private _boatDriver = _grp createUnit ["CUP_O_RU_Crew_Ratnik_Autumn", _spawnW, [], 0, "NONE"];
+        private _boatDriver = _grp createUnit ["CUP_O_RU_Soldier_Ratnik_Autumn", _spawnW, [], 0, "NONE"];
         _boatDriver moveInDriver _boat;
-        private _boatGunner = _grp createUnit ["CUP_O_RU_Crew_Ratnik_Autumn", _spawnW, [], 0, "NONE"];
+        private _boatGunner = _grp createUnit ["CUP_O_RU_Soldier_Ratnik_Autumn", _spawnW, [], 0, "NONE"];
         _boatGunner moveInGunner _boat;
         DYN_AO_enemyVehs pushBack _boat;
         { DYN_AO_enemies pushBack _x; [_x] call _fn_setMaxSkill; } forEach (crew _boat);
