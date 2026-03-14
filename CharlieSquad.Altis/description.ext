@@ -622,17 +622,18 @@ class DYN_MilitiaDialog
     enableSimulation = true;
     onLoad = "[] spawn DYN_fnc_militiaDialogOnLoad;";
 
-    // Layout reference
-    //  Dialog  : x=0.30  y=0.18  w=0.40  h=0.58   (right=0.70  bottom=0.76)
-    //  Header  : y=0.18  h=0.10  → bottom 0.28
-    //  Buttons : compass pattern  N / W+E / S  centred at x=0.50
+    // Layout reference (matches shop/squad UI conventions)
+    //  Dialog  : x=0.30  y=0.16  w=0.40  h=0.68   (right=0.70  bottom=0.84)
+    //  HeaderBG: y=0.16  h=0.10  → bottom 0.26
+    //  ContentBG:y=0.27  h=0.42  → bottom 0.69
+    //  BottomBG: y=0.74  h=0.10  → bottom 0.84
 
     class ControlsBackground
     {
         class MainBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.30; y = 0.18; w = 0.40; h = 0.58;
+            x = 0.30; y = 0.16; w = 0.40; h = 0.68;
             colorBackground[] = {0.13, 0.13, 0.13, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
@@ -640,8 +641,24 @@ class DYN_MilitiaDialog
         class HeaderBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.30; y = 0.18; w = 0.40; h = 0.10;
-            colorBackground[] = {0.10, 0.18, 0.28, 1};
+            x = 0.30; y = 0.16; w = 0.40; h = 0.10;
+            colorBackground[] = {0.17, 0.17, 0.17, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class ContentBG
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.31; y = 0.27; w = 0.38; h = 0.42;
+            colorBackground[] = {0.10, 0.10, 0.10, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class BottomBG
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.30; y = 0.74; w = 0.40; h = 0.10;
+            colorBackground[] = {0.15, 0.15, 0.15, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
@@ -652,55 +669,55 @@ class DYN_MilitiaDialog
         class HeaderTitle
         {
             idc = -1; type = 0; style = 2;
-            x = 0.30; y = 0.193; w = 0.40; h = 0.062;
+            x = 0.30; y = 0.175; w = 0.40; h = 0.065;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.82, 0.92, 1.0, 1};
-            text = "MILITIA REINFORCEMENTS";
-            font = "RobotoCondensedBold"; sizeEx = 0.040; shadow = 2;
+            colorText[] = {0.90, 0.90, 0.90, 1};
+            text = "MILITIA SUPPORT";
+            font = "RobotoCondensedBold"; sizeEx = 0.055; shadow = 2;
         };
         class CloseBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.654; y = 0.188; w = 0.035; h = 0.048;
-            colorBackground[]         = {0.22, 0.22, 0.22, 1};
-            colorBackgroundActive[]   = {0.45, 0.25, 0.25, 1};
-            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            x = 0.659; y = 0.170; w = 0.035; h = 0.046;
+            colorBackground[]         = {0.25, 0.25, 0.25, 1};
+            colorBackgroundActive[]   = {0.50, 0.30, 0.30, 1};
+            colorBackgroundDisabled[] = {0.15, 0.15, 0.15, 1};
             colorText[]     = {0.8, 0.8, 0.8, 1};
-            colorFocused[]  = {0.22, 0.22, 0.22, 1};
+            colorFocused[]  = {0.25, 0.25, 0.25, 1};
             colorBorder[]   = {0,0,0,0};
             colorDisabled[] = {0.4, 0.4, 0.4, 1};
             colorShadow[]   = {0,0,0,0};
-            text = "X"; font = "RobotoCondensedBold"; sizeEx = 0.034;
+            text = "X"; font = "RobotoCondensedBold"; sizeEx = 0.038;
             offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
             borderSize = 0;
-            soundClick[]  = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
-            soundEnter[]  = {"", 0.1, 1};
-            soundPush[]   = {"", 0.1, 1};
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
             action = "closeDialog 0;";
         };
         class InfoText
         {
             idc = -1; type = 0; style = 2;
-            x = 0.31; y = 0.295; w = 0.38; h = 0.044;
+            x = 0.315; y = 0.282; w = 0.37; h = 0.038;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.72, 0.72, 0.72, 1};
-            text = "10 CUP BLUFOR militia will assault the AO from your chosen direction.";
-            font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
+            colorText[] = {0.75, 0.75, 0.75, 1};
+            text = "10 friendly militia will assault the AO from your direction.";
+            font = "RobotoCondensed"; sizeEx = 0.028; shadow = 0;
         };
         class TimerText
         {
             idc = -1; type = 0; style = 2;
-            x = 0.31; y = 0.338; w = 0.38; h = 0.036;
+            x = 0.315; y = 0.320; w = 0.37; h = 0.034;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.55, 0.65, 0.75, 1};
-            text = "Forces will assault 10 minutes after purchase.";
-            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "Forces assault 10 minutes after purchase.";
+            font = "RobotoCondensed"; sizeEx = 0.026; shadow = 0;
         };
         class BalanceLabel
         {
             idc = 9751; type = 0; style = 2;
-            x = 0.31; y = 0.383; w = 0.38; h = 0.036;
+            x = 0.315; y = 0.360; w = 0.37; h = 0.036;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.4, 0.9, 0.4, 1};
             text = "Balance: — pts  |  Cost: 30 pts";
@@ -709,24 +726,27 @@ class DYN_MilitiaDialog
         class DirectionLabel
         {
             idc = -1; type = 0; style = 2;
-            x = 0.31; y = 0.432; w = 0.38; h = 0.030;
+            x = 0.315; y = 0.408; w = 0.37; h = 0.028;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.50, 0.55, 0.60, 1};
+            colorText[] = {0.55, 0.55, 0.55, 1};
             text = "SELECT ATTACK DIRECTION";
             font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
         };
 
-        // ── Direction buttons — compass layout ─────────────────────────
-        // Shared style defined on NorthBtn, others inherit via class X: NorthBtn
+        // Compass layout — N centred, W/E flanking, S below
+        // Button w=0.130  h=0.048  centreX=0.50
+        // N: x=0.435  y=0.444
+        // W: x=0.315  y=0.504   E: x=0.555  y=0.504
+        // S: x=0.435  y=0.564
         class NorthBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.430; y = 0.472; w = 0.140; h = 0.053;
-            colorBackground[]         = {0.12, 0.22, 0.38, 1};
-            colorBackgroundActive[]   = {0.20, 0.36, 0.58, 1};
-            colorBackgroundDisabled[] = {0.10, 0.10, 0.12, 1};
-            colorText[]     = {0.82, 0.92, 1.00, 1};
-            colorFocused[]  = {0.12, 0.22, 0.38, 1};
+            x = 0.435; y = 0.444; w = 0.130; h = 0.048;
+            colorBackground[]         = {0.20, 0.20, 0.20, 1};
+            colorBackgroundActive[]   = {0.32, 0.32, 0.32, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[]     = {0.85, 0.85, 0.85, 1};
+            colorFocused[]  = {0.20, 0.20, 0.20, 1};
             colorBorder[]   = {0,0,0,0};
             colorDisabled[] = {0.35, 0.35, 0.35, 1};
             colorShadow[]   = {0,0,0,0};
@@ -734,27 +754,27 @@ class DYN_MilitiaDialog
             font = "RobotoCondensedBold"; sizeEx = 0.030;
             offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
             borderSize = 0;
-            soundClick[]  = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
-            soundEnter[]  = {"", 0.1, 1};
-            soundPush[]   = {"", 0.1, 1};
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
             action = "['NORTH'] call DYN_fnc_militiaDirectionChosen;";
         };
         class WestBtn: NorthBtn
         {
-            x = 0.308; y = 0.538;
+            x = 0.315; y = 0.504;
             text = "WEST";
             action = "['WEST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class EastBtn: NorthBtn
         {
-            x = 0.552; y = 0.538;
+            x = 0.555; y = 0.504;
             text = "EAST";
             action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class SouthBtn: NorthBtn
         {
-            x = 0.430; y = 0.604;
+            x = 0.435; y = 0.564;
             text = "SOUTH";
             action = "['SOUTH'] call DYN_fnc_militiaDirectionChosen;";
         };
@@ -762,12 +782,12 @@ class DYN_MilitiaDialog
         class CancelBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.370; y = 0.685; w = 0.260; h = 0.053;
-            colorBackground[]         = {0.28, 0.15, 0.15, 1};
-            colorBackgroundActive[]   = {0.42, 0.22, 0.22, 1};
+            x = 0.375; y = 0.757; w = 0.250; h = 0.050;
+            colorBackground[]         = {0.30, 0.18, 0.18, 1};
+            colorBackgroundActive[]   = {0.45, 0.25, 0.25, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
             colorText[]     = {0.85, 0.68, 0.68, 1};
-            colorFocused[]  = {0.28, 0.15, 0.15, 1};
+            colorFocused[]  = {0.30, 0.18, 0.18, 1};
             colorBorder[]   = {0,0,0,0};
             colorDisabled[] = {0.35, 0.35, 0.35, 1};
             colorShadow[]   = {0,0,0,0};
@@ -775,9 +795,9 @@ class DYN_MilitiaDialog
             font = "RobotoCondensedBold"; sizeEx = 0.032;
             offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
             borderSize = 0;
-            soundClick[]  = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
-            soundEnter[]  = {"", 0.1, 1};
-            soundPush[]   = {"", 0.1, 1};
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
             action = "closeDialog 0;";
         };
