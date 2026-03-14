@@ -199,21 +199,47 @@ DYN_fnc_shopBuy = {
 // MILITIA SUPPORT — CLIENT
 // =====================================================
 
+DYN_fnc_militiaSelectTier = {
+    params ["_tier"];
+    DYN_militia_tier = _tier;
+    private _display = findDisplay 9750;
+    if (isNull _display) exitWith {};
+    // Reset all tier buttons to default
+    { (_display displayCtrl _x) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] } forEach [9752, 9753, 9754];
+    // Highlight the selected tier with a green tint
+    private _idc = switch (_tier) do {
+        case "ROOKIE":  { 9752 };
+        case "REGULAR": { 9753 };
+        case "ELITE":   { 9754 };
+        default         { 9752 };
+    };
+    (_display displayCtrl _idc) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
+};
+
 DYN_fnc_militiaDialogOnLoad = {
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
     (_display displayCtrl 9751) ctrlSetText format ["%1 pts", _rep];
+    // Default selection: ROOKIE
+    ["ROOKIE"] call DYN_fnc_militiaSelectTier;
 };
 
 DYN_fnc_militiaDirectionChosen = {
     params ["_direction"];
+    private _tier = missionNamespace getVariable ["DYN_militia_tier", "ROOKIE"];
+    private _cost = switch (_tier) do {
+        case "ROOKIE":  { 20 };
+        case "REGULAR": { 35 };
+        case "ELITE":   { 60 };
+        default         { 20 };
+    };
     closeDialog 0;
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
-    if (_rep < 30) exitWith {
-        hint format ["Not enough points!\nNeed: 30  Have: %1", _rep];
+    if (_rep < _cost) exitWith {
+        hint format ["Not enough points!\nNeed: %1  Have: %2", _cost, _rep];
     };
-    [getPlayerUID player, _direction] remoteExec ["DYN_fnc_purchaseMilitia", 2];
-    hint format ["Militia support purchased!\n10 friendlies assaulting from %1 in 10 minutes.", _direction];
+    [getPlayerUID player, _direction, _tier] remoteExec ["DYN_fnc_purchaseMilitia", 2];
+    hint format ["Militia support purchased!\n%1 assaulting from %2 in 10 minutes.", _tier, _direction];
 };
 
