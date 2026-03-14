@@ -171,3 +171,51 @@ DYN_fnc_shopBuy = {
     closeDialog 0;
     hint format ["Requisitioning %1...", _name];
 };
+
+// =====================================================
+// MILITIA SUPPORT — CLIENT
+// =====================================================
+
+// Wait for server to broadcast the active flag
+waitUntil { !isNil "DYN_militia_active" };
+
+DYN_fnc_militiaDialogOnLoad = {
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    private _display = findDisplay 9750;
+    if (isNull _display) exitWith {};
+    (_display displayCtrl 9751) ctrlSetText format ["Balance: %1 pts  |  Cost: 30 pts", _rep];
+};
+
+DYN_fnc_militiaDirectionChosen = {
+    params ["_direction"];
+    closeDialog 0;
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    if (_rep < 30) exitWith {
+        hint format ["Not enough points!\nNeed: 30  Have: %1", _rep];
+    };
+    [getPlayerUID player, _direction] remoteExec ["DYN_fnc_purchaseMilitia", 2];
+    hint format ["Militia support purchased!\n10 friendlies assaulting from %1 in 10 minutes.", _direction];
+};
+
+_terminal addAction [
+    "<t color='#88BBFF'>Militia Support</t>",
+    {
+        if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
+            hint "Only active Squad Leaders can request militia support.";
+        };
+        if (missionNamespace getVariable ["DYN_militia_active", false]) exitWith {
+            hint "Friendly militia are already deployed! Wait for them to finish.";
+        };
+        if ((missionNamespace getVariable ["DYN_AO_center", [0,0,0]]) isEqualTo [0,0,0]) exitWith {
+            hint "No active AO. Cannot deploy militia support.";
+        };
+        createDialog "DYN_MilitiaDialog";
+    },
+    nil,
+    1.5,
+    true,
+    true,
+    "",
+    "true",
+    5
+];

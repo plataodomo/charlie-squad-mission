@@ -353,6 +353,7 @@ if (!isServer) then {} else {
 // Shop system uses tracking when vehicles are purchased
 [] execVM "scripts\shop\fn_vehiclePersistence.sqf";
 [] execVM "scripts\shop\fn_shopSystem.sqf";
+[] execVM "scripts\shop\fn_militiaSupport.sqf";
 [] execVM "scripts\naval\fn_navalMissions.sqf";
 [] execVM "scripts\groundMissions\fn_groundMissions.sqf";
 
