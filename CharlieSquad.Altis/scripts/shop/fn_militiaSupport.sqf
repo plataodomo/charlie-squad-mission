@@ -117,13 +117,19 @@ DYN_fnc_purchaseMilitia = {
     _etaMkr setMarkerSize  [0.8, 0.8];
 
     // --- announce ---
+    private _tierLabel = switch (_tier) do {
+        case "ROOKIE":  { "Rookie infantry" };
+        case "REGULAR": { "Regular infantry + light vehicles" };
+        case "ELITE":   { "Elite infantry + heavy armor" };
+        default:        { "Militia" };
+    };
     ["MilitiaInbound",
-        [format ["Militia support inbound! 10 friendlies assaulting from %1 in 10 minutes.", _direction]]
+        [format ["Militia inbound from %1 in 10 min! (%2)", _direction, _tierLabel]]
     ] remoteExec ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
-    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost] spawn {
-        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost"];
+    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier] spawn {
+        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier"];
 
         // 5-minute warning
         sleep 300;
@@ -176,16 +182,24 @@ DYN_fnc_purchaseMilitia = {
         _grp setBehaviourStrong "AWARE";
         _grp setCombatMode "YELLOW";
 
+        // Skill multiplier by tier: ROOKIE is untrained, ELITE is veteran
+        private _skillBase = switch (_tier) do {
+            case "ROOKIE":  { 0.25 };
+            case "REGULAR": { 0.50 };
+            case "ELITE":   { 0.75 };
+            default:        { 0.50 };
+        };
+
         private _spawnedUnits = [];
         {
             private _unit = _grp createUnit [_x, _spawnPos, [], 4 + random 6, "NONE"];
             if (!isNull _unit) then {
                 _spawnedUnits pushBack _unit;
-                _unit setSkill ["aimingAccuracy", 0.42 + random 0.08];
-                _unit setSkill ["aimingSpeed",    0.48 + random 0.08];
-                _unit setSkill ["spotDistance",   0.58 + random 0.10];
-                _unit setSkill ["courage",        0.80];
-                _unit allowFleeing 0.05;
+                _unit setSkill ["aimingAccuracy", _skillBase + random 0.08];
+                _unit setSkill ["aimingSpeed",    _skillBase + random 0.08];
+                _unit setSkill ["spotDistance",   _skillBase + random 0.10];
+                _unit setSkill ["courage",        0.50 + _skillBase * 0.4];
+                _unit allowFleeing (0.20 - _skillBase * 0.15);
             };
         } forEach DYN_militia_units;
 
@@ -209,6 +223,7 @@ DYN_fnc_purchaseMilitia = {
         // TIER VEHICLES — spawn and assign independent waypoints
         // =====================================================
         private _allCrewUnits = [];
+        private _allVehicles  = [];   // tracked separately so hulls can be deleted
         {
             private _vClass = _x;
             private _veh = _vClass createVehicle _spawnPos;
@@ -230,6 +245,7 @@ DYN_fnc_purchaseMilitia = {
             _vWp3 setWaypointType "CYCLE"; _vWp3 setWaypointCombatMode "RED";
 
             _allCrewUnits append (crew _veh);
+            _allVehicles pushBack _veh;
             diag_log format ["[MILITIA] Vehicle spawned: %1", _vClass];
         } forEach _vehicleClasses;
 
@@ -273,14 +289,15 @@ DYN_fnc_purchaseMilitia = {
         // =====================================================
         private _watchUnits = _spawnedUnits + _allCrewUnits;
         private _timeout    = diag_tickTime + 1800;
-        [_watchUnits, _timeout, _liveMkr] spawn {
-            params ["_units", "_timeout", "_mkr"];
+        [_watchUnits, _allVehicles, _timeout, _liveMkr] spawn {
+            params ["_units", "_vehicles", "_timeout", "_mkr"];
             waitUntil {
                 sleep 15;
                 ({ alive _x } count _units) == 0
                 || diag_tickTime > _timeout
             };
             { if (alive _x) then { deleteVehicle _x } } forEach _units;
+            { if (!isNull _x) then { deleteVehicle _x } } forEach _vehicles;
             deleteMarker _mkr;
             DYN_militia_active = false;
             publicVariable "DYN_militia_active";
@@ -290,4 +307,4 @@ DYN_fnc_purchaseMilitia = {
 };
 publicVariable "DYN_fnc_purchaseMilitia";
 
-diag_log "[MILITIA] Militia support system ready (cost: 30 pts | delay: 10 min | units: 10)";
+diag_log "[MILITIA] Militia support system ready (ROOKIE=20pts REGULAR=35pts ELITE=60pts | delay: 10 min | units: 10)";
