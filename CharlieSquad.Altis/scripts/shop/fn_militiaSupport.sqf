@@ -128,20 +128,20 @@ DYN_fnc_purchaseMilitia = {
     ] remoteExec ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
-    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier] spawn {
-        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier"];
+    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier, _buyer] spawn {
+        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier", "_buyer"];
 
-        // 5-minute warning
+        // 5-minute warning — buyer only
         sleep 300;
         ["MilitiaInbound",
             [format ["Militia assault in 5 minutes from %1!", _direction]]
-        ] remoteExec ["BIS_fnc_showNotification", 0];
+        ] remoteExec ["BIS_fnc_showNotification", _buyer];
 
-        // 1-minute warning
+        // 1-minute warning — buyer only
         sleep 240;
         ["MilitiaInbound",
             [format ["Militia assault in 1 minute from %1!", _direction]]
-        ] remoteExec ["BIS_fnc_showNotification", 0];
+        ] remoteExec ["BIS_fnc_showNotification", _buyer];
         _etaMkr setMarkerText format ["Militia 1 MIN | %1", _direction];
 
         sleep 60;
