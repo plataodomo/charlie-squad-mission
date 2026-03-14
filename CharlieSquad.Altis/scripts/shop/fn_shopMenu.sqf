@@ -237,7 +237,12 @@ DYN_fnc_militiaDirectionChosen = {
     };
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     if (_rep < _cost) exitWith {
-        hint format ["Not enough points!\nNeed: %1  Have: %2", _cost, _rep];
+        private _display = findDisplay 9750;
+        if (!isNull _display) then {
+            private _lbl = _display displayCtrl 9751;
+            _lbl ctrlSetText format ["Need %1 pts — have %2", _cost, _rep];
+            _lbl ctrlSetTextColor [0.9, 0.2, 0.2, 1];
+        };
     };
     closeDialog 0;
     [getPlayerUID player, _direction, _tier] remoteExec ["DYN_fnc_purchaseMilitia", 2];
