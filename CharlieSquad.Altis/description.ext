@@ -625,9 +625,10 @@ class DYN_MilitiaDialog
     // Layout — two-column fire support terminal
     //  Dialog    : x=0.20  y=0.10  w=0.60  h=0.80   (right=0.80  bottom=0.90)
     //  HeaderBG  : y=0.10  h=0.12  → bottom=0.22
-    //  LeftPanel : x=0.21  y=0.24  w=0.23  h=0.54   → bottom=0.78
+    //  LeftPanel : x=0.21  y=0.24  w=0.23  h=0.54   → bottom=0.78  (tier cards)
     //  RightPanel: x=0.45  y=0.24  w=0.34  h=0.54   → bottom=0.78
-    //  CompassBG : x=0.458 y=0.314 w=0.324 h=0.234  → bottom=0.548
+    //  CompassBG : x=0.480 y=0.314 w=0.280 h=0.232  → bottom=0.546
+    //  CrossH    : y=0.429 h=0.002  CrossV: x=0.619 w=0.002  (drawn behind btns)
     //  BottomBG  : y=0.80  h=0.10  → bottom=0.90
 
     class ControlsBackground
@@ -667,8 +668,24 @@ class DYN_MilitiaDialog
         class CompassBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.458; y = 0.314; w = 0.324; h = 0.234;
+            x = 0.480; y = 0.314; w = 0.280; h = 0.232;
             colorBackground[] = {0.08, 0.08, 0.08, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class CrossH
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.480; y = 0.429; w = 0.280; h = 0.002;
+            colorBackground[] = {0.20, 0.20, 0.20, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class CrossV
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.619; y = 0.314; w = 0.002; h = 0.232;
+            colorBackground[] = {0.20, 0.20, 0.20, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
@@ -725,102 +742,144 @@ class DYN_MilitiaDialog
             action = "closeDialog 0;";
         };
 
-        // ── Left panel — mission brief ────────────────────────────────────────
-        class LeftPanelLabel
+        // ── Left panel — tier selection ───────────────────────────────────────
+        // IDC 9752 = ROOKIE btn  9753 = REGULAR btn  9754 = ELITE btn
+        // IDC 9751 = balance label
+        class TierSectionLabel
         {
             idc = -1; type = 0; style = 0;
             x = 0.218; y = 0.247; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.55, 0.55, 0.55, 1};
-            text = "MISSION BRIEF";
+            text = "SELECT UNIT TIER";
             font = "RobotoCondensedBold"; sizeEx = 0.022; shadow = 0;
         };
 
-        class Row1Label
+        // ── Tier 1: ROOKIE ────────────────────────────────────────────────────
+        class RookieBtn
         {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.278; w = 0.21; h = 0.022;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.50, 0.50, 0.50, 1};
-            text = "UNIT COMPOSITION";
-            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+            idc = 9752; type = 1; style = 0;
+            x = 0.213; y = 0.275; w = 0.214; h = 0.040;
+            colorBackground[]         = {0.20, 0.20, 0.20, 1};
+            colorBackgroundActive[]   = {0.30, 0.30, 0.30, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[]     = {0.85, 0.85, 0.85, 1};
+            colorFocused[]  = {0.20, 0.20, 0.20, 1};
+            colorBorder[]   = {0,0,0,0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[]   = {0,0,0,0};
+            text = "ROOKIE MILITIA";
+            font = "RobotoCondensedBold"; sizeEx = 0.026;
+            offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[]  = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "['ROOKIE'] call DYN_fnc_militiaSelectTier;";
         };
-        class Row1Value
+        class RookieCost
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.302; w = 0.21; h = 0.038;
+            x = 0.218; y = 0.320; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.90, 0.90, 0.90, 1};
-            text = "10 x BLUFOR INFANTRY";
-            font = "RobotoCondensedBold"; sizeEx = 0.032; shadow = 0;
+            colorText[] = {0.90, 0.80, 0.40, 1};
+            text = "20 pts — Infantry only";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
+        class RookieDesc
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.343; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "10 untrained soldiers, no vehicles";
+            font = "RobotoCondensed"; sizeEx = 0.020; shadow = 0;
         };
         class Sep1
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.346; w = 0.21; h = 0.002;
+            x = 0.213; y = 0.370; w = 0.214; h = 0.002;
             colorBackground[] = {0.22, 0.22, 0.22, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
 
-        class Row2Label
+        // ── Tier 2: REGULAR ───────────────────────────────────────────────────
+        class RegularBtn: RookieBtn
         {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.354; w = 0.21; h = 0.022;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.50, 0.50, 0.50, 1};
-            text = "ARRIVAL TIME";
-            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+            idc = 9753;
+            y = 0.377;
+            text = "REGULAR MILITIA";
+            action = "['REGULAR'] call DYN_fnc_militiaSelectTier;";
         };
-        class Row2Value
+        class RegularCost
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.378; w = 0.21; h = 0.038;
+            x = 0.218; y = 0.422; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.80, 0.40, 1};
-            text = "10 MINUTES";
-            font = "RobotoCondensedBold"; sizeEx = 0.034; shadow = 0;
+            text = "35 pts — Light vehicles";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
+        class RegularDesc
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.445; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "10 soldiers + 2 HMG trucks";
+            font = "RobotoCondensed"; sizeEx = 0.020; shadow = 0;
         };
         class Sep2
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.422; w = 0.21; h = 0.002;
+            x = 0.213; y = 0.472; w = 0.214; h = 0.002;
             colorBackground[] = {0.22, 0.22, 0.22, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
 
-        class Row3Label
+        // ── Tier 3: ELITE ─────────────────────────────────────────────────────
+        class EliteBtn: RookieBtn
         {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.430; w = 0.21; h = 0.022;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.50, 0.50, 0.50, 1};
-            text = "COST";
-            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+            idc = 9754;
+            y = 0.479;
+            text = "ELITE MILITIA";
+            action = "['ELITE'] call DYN_fnc_militiaSelectTier;";
         };
-        class Row3Value
+        class EliteCost
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.454; w = 0.21; h = 0.038;
+            x = 0.218; y = 0.524; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.80, 0.40, 1};
-            text = "30 REPUTATION PTS";
-            font = "RobotoCondensedBold"; sizeEx = 0.034; shadow = 0;
+            text = "60 pts — Heavy armor";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
+        class EliteDesc
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.547; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "10 soldiers + APC + tank";
+            font = "RobotoCondensed"; sizeEx = 0.020; shadow = 0;
         };
         class Sep3
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.498; w = 0.21; h = 0.002;
+            x = 0.213; y = 0.574; w = 0.214; h = 0.002;
             colorBackground[] = {0.22, 0.22, 0.22, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
 
-        class Row4Label
+        // ── Balance ───────────────────────────────────────────────────────────
+        class BalanceSectionLabel
         {
             idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.506; w = 0.21; h = 0.022;
+            x = 0.218; y = 0.582; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.50, 0.50, 0.50, 1};
             text = "YOUR BALANCE";
@@ -829,55 +888,11 @@ class DYN_MilitiaDialog
         class BalanceLabel
         {
             idc = 9751; type = 0; style = 0;
-            x = 0.218; y = 0.530; w = 0.21; h = 0.040;
+            x = 0.218; y = 0.607; w = 0.21; h = 0.038;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.4, 0.9, 0.4, 1};
             text = "— pts";
-            font = "RobotoCondensedBold"; sizeEx = 0.036; shadow = 0;
-        };
-        class Sep4
-        {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.578; w = 0.21; h = 0.002;
-            colorBackground[] = {0.22, 0.22, 0.22, 1};
-            colorText[] = {0,0,0,0}; text = "";
-            font = "RobotoCondensed"; sizeEx = 0.03;
-        };
-        class OpNotesLabel
-        {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.586; w = 0.21; h = 0.022;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.50, 0.50, 0.50, 1};
-            text = "OPERATION NOTES";
-            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
-        };
-        class OpNotesLine1
-        {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.614; w = 0.21; h = 0.024;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.62, 0.62, 0.62, 1};
-            text = "Units spawn 700m outside AO,";
-            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
-        };
-        class OpNotesLine2
-        {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.638; w = 0.21; h = 0.024;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.62, 0.62, 0.62, 1};
-            text = "assault inward on foot.";
-            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
-        };
-        class OpNotesLine3
-        {
-            idc = -1; type = 0; style = 0;
-            x = 0.218; y = 0.662; w = 0.21; h = 0.024;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.62, 0.62, 0.62, 1};
-            text = "Cannot be recalled.";
-            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+            font = "RobotoCondensedBold"; sizeEx = 0.034; shadow = 0;
         };
 
         // ── Right panel — compass ─────────────────────────────────────────────
@@ -900,17 +915,16 @@ class DYN_MilitiaDialog
             font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
         };
 
-        // Compass buttons — square-ish, single letter, centreX = 0.620
-        // btn w=0.080  h=0.062
-        // N : x=0.580  y=0.326  (centreX=0.620)
-        // W : x=0.470  y=0.400  (centreX=0.510)
-        // E : x=0.690  y=0.400  (centreX=0.730)  — W/E symmetric around 0.620
-        // S : x=0.580  y=0.474
-        // + : x=0.606  y=0.422  centre crosshair (between all four)
+        // Compass buttons — square (0.060×0.056), small letter, centreX = 0.620
+        // CompassBG: x=0.480 y=0.314 w=0.280 h=0.232  centreX=0.620 centreY=0.430
+        // N : x=0.590  y=0.324  centreX=0.620
+        // W : x=0.488  y=0.402  centreX=0.518
+        // E : x=0.702  y=0.402  centreX=0.732  — W/E symmetric around 0.620
+        // S : x=0.590  y=0.480
         class NorthBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.580; y = 0.326; w = 0.080; h = 0.062;
+            x = 0.590; y = 0.324; w = 0.060; h = 0.056;
             colorBackground[]         = {0.20, 0.20, 0.20, 1};
             colorBackgroundActive[]   = {0.32, 0.32, 0.32, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -920,7 +934,7 @@ class DYN_MilitiaDialog
             colorDisabled[] = {0.35, 0.35, 0.35, 1};
             colorShadow[]   = {0,0,0,0};
             text = "N";
-            font = "RobotoCondensedBold"; sizeEx = 0.040;
+            font = "RobotoCondensedBold"; sizeEx = 0.026;
             offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
             borderSize = 0;
             soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
@@ -931,36 +945,36 @@ class DYN_MilitiaDialog
         };
         class WestBtn: NorthBtn
         {
-            x = 0.470; y = 0.400;
+            x = 0.488; y = 0.402;
             text = "W";
             action = "['WEST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class EastBtn: NorthBtn
         {
-            x = 0.690; y = 0.400;
+            x = 0.702; y = 0.402;
             text = "E";
             action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class SouthBtn: NorthBtn
         {
-            x = 0.580; y = 0.474;
+            x = 0.590; y = 0.480;
             text = "S";
             action = "['SOUTH'] call DYN_fnc_militiaDirectionChosen;";
         };
         class CompassCenter
         {
             idc = -1; type = 0; style = 2;
-            x = 0.606; y = 0.422; w = 0.028; h = 0.018;
+            x = 0.610; y = 0.422; w = 0.020; h = 0.016;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.38, 0.38, 0.38, 1};
+            colorText[] = {0.40, 0.40, 0.40, 1};
             text = "+";
-            font = "RobotoCondensedBold"; sizeEx = 0.020; shadow = 0;
+            font = "RobotoCondensedBold"; sizeEx = 0.018; shadow = 0;
         };
 
         class AssaultNote
         {
             idc = -1; type = 0; style = 2;
-            x = 0.453; y = 0.558; w = 0.334; h = 0.030;
+            x = 0.453; y = 0.555; w = 0.334; h = 0.030;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.45, 0.45, 0.45, 1};
             text = "Forces assault inward from the AO perimeter.";

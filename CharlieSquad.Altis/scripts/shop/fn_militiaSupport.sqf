@@ -39,11 +39,28 @@ DYN_militia_units = [
 // =====================================================
 // PURCHASE HANDLER (remoteExec target: server)
 // =====================================================
+// Tier definitions
+//   ROOKIE  — 20 pts — 10 infantry, no vehicles (untrained)
+//   REGULAR — 35 pts — 10 infantry + 2x HMMWV HMG (light)
+//   ELITE   — 60 pts — 10 infantry + 1x APC + 1x MBT (heavy armor)
+DYN_militia_tierCost = createHashMapFromArray [
+    ["ROOKIE",  20],
+    ["REGULAR", 35],
+    ["ELITE",   60]
+];
+
+DYN_militia_tierVehicles = createHashMapFromArray [
+    ["ROOKIE",  []],
+    ["REGULAR", ["CUP_B_HMMWV_M1151_M2_US", "CUP_B_HMMWV_M1151_M2_US"]],
+    ["ELITE",   ["CUP_B_M2A2_US", "CUP_B_M1A1_US"]]
+];
+
 DYN_fnc_purchaseMilitia = {
-    params ["_buyerUID", "_direction"];
+    params ["_buyerUID", "_direction", ["_tier", "ROOKIE"]];
     if (!isServer) exitWith {};
 
-    private _cost = 30;
+    _tier = toUpper _tier;
+    private _cost = DYN_militia_tierCost getOrDefault [_tier, 20];
 
     // Locate buyer
     private _buyer = objNull;
@@ -77,7 +94,8 @@ DYN_fnc_purchaseMilitia = {
     DYN_militia_active = true;
     publicVariable "DYN_militia_active";
 
-    diag_log format ["[MILITIA] Purchase confirmed by %1 — direction: %2", _buyerUID, _direction];
+    private _vehicleClasses = DYN_militia_tierVehicles getOrDefault [_tier, []];
+    diag_log format ["[MILITIA] Purchase confirmed by %1 — direction: %2  tier: %3", _buyerUID, _direction, _tier];
 
     private _bearing = switch (toUpper _direction) do {
         case "NORTH": { 0 };
@@ -104,8 +122,8 @@ DYN_fnc_purchaseMilitia = {
     ] remoteExec ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
-    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr] spawn {
-        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr"];
+    [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost] spawn {
+        params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost"];
 
         // 5-minute warning
         sleep 300;
@@ -175,7 +193,7 @@ DYN_fnc_purchaseMilitia = {
             diag_log "[MILITIA] ERROR: No units created — verify CUP class names in DYN_militia_units";
             deleteGroup _grp;
             // Refund the cost
-            [30, "Militia Refund (spawn failed)"] call DYN_fnc_changeReputation;
+            [_cost, "Militia Refund (spawn failed)"] call DYN_fnc_changeReputation;
             DYN_militia_active = false;
             publicVariable "DYN_militia_active";
         };
@@ -186,6 +204,34 @@ DYN_fnc_purchaseMilitia = {
         // WAYPOINTS: approach → AO edge (AWARE) → AO centre (COMBAT, cycle)
         // =====================================================
         private _aoEdge = [_aoCenter, _aoRadius + 150, _bearing] call DYN_fnc_posOffset;
+
+        // =====================================================
+        // TIER VEHICLES — spawn and assign independent waypoints
+        // =====================================================
+        private _allCrewUnits = [];
+        {
+            private _vClass = _x;
+            private _veh = _vClass createVehicle _spawnPos;
+            createVehicleCrew _veh;
+            private _vGrp = createGroup [west, true];
+            (crew _veh) joinSilent _vGrp;
+            _vGrp setCombatMode "YELLOW";
+            _vGrp setBehaviourStrong "AWARE";
+
+            private _vWp1 = _vGrp addWaypoint [_aoEdge, 80];
+            _vWp1 setWaypointType "MOVE"; _vWp1 setWaypointBehaviour "AWARE";
+            _vWp1 setWaypointSpeed "FULL"; _vWp1 setWaypointCombatMode "YELLOW";
+
+            private _vWp2 = _vGrp addWaypoint [_aoCenter, 100];
+            _vWp2 setWaypointType "MOVE"; _vWp2 setWaypointBehaviour "COMBAT";
+            _vWp2 setWaypointCombatMode "RED";
+
+            private _vWp3 = _vGrp addWaypoint [_aoCenter, 150];
+            _vWp3 setWaypointType "CYCLE"; _vWp3 setWaypointCombatMode "RED";
+
+            _allCrewUnits append (crew _veh);
+            diag_log format ["[MILITIA] Vehicle spawned: %1", _vClass];
+        } forEach _vehicleClasses;
 
         private _wp1 = _grp addWaypoint [_aoEdge, 80];
         _wp1 setWaypointType             "MOVE";
@@ -225,7 +271,7 @@ DYN_fnc_purchaseMilitia = {
         // =====================================================
         // MONITOR — clean up when done or after 30-minute timeout
         // =====================================================
-        private _watchUnits = +_spawnedUnits;
+        private _watchUnits = _spawnedUnits + _allCrewUnits;
         private _timeout    = diag_tickTime + 1800;
         [_watchUnits, _timeout, _liveMkr] spawn {
             params ["_units", "_timeout", "_mkr"];
