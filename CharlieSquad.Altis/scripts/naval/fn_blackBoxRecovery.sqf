@@ -285,16 +285,17 @@ diag_log format ["[NAVAL] Sea floor Z: %1 (depth: %2m) at %3", _seaFloorZ, abs _
 // =====================================================
 // SPAWN WRECK ON SEA FLOOR
 // =====================================================
-private _wreck = createVehicle ["CUP_MH47E_wreck2", [0,0,0], [], 0, "CAN_COLLIDE"];
-
 private _wreckDir = random 360;
+private _wreck = createVehicle ["CUP_MH47E_wreck2", [0,0,0], [], 0, "NONE"];
+
+// Disable simulation BEFORE the first setPosASL — on dedicated servers the physics
+// thread can run between SQF instructions, so creating with CAN_COLLIDE and then
+// moving the vehicle leaves a window where buoyancy/gravity resets it to [0,0,0].
+_wreck enableSimulationGlobal false;
+_wreck setDir _wreckDir;
 
 // Initial placement — will be corrected below after bounding box is known
 _wreck setPosASL [_actualWreckPos select 0, _actualWreckPos select 1, _seaFloorZ];
-_wreck setDir _wreckDir;
-
-// Disable simulation so physics doesn't float it
-_wreck enableSimulationGlobal false;
 
 DYN_naval_objects pushBack _wreck;
 
@@ -321,7 +322,7 @@ diag_log format ["[NAVAL] Wreck placed at ASL: %1", getPosASL _wreck];
 // =====================================================
 sleep 1;
 
-private _recorder = createVehicle ["rhs_flightrecorder_assembled", [0,0,0], [], 0, "CAN_COLLIDE"];
+private _recorder = createVehicle ["rhs_flightrecorder_assembled", [0,0,0], [], 0, "NONE"];
 
 // Place recorder 1.5m above the belly in local model space
 // This puts it inside the wreck cabin, above the seafloor

@@ -336,7 +336,7 @@ private _medNote = if (_civIsInjured) then {
         "Repair Civilian Vehicle",
         ""
     ],
-    _missionPos,
+    [_missionPos select 0, _missionPos select 1, 0],
     "CREATED",
     3,
     true,
