@@ -381,6 +381,20 @@ private _guardSpots = [
 } forEach _guardSpots;
 
 // =====================================================
+// DELETE MORTARS WHEN ALL PIT ENEMIES ARE DEAD
+// =====================================================
+[_mortars, _mortarGrp, _guardGrp] spawn {
+    params ["_mortars", "_mortarGrp", "_guardGrp"];
+    waitUntil {
+        sleep 5;
+        ({ alive _x } count units _mortarGrp) == 0
+        && ({ alive _x } count units _guardGrp) == 0
+    };
+    { if (!isNull _x) then { deleteVehicle _x }; } forEach _mortars;
+    diag_log "[MORTAR] All pit enemies dead — mortars deleted.";
+};
+
+// =====================================================
 // FIRE SUPPORT LOGIC
 // =====================================================
 [_mortars, _pos, _aoRadius, _ammoType] spawn {
