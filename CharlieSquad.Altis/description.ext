@@ -627,7 +627,7 @@ class DYN_MilitiaDialog
     //  HeaderBG  : y=0.10  h=0.12  → bottom=0.22
     //  LeftPanel : x=0.21  y=0.24  w=0.23  h=0.54   → bottom=0.78
     //  RightPanel: x=0.45  y=0.24  w=0.34  h=0.54   → bottom=0.78
-    //  CompassBG : x=0.453 y=0.308 w=0.334 h=0.218  → bottom=0.526
+    //  CompassBG : x=0.458 y=0.314 w=0.324 h=0.234  → bottom=0.548
     //  BottomBG  : y=0.80  h=0.10  → bottom=0.90
 
     class ControlsBackground
@@ -667,7 +667,7 @@ class DYN_MilitiaDialog
         class CompassBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.453; y = 0.308; w = 0.334; h = 0.218;
+            x = 0.458; y = 0.314; w = 0.324; h = 0.234;
             colorBackground[] = {0.08, 0.08, 0.08, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
@@ -835,6 +835,50 @@ class DYN_MilitiaDialog
             text = "— pts";
             font = "RobotoCondensedBold"; sizeEx = 0.036; shadow = 0;
         };
+        class Sep4
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.578; w = 0.21; h = 0.002;
+            colorBackground[] = {0.22, 0.22, 0.22, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class OpNotesLabel
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.586; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "OPERATION NOTES";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+        };
+        class OpNotesLine1
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.614; w = 0.21; h = 0.024;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.62, 0.62, 0.62, 1};
+            text = "Units spawn 700m outside AO,";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
+        class OpNotesLine2
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.638; w = 0.21; h = 0.024;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.62, 0.62, 0.62, 1};
+            text = "assault inward on foot.";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
+        class OpNotesLine3
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.662; w = 0.21; h = 0.024;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.62, 0.62, 0.62, 1};
+            text = "Cannot be recalled.";
+            font = "RobotoCondensed"; sizeEx = 0.021; shadow = 0;
+        };
 
         // ── Right panel — compass ─────────────────────────────────────────────
         class RightPanelLabel
@@ -856,16 +900,17 @@ class DYN_MilitiaDialog
             font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
         };
 
-        // Compass buttons — centred on right panel (centreX = 0.45 + 0.17 = 0.62)
-        // btn w=0.130  h=0.050
-        // N : x=0.555  y=0.316   (centreX=0.620)
-        // W : x=0.460  y=0.383   (centreX=0.525)
-        // E : x=0.650  y=0.383   (centreX=0.715)  — W/E symmetric around 0.620
-        // S : x=0.555  y=0.450
+        // Compass buttons — square-ish, single letter, centreX = 0.620
+        // btn w=0.080  h=0.062
+        // N : x=0.580  y=0.326  (centreX=0.620)
+        // W : x=0.470  y=0.400  (centreX=0.510)
+        // E : x=0.690  y=0.400  (centreX=0.730)  — W/E symmetric around 0.620
+        // S : x=0.580  y=0.474
+        // + : x=0.606  y=0.422  centre crosshair (between all four)
         class NorthBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.555; y = 0.316; w = 0.130; h = 0.050;
+            x = 0.580; y = 0.326; w = 0.080; h = 0.062;
             colorBackground[]         = {0.20, 0.20, 0.20, 1};
             colorBackgroundActive[]   = {0.32, 0.32, 0.32, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -874,8 +919,8 @@ class DYN_MilitiaDialog
             colorBorder[]   = {0,0,0,0};
             colorDisabled[] = {0.35, 0.35, 0.35, 1};
             colorShadow[]   = {0,0,0,0};
-            text = "NORTH";
-            font = "RobotoCondensedBold"; sizeEx = 0.030;
+            text = "N";
+            font = "RobotoCondensedBold"; sizeEx = 0.040;
             offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
             borderSize = 0;
             soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
@@ -886,27 +931,36 @@ class DYN_MilitiaDialog
         };
         class WestBtn: NorthBtn
         {
-            x = 0.460; y = 0.383;
-            text = "WEST";
+            x = 0.470; y = 0.400;
+            text = "W";
             action = "['WEST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class EastBtn: NorthBtn
         {
-            x = 0.650; y = 0.383;
-            text = "EAST";
+            x = 0.690; y = 0.400;
+            text = "E";
             action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class SouthBtn: NorthBtn
         {
-            x = 0.555; y = 0.450;
-            text = "SOUTH";
+            x = 0.580; y = 0.474;
+            text = "S";
             action = "['SOUTH'] call DYN_fnc_militiaDirectionChosen;";
+        };
+        class CompassCenter
+        {
+            idc = -1; type = 0; style = 2;
+            x = 0.606; y = 0.422; w = 0.028; h = 0.018;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.38, 0.38, 0.38, 1};
+            text = "+";
+            font = "RobotoCondensedBold"; sizeEx = 0.020; shadow = 0;
         };
 
         class AssaultNote
         {
             idc = -1; type = 0; style = 2;
-            x = 0.453; y = 0.516; w = 0.334; h = 0.030;
+            x = 0.453; y = 0.558; w = 0.334; h = 0.030;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.45, 0.45, 0.45, 1};
             text = "Forces assault inward from the AO perimeter.";
