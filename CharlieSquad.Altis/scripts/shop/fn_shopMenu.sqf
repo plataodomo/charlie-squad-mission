@@ -40,6 +40,29 @@ _terminal addAction [
     5
 ];
 
+_terminal addAction [
+    "<t color='#88BBFF'>Militia Support</t>",
+    {
+        if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
+            hint "Only active Squad Leaders can request militia support.";
+        };
+        if (missionNamespace getVariable ["DYN_militia_active", false]) exitWith {
+            hint "Friendly militia are already deployed! Wait for them to finish.";
+        };
+        if ((missionNamespace getVariable ["DYN_AO_center", [0,0,0]]) isEqualTo [0,0,0]) exitWith {
+            hint "No active AO. Cannot deploy militia support.";
+        };
+        createDialog "DYN_MilitiaDialog";
+    },
+    nil,
+    1.4,
+    true,
+    true,
+    "",
+    "true",
+    5
+];
+
 DYN_shopSelectedClass = "";
 DYN_shopCurrentFilter = "Cars";
 
@@ -194,25 +217,3 @@ DYN_fnc_militiaDirectionChosen = {
     hint format ["Militia support purchased!\n10 friendlies assaulting from %1 in 10 minutes.", _direction];
 };
 
-_terminal addAction [
-    "<t color='#88BBFF'>Militia Support</t>",
-    {
-        if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
-            hint "Only active Squad Leaders can request militia support.";
-        };
-        if (missionNamespace getVariable ["DYN_militia_active", false]) exitWith {
-            hint "Friendly militia are already deployed! Wait for them to finish.";
-        };
-        if ((missionNamespace getVariable ["DYN_AO_center", [0,0,0]]) isEqualTo [0,0,0]) exitWith {
-            hint "No active AO. Cannot deploy militia support.";
-        };
-        createDialog "DYN_MilitiaDialog";
-    },
-    nil,
-    1.5,
-    true,
-    true,
-    "",
-    "true",
-    5
-];
