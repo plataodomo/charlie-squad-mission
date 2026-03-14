@@ -382,6 +382,15 @@ diag_log format ["[GROUND-SNIPER] Team spawned. Sniper: %1  Spotter: %2", _snipe
             diag_tickTime > _deadline
         };
     };
+
+    // Deadline expired — clear the flag from any player still holding it so
+    // it doesn't persist into the next sniper hunt mission as a free reward
+    {
+        if (_x getVariable ["DYN_hasDogtag_sniper", false]) then {
+            _x setVariable ["DYN_hasDogtag_sniper", false, true];
+            diag_log format ["[GROUND-SNIPER] Dog tag flag cleared from %1 (deadline expired)", name _x];
+        };
+    } forEach allPlayers;
 };
 
 // =====================================================
