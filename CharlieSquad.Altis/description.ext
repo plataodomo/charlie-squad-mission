@@ -622,18 +622,20 @@ class DYN_MilitiaDialog
     enableSimulation = true;
     onLoad = "[] spawn DYN_fnc_militiaDialogOnLoad;";
 
-    // Layout reference (matches shop/squad UI conventions)
-    //  Dialog  : x=0.30  y=0.16  w=0.40  h=0.68   (right=0.70  bottom=0.84)
-    //  HeaderBG: y=0.16  h=0.10  → bottom 0.26
-    //  ContentBG:y=0.27  h=0.42  → bottom 0.69
-    //  BottomBG: y=0.74  h=0.10  → bottom 0.84
+    // Layout — two-column fire support terminal
+    //  Dialog    : x=0.20  y=0.10  w=0.60  h=0.80   (right=0.80  bottom=0.90)
+    //  HeaderBG  : y=0.10  h=0.12  → bottom=0.22
+    //  LeftPanel : x=0.21  y=0.24  w=0.23  h=0.54   → bottom=0.78
+    //  RightPanel: x=0.45  y=0.24  w=0.34  h=0.54   → bottom=0.78
+    //  CompassBG : x=0.453 y=0.308 w=0.334 h=0.218  → bottom=0.526
+    //  BottomBG  : y=0.80  h=0.10  → bottom=0.90
 
     class ControlsBackground
     {
         class MainBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.30; y = 0.16; w = 0.40; h = 0.68;
+            x = 0.20; y = 0.10; w = 0.60; h = 0.80;
             colorBackground[] = {0.13, 0.13, 0.13, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
@@ -641,23 +643,39 @@ class DYN_MilitiaDialog
         class HeaderBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.30; y = 0.16; w = 0.40; h = 0.10;
+            x = 0.20; y = 0.10; w = 0.60; h = 0.12;
             colorBackground[] = {0.17, 0.17, 0.17, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
-        class ContentBG
+        class LeftPanelBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.31; y = 0.27; w = 0.38; h = 0.42;
+            x = 0.21; y = 0.24; w = 0.23; h = 0.54;
             colorBackground[] = {0.10, 0.10, 0.10, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class RightPanelBG
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.45; y = 0.24; w = 0.34; h = 0.54;
+            colorBackground[] = {0.10, 0.10, 0.10, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+        class CompassBG
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.453; y = 0.308; w = 0.334; h = 0.218;
+            colorBackground[] = {0.08, 0.08, 0.08, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
         class BottomBG
         {
             idc = -1; type = 0; style = 0;
-            x = 0.30; y = 0.74; w = 0.40; h = 0.10;
+            x = 0.20; y = 0.80; w = 0.60; h = 0.10;
             colorBackground[] = {0.15, 0.15, 0.15, 1};
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
@@ -666,19 +684,29 @@ class DYN_MilitiaDialog
 
     class Controls
     {
+        // ── Header ───────────────────────────────────────────────────────────
         class HeaderTitle
         {
             idc = -1; type = 0; style = 2;
-            x = 0.30; y = 0.175; w = 0.40; h = 0.065;
+            x = 0.20; y = 0.113; w = 0.60; h = 0.060;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.90, 0.90, 1};
             text = "MILITIA SUPPORT";
-            font = "RobotoCondensedBold"; sizeEx = 0.055; shadow = 2;
+            font = "RobotoCondensedBold"; sizeEx = 0.058; shadow = 2;
+        };
+        class HeaderSubTitle
+        {
+            idc = -1; type = 0; style = 2;
+            x = 0.20; y = 0.176; w = 0.60; h = 0.030;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "FIRE SUPPORT REQUEST TERMINAL";
+            font = "RobotoCondensed"; sizeEx = 0.026; shadow = 0;
         };
         class CloseBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.659; y = 0.170; w = 0.035; h = 0.046;
+            x = 0.759; y = 0.113; w = 0.035; h = 0.046;
             colorBackground[]         = {0.25, 0.25, 0.25, 1};
             colorBackgroundActive[]   = {0.50, 0.30, 0.30, 1};
             colorBackgroundDisabled[] = {0.15, 0.15, 0.15, 1};
@@ -696,52 +724,148 @@ class DYN_MilitiaDialog
             soundEscape[] = {"", 0.1, 1};
             action = "closeDialog 0;";
         };
-        class InfoText
+
+        // ── Left panel — mission brief ────────────────────────────────────────
+        class LeftPanelLabel
         {
-            idc = -1; type = 0; style = 2;
-            x = 0.315; y = 0.282; w = 0.37; h = 0.038;
-            colorBackground[] = {0,0,0,0};
-            colorText[] = {0.75, 0.75, 0.75, 1};
-            text = "10 friendly militia will assault the AO from your direction.";
-            font = "RobotoCondensed"; sizeEx = 0.028; shadow = 0;
-        };
-        class TimerText
-        {
-            idc = -1; type = 0; style = 2;
-            x = 0.315; y = 0.320; w = 0.37; h = 0.034;
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.247; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.55, 0.55, 0.55, 1};
-            text = "Forces assault 10 minutes after purchase.";
-            font = "RobotoCondensed"; sizeEx = 0.026; shadow = 0;
+            text = "MISSION BRIEF";
+            font = "RobotoCondensedBold"; sizeEx = 0.022; shadow = 0;
+        };
+
+        class Row1Label
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.278; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "UNIT COMPOSITION";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+        };
+        class Row1Value
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.302; w = 0.21; h = 0.038;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.90, 0.90, 0.90, 1};
+            text = "10 x BLUFOR INFANTRY";
+            font = "RobotoCondensedBold"; sizeEx = 0.032; shadow = 0;
+        };
+        class Sep1
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.346; w = 0.21; h = 0.002;
+            colorBackground[] = {0.22, 0.22, 0.22, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+
+        class Row2Label
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.354; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "ARRIVAL TIME";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+        };
+        class Row2Value
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.378; w = 0.21; h = 0.038;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.90, 0.80, 0.40, 1};
+            text = "10 MINUTES";
+            font = "RobotoCondensedBold"; sizeEx = 0.034; shadow = 0;
+        };
+        class Sep2
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.422; w = 0.21; h = 0.002;
+            colorBackground[] = {0.22, 0.22, 0.22, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+
+        class Row3Label
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.430; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "COST";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+        };
+        class Row3Value
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.454; w = 0.21; h = 0.038;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.90, 0.80, 0.40, 1};
+            text = "30 REPUTATION PTS";
+            font = "RobotoCondensedBold"; sizeEx = 0.034; shadow = 0;
+        };
+        class Sep3
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.498; w = 0.21; h = 0.002;
+            colorBackground[] = {0.22, 0.22, 0.22, 1};
+            colorText[] = {0,0,0,0}; text = "";
+            font = "RobotoCondensed"; sizeEx = 0.03;
+        };
+
+        class Row4Label
+        {
+            idc = -1; type = 0; style = 0;
+            x = 0.218; y = 0.506; w = 0.21; h = 0.022;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.50, 0.50, 0.50, 1};
+            text = "YOUR BALANCE";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
         };
         class BalanceLabel
         {
-            idc = 9751; type = 0; style = 2;
-            x = 0.315; y = 0.360; w = 0.37; h = 0.036;
+            idc = 9751; type = 0; style = 0;
+            x = 0.218; y = 0.530; w = 0.21; h = 0.040;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.4, 0.9, 0.4, 1};
-            text = "Balance: — pts  |  Cost: 30 pts";
-            font = "RobotoCondensedBold"; sizeEx = 0.030; shadow = 0;
+            text = "— pts";
+            font = "RobotoCondensedBold"; sizeEx = 0.036; shadow = 0;
         };
-        class DirectionLabel
+
+        // ── Right panel — compass ─────────────────────────────────────────────
+        class RightPanelLabel
         {
-            idc = -1; type = 0; style = 2;
-            x = 0.315; y = 0.408; w = 0.37; h = 0.028;
+            idc = -1; type = 0; style = 0;
+            x = 0.453; y = 0.247; w = 0.14; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "ATTACK VECTOR";
+            font = "RobotoCondensedBold"; sizeEx = 0.022; shadow = 0;
+        };
+        class SelectLabel
+        {
+            idc = -1; type = 0; style = 2;
+            x = 0.453; y = 0.276; w = 0.334; h = 0.026;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.65, 0.65, 0.65, 1};
             text = "SELECT ATTACK DIRECTION";
             font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
         };
 
-        // Compass layout — N centred, W/E flanking, S below
-        // Button w=0.130  h=0.048  centreX=0.50
-        // N: x=0.435  y=0.444
-        // W: x=0.315  y=0.504   E: x=0.555  y=0.504
-        // S: x=0.435  y=0.564
+        // Compass buttons — centred on right panel (centreX = 0.45 + 0.17 = 0.62)
+        // btn w=0.130  h=0.050
+        // N : x=0.555  y=0.316   (centreX=0.620)
+        // W : x=0.460  y=0.383   (centreX=0.525)
+        // E : x=0.650  y=0.383   (centreX=0.715)  — W/E symmetric around 0.620
+        // S : x=0.555  y=0.450
         class NorthBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.435; y = 0.444; w = 0.130; h = 0.048;
+            x = 0.555; y = 0.316; w = 0.130; h = 0.050;
             colorBackground[]         = {0.20, 0.20, 0.20, 1};
             colorBackgroundActive[]   = {0.32, 0.32, 0.32, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -762,27 +886,38 @@ class DYN_MilitiaDialog
         };
         class WestBtn: NorthBtn
         {
-            x = 0.315; y = 0.504;
+            x = 0.460; y = 0.383;
             text = "WEST";
             action = "['WEST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class EastBtn: NorthBtn
         {
-            x = 0.555; y = 0.504;
+            x = 0.650; y = 0.383;
             text = "EAST";
             action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
         };
         class SouthBtn: NorthBtn
         {
-            x = 0.435; y = 0.564;
+            x = 0.555; y = 0.450;
             text = "SOUTH";
             action = "['SOUTH'] call DYN_fnc_militiaDirectionChosen;";
         };
 
+        class AssaultNote
+        {
+            idc = -1; type = 0; style = 2;
+            x = 0.453; y = 0.516; w = 0.334; h = 0.030;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.45, 0.45, 0.45, 1};
+            text = "Forces assault inward from the AO perimeter.";
+            font = "RobotoCondensed"; sizeEx = 0.022; shadow = 0;
+        };
+
+        // ── Bottom strip ──────────────────────────────────────────────────────
         class CancelBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.375; y = 0.757; w = 0.250; h = 0.050;
+            x = 0.375; y = 0.824; w = 0.250; h = 0.050;
             colorBackground[]         = {0.30, 0.18, 0.18, 1};
             colorBackgroundActive[]   = {0.45, 0.25, 0.25, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
