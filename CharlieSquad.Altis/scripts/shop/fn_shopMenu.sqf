@@ -201,7 +201,8 @@ DYN_fnc_shopBuy = {
 
 DYN_fnc_militiaSelectTier = {
     params ["_tier"];
-    DYN_militia_tier = _tier;
+    // uiNamespace so each client keeps its own selection (not a shared global)
+    uiNamespace setVariable ["DYN_militia_tier", _tier];
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
     // Reset all tier buttons to default
@@ -227,18 +228,18 @@ DYN_fnc_militiaDialogOnLoad = {
 
 DYN_fnc_militiaDirectionChosen = {
     params ["_direction"];
-    private _tier = missionNamespace getVariable ["DYN_militia_tier", "ROOKIE"];
+    private _tier = uiNamespace getVariable ["DYN_militia_tier", "ROOKIE"];
     private _cost = switch (_tier) do {
         case "ROOKIE":  { 20 };
         case "REGULAR": { 35 };
         case "ELITE":   { 60 };
         default         { 20 };
     };
-    closeDialog 0;
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     if (_rep < _cost) exitWith {
         hint format ["Not enough points!\nNeed: %1  Have: %2", _cost, _rep];
     };
+    closeDialog 0;
     [getPlayerUID player, _direction, _tier] remoteExec ["DYN_fnc_purchaseMilitia", 2];
     hint format ["Militia support purchased!\n%1 assaulting from %2 in 10 minutes.", _tier, _direction];
 };

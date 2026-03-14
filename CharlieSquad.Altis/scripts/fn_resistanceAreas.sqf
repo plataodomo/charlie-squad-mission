@@ -284,7 +284,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     _patrolGrp setCombatMode "RED";
     _areaGroups pushBack _patrolGrp;
 
-    private _patrolCount = 4 + floor (random 3);  // 4-6 units
+    private _patrolCount = 5 + floor (random 4);  // 5-8 units
     for "_i" from 0 to (_patrolCount - 1) do {
         private _p = [_lPos, 20, 180, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
         if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [30 + random 80, random 360]; };
@@ -313,7 +313,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     _garrisonGrp setCombatMode "RED";
     _areaGroups pushBack _garrisonGrp;
 
-    private _garrisonCount = 3 + floor (random 3);  // 3-5 units
+    private _garrisonCount = 4 + floor (random 3);  // 4-6 units
     if (!(_nearBuildings isEqualTo [])) then {
         private _useHouses = (_garrisonCount min (count _nearBuildings)) max 1;
         for "_h" from 0 to (_useHouses - 1) do {
@@ -354,7 +354,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     _patrol2Grp setCombatMode "RED";
     _areaGroups pushBack _patrol2Grp;
 
-    private _patrol2Count = 3 + floor (random 3);  // 3-5 units
+    private _patrol2Count = 4 + floor (random 4);  // 4-7 units
     for "_i" from 0 to (_patrol2Count - 1) do {
         private _p = [_lPos, 40, 220, 6, 0, 0.5, 0] call BIS_fnc_findSafePos;
         if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [60 + random 100, random 360]; };
@@ -424,6 +424,25 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     };
     (_vehGrp addWaypoint [_vehSpawnPos, 0]) setWaypointType "CYCLE";
 
+    // --- Squad 4: Close-protection sentries guarding the laptop area ---
+    private _guardGrp = createGroup east;
+    _guardGrp setBehaviour "AWARE";
+    _guardGrp setCombatMode "RED";
+    _areaGroups pushBack _guardGrp;
+
+    private _guardCount = 2 + floor (random 3);  // 2-4 units — static sentries
+    for "_i" from 0 to (_guardCount - 1) do {
+        private _p = [_lPos, 10, 60, 4, 0, 0.3, 0] call BIS_fnc_findSafePos;
+        if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [15 + random 20, random 360]; };
+        private _u = _guardGrp createUnit [selectRandom _infantryPool, _p, [], 0, "SENTRY"];
+        if (!isNull _u) then {
+            _u setUnitPos "UP";
+            _u allowFleeing 0;
+            if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
+            _areaEnemies pushBack _u;
+        };
+    };
+
     // --- Intel laptop ---
     private _lapPos = [];
 
@@ -467,9 +486,13 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         private _alive = { !isNull _x && alive _x } count _enemies;
         if (_alive == 0) then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
-            ["TaskSucceeded", [format ["Resistance in %1 eliminated.", _name], "Area cleared."]]
+            private _clearRep = 10 + floor (random 6);   // 10-15 pts
+            if (!isNil "DYN_fnc_changeReputation") then {
+                [_clearRep, "Resistance Area Cleared"] call DYN_fnc_changeReputation;
+            };
+            ["TaskSucceeded", [format ["Resistance in %1 eliminated. +%2 reputation.", _name, _clearRep], "Area cleared."]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
-            diag_log format ["[RESISTANCE] Area '%1' cleared (task %2)", _name, _taskId];
+            diag_log format ["[RESISTANCE] Area '%1' cleared (task %2) +%3 rep", _name, _taskId, _clearRep];
         } else {
             // AO ended — cancel task and despawn remaining resistance
             [_taskId, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];

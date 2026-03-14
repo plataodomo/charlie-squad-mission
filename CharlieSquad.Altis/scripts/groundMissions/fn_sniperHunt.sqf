@@ -9,6 +9,42 @@
 */
 if (!isServer) exitWith {};
 
+// =====================================================
+// DOG TAG PICKUP — ACE action added to sniper corpse
+// Broadcast to all clients when sniper dies
+// =====================================================
+if (isNil "DYN_fnc_addSniperDogTagAction") then {
+    DYN_fnc_addSniperDogTagAction = {
+        params ["_sniperBody"];
+        if (isNull _sniperBody) exitWith {};
+
+        if (isNil "ace_interact_menu_fnc_createAction") exitWith {
+            diag_log "[GROUND-SNIPER] ACE interact not loaded — dog tag action skipped";
+        };
+
+        private _action = [
+            "DYN_SniperDogTag",
+            "Recover Dog Tag",
+            "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_search_ca.paa",
+            {
+                params ["_target", "_caller", "_params"];
+                _target setVariable ["DYN_dogtagTaken", true, true];
+                _caller setVariable ["DYN_hasDogtag_sniper", true, true];
+                hint "Dog tag recovered. Return to base for a bonus reward.";
+            },
+            {
+                params ["_target", "_caller", "_params"];
+                !alive _target
+                && {!(_target getVariable ["DYN_dogtagTaken", false])}
+                && {(_caller distance _target) < 3}
+            }
+        ] call ace_interact_menu_fnc_createAction;
+
+        [_sniperBody, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+    };
+    publicVariable "DYN_fnc_addSniperDogTagAction";
+};
+
 diag_log "[GROUND-SNIPER] Setting up Sniper Hunt mission...";
 
 // =====================================================
@@ -302,6 +338,51 @@ DYN_ground_enemies pushBack _spotter;
 };
 
 diag_log format ["[GROUND-SNIPER] Team spawned. Sniper: %1  Spotter: %2", _sniperPos, _spotterPos];
+
+// =====================================================
+// 8b. DOG TAG — added to sniper corpse when he dies
+//     Player recovers it, returns to base, gets bonus rep
+// =====================================================
+[_sniper] spawn {
+    params ["_sniperUnit"];
+
+    // Wait for the sniper to be killed
+    waitUntil { sleep 2; !alive _sniperUnit };
+
+    // Add ACE recovery action to the corpse (broadcasts to all clients)
+    [_sniperUnit] remoteExec ["DYN_fnc_addSniperDogTagAction", 0];
+    diag_log "[GROUND-SNIPER] Dog tag available on sniper corpse.";
+
+    // Monitor for a player bringing the tag back to base (prison_dropoff / 200m)
+    // 20-minute window from time of death
+    private _basePos = getMarkerPos "prison_dropoff";
+    if (_basePos isEqualTo [0,0,0]) then { _basePos = getMarkerPos "respawn_west"; };
+
+    private _deadline = diag_tickTime + 1200;
+    waitUntil {
+        sleep 5;
+        private _carrier = objNull;
+        {
+            if (_x getVariable ["DYN_hasDogtag_sniper", false] && alive _x) exitWith {
+                _carrier = _x;
+            };
+        } forEach allPlayers;
+
+        if (!isNull _carrier && (_carrier distance2D _basePos) < 200) then {
+            _carrier setVariable ["DYN_hasDogtag_sniper", false, true];
+            private _bonus = 8 + floor random 7;   // 8-14 pts
+            [_bonus, "Sniper Dog Tag Recovered"] call DYN_fnc_changeReputation;
+            ["TaskSucceeded", [
+                format ["Dog tag delivered to base! +%1 reputation.", _bonus],
+                "Sniper Dog Tag"
+            ]] remoteExecCall ["BIS_fnc_showNotification", 0];
+            diag_log format ["[GROUND-SNIPER] Dog tag returned by %1, +%2 rep", name _carrier, _bonus];
+            true
+        } else {
+            diag_tickTime > _deadline
+        };
+    };
+};
 
 // =====================================================
 // 9. GROUP BEHAVIOUR
