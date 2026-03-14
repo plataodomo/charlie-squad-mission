@@ -176,9 +176,6 @@ DYN_fnc_shopBuy = {
 // MILITIA SUPPORT — CLIENT
 // =====================================================
 
-// Wait for server to broadcast the active flag
-waitUntil { !isNil "DYN_militia_active" };
-
 DYN_fnc_militiaDialogOnLoad = {
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     private _display = findDisplay 9750;
