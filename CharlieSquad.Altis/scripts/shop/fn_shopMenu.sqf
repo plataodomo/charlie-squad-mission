@@ -203,7 +203,7 @@ DYN_fnc_militiaDialogOnLoad = {
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
-    (_display displayCtrl 9751) ctrlSetText format ["Balance: %1 pts  |  Cost: 30 pts", _rep];
+    (_display displayCtrl 9751) ctrlSetText format ["%1 pts", _rep];
 };
 
 DYN_fnc_militiaDirectionChosen = {
