@@ -40,13 +40,13 @@ DYN_militia_units = [
 // PURCHASE HANDLER (remoteExec target: server)
 // =====================================================
 // Tier definitions
-//   ROOKIE  — 30 pts — 10 infantry, no vehicles (untrained)
-//   REGULAR — 55 pts — 10 infantry + 2x HMMWV HMG (light)
-//   ELITE   — 90 pts — 10 infantry + 1x APC + 1x MBT (heavy armor)
+//   ROOKIE  —  50 pts — 10 infantry, no vehicles (untrained)
+//   REGULAR —  90 pts — 10 infantry + 2x HMMWV HMG (light)
+//   ELITE   — 150 pts — 10 infantry + 1x APC + 1x MBT (heavy armor)
 DYN_militia_tierCost = createHashMapFromArray [
-    ["ROOKIE",  30],
-    ["REGULAR", 55],
-    ["ELITE",   90]
+    ["ROOKIE",   50],
+    ["REGULAR",  90],
+    ["ELITE",   150]
 ];
 
 DYN_militia_tierVehicles = createHashMapFromArray [
@@ -307,4 +307,4 @@ DYN_fnc_purchaseMilitia = {
 };
 publicVariable "DYN_fnc_purchaseMilitia";
 
-diag_log "[MILITIA] Militia support system ready (ROOKIE=30pts REGULAR=55pts ELITE=90pts | delay: 10 min | units: 10)";
+diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 10 min | units: 10)";
