@@ -152,6 +152,7 @@ private _fn_spawnHeli = {
     [_heli, _grp, _center, _radius, _alt, _fn_setupHeliWPs, _fn_dlActive] spawn {
         params ["_heli","_grp","_center","_radius","_alt","_fn_setupHeliWPs","_fn_dlActive"];
 
+        if (isNull _heli) exitWith {};
         private _lastPos = getPosATL _heli;
         private _lastMoveT = diag_tickTime;
 

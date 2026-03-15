@@ -103,6 +103,7 @@ for "_i" from 0 to (_useCount - 1) do {
     for "_u" from 1 to (3 + floor (random 3)) do {
         private _p = selectRandom _positions;
         private _unit = _grp createUnit [selectRandom _garrisonPool, _p, [], 0, "NONE"];
+        if (isNull _unit) then { continue };
         // PATH disabled while AWARE so units hold their building positions
         _unit disableAI "PATH"; _unit setUnitPos (selectRandom ["UP","MIDDLE"]); _unit allowFleeing 0;
         DYN_AO_enemies pushBack _unit;

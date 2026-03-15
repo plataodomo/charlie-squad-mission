@@ -576,10 +576,12 @@ if (!isNull _compositionHMG) then {
     private _hmgGrp = createGroup east;
     DYN_naval_enemyGroups pushBack _hmgGrp;
     private _hmgGunner = _hmgGrp createUnit [selectRandom _infPool, getPos _compositionHMG, [], 0, "NONE"];
-    _hmgGunner moveInGunner _compositionHMG;
-    _hmgGunner allowFleeing 0;
-    _hmgGunner setSkill 0.55;
-    DYN_naval_enemies pushBack _hmgGunner;
+    if (!isNull _hmgGunner) then {
+        _hmgGunner moveInGunner _compositionHMG;
+        _hmgGunner allowFleeing 0;
+        _hmgGunner setSkill 0.55;
+        DYN_naval_enemies pushBack _hmgGunner;
+    };
 };
 
 // ---- Crew the Tigr vehicles ----
@@ -592,17 +594,21 @@ sleep 13;
         DYN_naval_enemyGroups pushBack _vGrp;
 
         private _driver = _vGrp createUnit [selectRandom _infPool, getPos _x, [], 0, "NONE"];
-        _driver moveInDriver _x;
-        _driver allowFleeing 0;
-        _driver setSkill 0.45;
-        DYN_naval_enemies pushBack _driver;
+        if (!isNull _driver) then {
+            _driver moveInDriver _x;
+            _driver allowFleeing 0;
+            _driver setSkill 0.45;
+            DYN_naval_enemies pushBack _driver;
+        };
 
         if ((_x emptyPositions "gunner") > 0) then {
             private _gunner = _vGrp createUnit [selectRandom _infPool, getPos _x, [], 0, "NONE"];
-            _gunner moveInGunner _x;
-            _gunner allowFleeing 0;
-            _gunner setSkill 0.50;
-            DYN_naval_enemies pushBack _gunner;
+            if (!isNull _gunner) then {
+                _gunner moveInGunner _x;
+                _gunner allowFleeing 0;
+                _gunner setSkill 0.50;
+                DYN_naval_enemies pushBack _gunner;
+            };
         };
     };
 } forEach DYN_naval_enemyVehs;
@@ -620,14 +626,18 @@ if (random 1 < 0.7) then {
         DYN_naval_enemyGroups pushBack _bGrp;
 
         private _bDriver = _bGrp createUnit [selectRandom _infPool, _boatSpawn, [], 0, "NONE"];
-        _bDriver moveInDriver _boat;
-        DYN_naval_enemies pushBack _bDriver;
-        _bDriver allowFleeing 0;
+        if (!isNull _bDriver) then {
+            _bDriver moveInDriver _boat;
+            DYN_naval_enemies pushBack _bDriver;
+            _bDriver allowFleeing 0;
+        };
 
         private _bGunner = _bGrp createUnit [selectRandom _infPool, _boatSpawn, [], 0, "NONE"];
-        _bGunner moveInGunner _boat;
-        DYN_naval_enemies pushBack _bGunner;
-        _bGunner allowFleeing 0;
+        if (!isNull _bGunner) then {
+            _bGunner moveInGunner _boat;
+            DYN_naval_enemies pushBack _bGunner;
+            _bGunner allowFleeing 0;
+        };
 
         DYN_naval_enemyVehs pushBack _boat;
 

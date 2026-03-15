@@ -294,6 +294,7 @@ if (_escapeIsHeli) then {
     private _driverGrp = createGroup east;
     DYN_ground_enemyGroups pushBack _driverGrp;
     private _driver = _driverGrp createUnit [selectRandom _guardPool, _vehPos, [], 0, "NONE"];
+    if (isNull _driver) exitWith { diag_log "[GROUND-DEALER] ERROR: failed to create ground escape driver"; };
     _driver moveInDriver _escapeVeh;
     _driver allowFleeing 0;
     DYN_ground_enemies pushBack _driver;

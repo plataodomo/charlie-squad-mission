@@ -232,6 +232,7 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 if (isNull _driver) then {
                     _driverGrp = createGroup east;
                     private _newDriver = _driverGrp createUnit ["O_crew_F", _thisSpawn, [], 0, "NONE"];
+                    if (isNull _newDriver) exitWith { deleteVehicle _truck; };
                     _newDriver assignAsDriver _truck;
                     _newDriver moveInDriver _truck;
                     _newDriver allowFleeing 0;
@@ -281,7 +282,8 @@ if (isNil "DYN_fnc_spawnHQReinforcements") then {
                 _wp1 setWaypointCombatMode "BLUE";
                 _wp1 setWaypointCompletionRadius 25;
 
-                (driver _truck) doMove _dismountPos;
+                private _activeDriver = driver _truck;
+                if (!isNull _activeDriver) then { _activeDriver doMove _dismountPos; };
 
                 private _startTime = diag_tickTime;
                 private _timeout = 180;
