@@ -300,17 +300,19 @@ DYN_fnc_spawnWoundedCivilian = {
         _c setVariable ["ace_medical_ai_healSelf", false, true];
         _c setUnconscious true;
 
-        // Apply ACE wounds — values must be heavy enough for ACE to maintain
-        // blood loss below the unconscious threshold until a medic treats them.
-        // Light values (0.5/0.4) were insufficient; ACE would reset consciousness.
+        // Apply ACE wounds — moderate values keep the civilian unconscious with
+        // real treatable wounds, while bleeding slowly enough to survive until
+        // a medic arrives. Blood volume is set high after wounds are applied
+        // to give extra survival buffer during travel time.
         if (!isNil "ace_medical_fnc_addDamageToUnit") then {
-            [_c, 1.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            [_c, 1.2, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_c, 0.6, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_c, 0.5, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
             if (_sev >= 3) then {
-                [_c, 0.8, "rightleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-                [_c, 0.6, "rightarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+                [_c, 0.3, "rightleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+                [_c, 0.2, "rightarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
             };
-            diag_log format ["[REP] ACE wounds applied sev %1", _sev];
+            _c setVariable ["ace_medical_bloodVolume", 5.2, true];
+            diag_log format ["[REP] ACE wounds applied sev %1 (moderate, slow bleed)", _sev];
         } else {
             // Fallback for non-ACE: vanilla damage only
             private _dmg = if (_sev >= 3) then {0.75} else {0.6};
