@@ -205,16 +205,30 @@ DYN_fnc_militiaSelectTier = {
     uiNamespace setVariable ["DYN_militia_tier", _tier];
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
-    // Reset all tier buttons to default
-    { (_display displayCtrl _x) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] } forEach [9752, 9753, 9754];
-    // Highlight the selected tier with a green tint
+
+    // Reset all tier buttons: default bg + grey hover EHs
+    {
+        private _ctrl = _display displayCtrl _x;
+        _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
+        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
+        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.40, 0.40, 0.40, 1] }];
+        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
+    } forEach [9752, 9753, 9754];
+
+    // Highlight selected tier green; hover also stays green
     private _idc = switch (_tier) do {
         case "ROOKIE":  { 9752 };
         case "REGULAR": { 9753 };
         case "ELITE":   { 9754 };
         default         { 9752 };
     };
-    (_display displayCtrl _idc) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
+    private _selCtrl = _display displayCtrl _idc;
+    _selCtrl ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
+    _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
+    _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
+    _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.25, 0.42, 0.25, 1] }];
+    _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1] }];
 };
 
 DYN_fnc_militiaDialogOnLoad = {

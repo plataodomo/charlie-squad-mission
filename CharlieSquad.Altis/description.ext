@@ -692,14 +692,14 @@ class DYN_MilitiaDialog
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
-        // AO zone ring — uses the naval marker (circular frame) tinted green
+        // AO zone indicator — solid red dot in compass centre
         class AOCircle
         {
             idc = -1; type = 0; style = 48 + 2048;
             x = 0.594; y = 0.385; w = 0.052; h = 0.090;
             colorBackground[] = {0,0,0,0};
-            colorText[] = {0.20, 0.75, 0.30, 0.55};
-            text = "\A3\ui_f\data\map\markers\nato\b_naval.paa";
+            colorText[] = {0.85, 0.10, 0.10, 0.90};
+            text = "\A3\ui_f\data\map\markers\mil\dot_ca.paa";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
         class BottomBG
@@ -932,7 +932,7 @@ class DYN_MilitiaDialog
         // CompassBG: x=0.480 y=0.314 w=0.280 h=0.232  centreX=0.620 centreY=0.430
         // N : x=0.590  y=0.324  centreX=0.620
         // W : x=0.488  y=0.402  centreX=0.518
-        // E : x=0.702  y=0.402  centreX=0.732  — W/E symmetric around 0.620
+        // E : x=0.692  y=0.402  centreX=0.722  — W/E symmetric around 0.620  right=0.752 (inside BG)
         // S : x=0.590  y=0.480
         class NorthBtn
         {
@@ -964,7 +964,7 @@ class DYN_MilitiaDialog
         };
         class EastBtn: NorthBtn
         {
-            x = 0.702; y = 0.402;
+            x = 0.692; y = 0.402;
             text = "E";
             action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
         };
