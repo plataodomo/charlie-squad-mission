@@ -274,7 +274,9 @@ DYN_fnc_patrolCycle = {
             _ldr reveal [_primaryTarget, 4];
             { _x doSuppressiveFire _targetPos; } forEach _aliveUnits;
 
-            private _vehTargets = _knownTargets select { vehicle _x != _x };
+            // Map every known target to its vehicle — catches both directly-spotted
+            // vehicles and players reported as crew. Exclude foot soldiers.
+            private _vehTargets = (_knownTargets apply { vehicle _x }) select { !(_x isKindOf "Man") };
             if !(_vehTargets isEqualTo []) then {
                 {
                     if (secondaryWeapon _x != "") then {
