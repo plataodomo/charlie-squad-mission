@@ -936,7 +936,7 @@ class DYN_MilitiaDialog
         // S : x=0.590  y=0.480
         class NorthBtn
         {
-            idc = -1; type = 1; style = 2;
+            idc = 9760; type = 1; style = 2;
             x = 0.590; y = 0.324; w = 0.060; h = 0.056;
             colorBackground[]         = {0.20, 0.20, 0.20, 1};
             colorBackgroundActive[]   = {0.32, 0.32, 0.32, 1};
@@ -954,25 +954,28 @@ class DYN_MilitiaDialog
             soundEnter[] = {"", 0.1, 1};
             soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
-            action = "['NORTH'] call DYN_fnc_militiaDirectionChosen;";
+            action = "['NORTH'] call DYN_fnc_militiaSelectDirection;";
         };
         class WestBtn: NorthBtn
         {
+            idc = 9761;
             x = 0.488; y = 0.402;
             text = "W";
-            action = "['WEST'] call DYN_fnc_militiaDirectionChosen;";
+            action = "['WEST'] call DYN_fnc_militiaSelectDirection;";
         };
         class EastBtn: NorthBtn
         {
+            idc = 9762;
             x = 0.692; y = 0.402;
             text = "E";
-            action = "['EAST'] call DYN_fnc_militiaDirectionChosen;";
+            action = "['EAST'] call DYN_fnc_militiaSelectDirection;";
         };
         class SouthBtn: NorthBtn
         {
+            idc = 9763;
             x = 0.590; y = 0.480;
             text = "S";
-            action = "['SOUTH'] call DYN_fnc_militiaDirectionChosen;";
+            action = "['SOUTH'] call DYN_fnc_militiaSelectDirection;";
         };
         class CompassCenter
         {
@@ -984,10 +987,19 @@ class DYN_MilitiaDialog
             font = "RobotoCondensedBold"; sizeEx = 0.018; shadow = 0;
         };
 
+        class DirectionLabel
+        {
+            idc = 9756; type = 0; style = 2;
+            x = 0.453; y = 0.550; w = 0.334; h = 0.026;
+            colorBackground[] = {0,0,0,0};
+            colorText[] = {0.55, 0.55, 0.55, 1};
+            text = "—";
+            font = "RobotoCondensedBold"; sizeEx = 0.026; shadow = 0;
+        };
         class AssaultNote
         {
             idc = -1; type = 0; style = 2;
-            x = 0.453; y = 0.555; w = 0.334; h = 0.030;
+            x = 0.453; y = 0.580; w = 0.334; h = 0.030;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.45, 0.45, 0.45, 1};
             text = "Forces assault inward from the AO perimeter.";
@@ -998,7 +1010,7 @@ class DYN_MilitiaDialog
         class CancelBtn
         {
             idc = -1; type = 1; style = 2;
-            x = 0.375; y = 0.824; w = 0.250; h = 0.050;
+            x = 0.220; y = 0.824; w = 0.265; h = 0.050;
             colorBackground[]         = {0.30, 0.18, 0.18, 1};
             colorBackgroundActive[]   = {0.45, 0.25, 0.25, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -1016,6 +1028,28 @@ class DYN_MilitiaDialog
             soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
             action = "closeDialog 0;";
+        };
+        class DeployBtn
+        {
+            idc = 9755; type = 1; style = 2;
+            x = 0.515; y = 0.824; w = 0.265; h = 0.050;
+            colorBackground[]         = {0.12, 0.12, 0.12, 1};
+            colorBackgroundActive[]   = {0.25, 0.42, 0.25, 1};
+            colorBackgroundDisabled[] = {0.10, 0.10, 0.10, 1};
+            colorText[]     = {0.72, 0.90, 0.72, 1};
+            colorFocused[]  = {0.18, 0.28, 0.18, 1};
+            colorBorder[]   = {0,0,0,0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[]   = {0,0,0,0};
+            text = "DEPLOY";
+            font = "RobotoCondensedBold"; sizeEx = 0.038;
+            offsetX = 0; offsetY = 0; offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[]  = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "[] call DYN_fnc_militiaDeploy;";
         };
     };
 };
