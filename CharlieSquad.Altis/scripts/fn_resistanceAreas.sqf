@@ -434,7 +434,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     for "_i" from 0 to (_guardCount - 1) do {
         private _p = [_lPos, 10, 60, 4, 0, 0.3, 0] call BIS_fnc_findSafePos;
         if (surfaceIsWater _p || {_p isEqualTo [0,0,0]}) then { _p = _lPos getPos [15 + random 20, random 360]; };
-        private _u = _guardGrp createUnit [selectRandom _infantryPool, _p, [], 0, "SENTRY"];
+        private _u = _guardGrp createUnit [selectRandom _infantryPool, _p, [], 0, "NONE"];
         if (!isNull _u) then {
             _u setUnitPos "UP";
             _u allowFleeing 0;

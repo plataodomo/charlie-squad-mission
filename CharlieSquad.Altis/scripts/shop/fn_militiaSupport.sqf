@@ -121,7 +121,7 @@ DYN_fnc_purchaseMilitia = {
         case "ROOKIE":  { "Rookie infantry" };
         case "REGULAR": { "Regular infantry + light vehicles" };
         case "ELITE":   { "Elite infantry + heavy armor" };
-        default:        { "Militia" };
+        default         { "Militia" };
     };
     ["MilitiaInbound",
         [format ["Militia inbound from %1 in 10 min! (%2)", _direction, _tierLabel]]
