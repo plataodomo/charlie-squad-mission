@@ -39,7 +39,7 @@ diag_log format ["[NAVAL-OUTPOST] Land pos: %1 (water ref: %2)", _landPos, _wate
 // 2. SETTINGS
 // =====================================================
 private _timeout    = 7200;  // 2 hours
-private _repReward  = 8 + floor random 8;
+private _repReward  = 6 + floor random 5;
 private _cleanupDelay = 600;
 
 private _infPool = [

@@ -53,7 +53,7 @@ private _aoCenter = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
 // 1. SETTINGS
 // =====================================================
 private _timeout         = 7200;
-private _repRewardRepair = 10 + floor (random 11);  // 10-20 rep
+private _repRewardRepair = 5 + floor (random 6);  // 5-10 rep
 private _repRewardMedic  = 5;                        // +5 bonus
 private _repPenaltyCiv   = -10;                      // civilian killed
 private _zoneRadius      = 150;

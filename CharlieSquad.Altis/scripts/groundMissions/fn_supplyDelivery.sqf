@@ -55,7 +55,7 @@ if (_supplyMkrPos isEqualTo [0,0,0]) then {
 // 1. SETTINGS
 // =====================================================
 private _timeout      = 7200;
-private _repReward    = 22 + floor (random 11);  // 22-32 rep
+private _repReward    = 12 + floor (random 9);  // 12-20 rep
 private _dropRadius   = 80;
 private _cleanupDelay = 120;
 

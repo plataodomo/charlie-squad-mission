@@ -106,7 +106,7 @@ if (isNil "DYN_fnc_serverResIntelUsed") then {
         _laptop setVariable ["DYN_resIntelUsed", true, true];
 
         if (!isNil "DYN_fnc_changeReputation") then {
-            private _repGain = 5 + floor (random 6);
+            private _repGain = 3 + floor (random 4);
             [_repGain, "Enemy Intel Secured"] call DYN_fnc_changeReputation;
         };
 
@@ -486,7 +486,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         private _alive = { !isNull _x && alive _x } count _enemies;
         if (_alive == 0) then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
-            private _clearRep = 4 + floor (random 4);   // 4-7 pts
+            private _clearRep = 3 + floor (random 3);   // 3-5 pts
             if (!isNil "DYN_fnc_changeReputation") then {
                 [_clearRep, "Resistance Area Cleared"] call DYN_fnc_changeReputation;
             };

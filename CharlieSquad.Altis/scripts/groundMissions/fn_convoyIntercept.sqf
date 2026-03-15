@@ -376,11 +376,11 @@ private _objectiveType = selectRandom ["AMMO","DEVICE"];
 private _objectiveTruckClass = ""; private _objectiveAction = ""; private _repReward = 0; private _taskDescription = "";
 if (_objectiveType == "AMMO") then {
     _objectiveTruckClass = "O_Truck_03_ammo_F"; _objectiveAction = "DESTROY";
-    _repReward = 20 + floor random 6;
+    _repReward = 10 + floor random 6;
     _taskDescription = format ["Intelligence reports an enemy ammunition convoy departing from the vicinity of %1. The convoy carries high-priority munitions bound for frontline resupply operations.<br/><br/>Intercept and destroy the ammunition truck before it reaches its destination. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
 } else {
     _objectiveTruckClass = "O_T_Truck_03_device_ghex_F"; _objectiveAction = "CAPTURE";
-    _repReward = 35 + floor random 11;
+    _repReward = 18 + floor random 8;
     _taskDescription = format ["Intelligence indicates an enemy convoy departing from the vicinity of %1 is transporting a classified electronic device containing critical encryption hardware.<br/><br/>Intercept the convoy, eliminate the crew, and capture the device truck intact. Drive it back to the delivery point at base.<br/><br/>Warning: enemy reinforcements will pursue if the truck is captured. If the convoy completes its delivery, the mission will automatically fail.<br/><br/>Last known position: near %1.", _startName];
 };
 
