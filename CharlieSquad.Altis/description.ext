@@ -797,7 +797,7 @@ class DYN_MilitiaDialog
             x = 0.218; y = 0.320; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.80, 0.40, 1};
-            text = "20 pts — Infantry only";
+            text = "50 pts — Infantry only";
             font = "RobotoCondensed"; sizeEx = 0.025; shadow = 0;
         };
         class RookieDesc
@@ -832,7 +832,7 @@ class DYN_MilitiaDialog
             x = 0.218; y = 0.422; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.80, 0.40, 1};
-            text = "35 pts — Light vehicles";
+            text = "90 pts — Light vehicles";
             font = "RobotoCondensed"; sizeEx = 0.025; shadow = 0;
         };
         class RegularDesc
@@ -867,7 +867,7 @@ class DYN_MilitiaDialog
             x = 0.218; y = 0.524; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.90, 0.80, 0.40, 1};
-            text = "60 pts — Heavy armor";
+            text = "150 pts — Heavy armor";
             font = "RobotoCondensed"; sizeEx = 0.025; shadow = 0;
         };
         class EliteDesc
