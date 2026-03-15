@@ -26,7 +26,7 @@
       If the driver is injured, treat the casualty for a reputation bonus.
 
     REWARDS:
-      Truck repaired to operational status:  +10-20 REP
+      Truck repaired to operational status:  +5-10 REP
       Civilian driver treated:               +5  REP (bonus)
       Civilian driver killed:                -10 REP (penalty)
 
@@ -208,15 +208,18 @@ if (_civIsInjured) then {
         // Prevent ACE AI self-treatment
         _civ setVariable ["ace_medical_ai_healSelf", false, true];
 
-        // Apply serious wounds so ACE3 registers a genuine critical patient.
-        // Heavier values (1.5 / 1.2 / 0.8) cause enough blood loss to push
-        // blood volume well below ACE's unconscious threshold over time, so
-        // ACE_isUnconscious stays true until a medic actually treats the wounds.
+        // Apply moderate wounds so ACE3 registers a genuine critical patient.
+        // Values kept low enough that the civilian bleeds slowly — giving players
+        // time to travel to the site before blood loss becomes fatal.
+        // Blood volume is topped up after wounds are applied to further extend
+        // survival time while keeping proper ACE wound state for medics to treat.
         if (!isNil "ace_medical_fnc_addDamageToUnit") then {
-            [_civ, 1.5, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            [_civ, 1.2, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            [_civ, 0.8, "leftarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
-            diag_log "[GROUND-REPAIR] ACE wounds applied to civilian driver (serious).";
+            [_civ, 0.6, "body",    "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_civ, 0.5, "leftleg", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            [_civ, 0.3, "leftarm", "bullet", objNull] call ace_medical_fnc_addDamageToUnit;
+            // Give the civ a healthy blood reserve so they survive until treated
+            _civ setVariable ["ace_medical_bloodVolume", 5.2, true];
+            diag_log "[GROUND-REPAIR] ACE wounds applied to civilian driver (moderate, slow bleed).";
         } else {
             _civ setDamage 0.6;
             diag_log "[GROUND-REPAIR] Vanilla fallback damage applied (no ACE).";
