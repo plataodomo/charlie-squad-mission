@@ -692,14 +692,14 @@ class DYN_MilitiaDialog
             colorText[] = {0,0,0,0}; text = "";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
-        // AO zone ring — mimics the main AO circle on the map
+        // AO zone ring — uses the naval marker (circular frame) tinted green
         class AOCircle
         {
-            idc = -1; type = 0; style = 48;
-            x = 0.595; y = 0.386; w = 0.050; h = 0.088;
+            idc = -1; type = 0; style = 48 + 2048;
+            x = 0.594; y = 0.385; w = 0.052; h = 0.090;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.20, 0.75, 0.30, 0.55};
-            text = "\A3\ui_f\data\map\markers\nato\selector_selectable_ca.paa";
+            text = "\A3\ui_f\data\map\markers\nato\b_naval.paa";
             font = "RobotoCondensed"; sizeEx = 0.03;
         };
         class BottomBG

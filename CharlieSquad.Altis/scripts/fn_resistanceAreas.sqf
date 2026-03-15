@@ -486,7 +486,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         private _alive = { !isNull _x && alive _x } count _enemies;
         if (_alive == 0) then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
-            private _clearRep = 10 + floor (random 6);   // 10-15 pts
+            private _clearRep = 4 + floor (random 4);   // 4-7 pts
             if (!isNil "DYN_fnc_changeReputation") then {
                 [_clearRep, "Resistance Area Cleared"] call DYN_fnc_changeReputation;
             };
