@@ -518,6 +518,7 @@ private _usedTowerPositions = [];
 for "_i" from 0 to (_sniperCount - 1) do {
     private _p = _towerPositions select (_i min ((count _towerPositions) - 1));
     private _sn = _sniperGrp createUnit [_sniperClass, _p, [], 0, "NONE"];
+    if (isNull _sn) then { continue };
     _sn setPosATL _p;
     _sn disableAI "PATH";
     _sn setUnitPos "UP";
@@ -549,6 +550,7 @@ if (!isNull _tower) then {
     for "_i" from 0 to (_towerGuardCount - 1) do {
         private _p = _shuffled select _i;
         private _u = _towerGuardGrp createUnit [selectRandom _towerPool, _p, [], 0, "NONE"];
+        if (isNull _u) then { continue };
         _u setPosATL _p;
         _u disableAI "PATH";
         _u setUnitPos "UP";
@@ -578,6 +580,7 @@ for "_i" from 1 to _interiorCount do {
     // and consistently places units OUTSIDE the walls instead of inside.
     private _p = _depotPos getPos [5 + random 22, random 360];
     private _u = _interiorGrp createUnit [selectRandom _guardPool, _p, [], 0, "FORM"];
+    if (isNull _u) then { continue };
     _u allowFleeing 0;
     _u setSkill (0.40 + random 0.15);
     DYN_AO_enemies pushBack _u;
@@ -610,6 +613,7 @@ for "_i" from 1 to _guardCount do {
     private _p = [_depotPos, 10, 65, 6, 0, 0.6, 0] call BIS_fnc_findSafePos;
     if (_p isEqualTo [0,0,0] || {surfaceIsWater _p}) then { _p = _depotPos getPos [25 + random 30, random 360]; };
     private _u = _guardGrp createUnit [selectRandom _guardPool, _p, [], 0, "FORM"];
+    if (isNull _u) then { continue };
     _u allowFleeing 0;
     DYN_AO_enemies pushBack _u;
 };
