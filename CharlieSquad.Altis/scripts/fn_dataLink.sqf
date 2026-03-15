@@ -281,23 +281,36 @@ _tablet setVelocity [0,0,0];
     };
 };
 
-// Inside guards
+// Inside guards - deferred so the building's collision mesh is loaded before units are placed
 private _insideGrp = createGroup east;
 DYN_AO_enemyGroups pushBack _insideGrp;
 _insideGrp setBehaviour "AWARE";
 _insideGrp setCombatMode "RED";
 
-private _inside = [_building] call BIS_fnc_buildingPositions;
-if (_inside isEqualTo []) then { _inside = [getPosATL _building]; };
-
 private _insideCount = 3 + floor (random 3);
-for "_i" from 1 to _insideCount do {
-    private _p = selectRandom _inside;
-    private _u = _insideGrp createUnit [selectRandom _insidePool, _p, [], 0, "NONE"];
-    _u disableAI "PATH";
-    _u setUnitPos (selectRandom ["UP","MIDDLE"]);
-    _u allowFleeing 0;
-    DYN_AO_enemies pushBack _u;
+
+[_insideGrp, _insidePool, _insideCount, _building] spawn {
+    params ["_insideGrp", "_insidePool", "_insideCount", "_building"];
+    sleep 1.5;
+    if (isNull _building) exitWith {};
+
+    private _positions = [_building] call BIS_fnc_buildingPositions;
+    if (_positions isEqualTo []) then { _positions = [getPosATL _building]; };
+
+    for "_i" from 1 to _insideCount do {
+        private _p = selectRandom _positions;
+        private _u = _insideGrp createUnit [selectRandom _insidePool, _p, [], 0, "NONE"];
+        _u disableAI "PATH";
+        _u setUnitPos (selectRandom ["UP","MIDDLE"]);
+        _u allowFleeing 0;
+        DYN_AO_enemies pushBack _u;
+        // Re-pin after physics tick to prevent falling through the floor
+        [_u, _p] spawn {
+            params ["_unit", "_pos"];
+            sleep 0.3;
+            if (!isNull _unit && { alive _unit }) then { _unit setPos _pos; };
+        };
+    };
 };
 
 // Patrol 1
