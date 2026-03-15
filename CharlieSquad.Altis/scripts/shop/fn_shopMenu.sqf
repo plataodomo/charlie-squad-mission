@@ -230,10 +230,10 @@ DYN_fnc_militiaDirectionChosen = {
     params ["_direction"];
     private _tier = uiNamespace getVariable ["DYN_militia_tier", "ROOKIE"];
     private _cost = switch (_tier) do {
-        case "ROOKIE":  { 20 };
-        case "REGULAR": { 35 };
-        case "ELITE":   { 60 };
-        default         { 20 };
+        case "ROOKIE":  { 30 };
+        case "REGULAR": { 55 };
+        case "ELITE":   { 90 };
+        default         { 30 };
     };
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     if (_rep < _cost) exitWith {
