@@ -306,7 +306,8 @@ for "_i" from 0 to (_mortarCount - 1) do {
         private _mPos = getPosATL _mortar;
         
         private _gunner = _grp createUnit [_crewClass, [_mPos#0, _mPos#1, 0], [], 0, "NONE"];
-        
+        if (isNull _gunner) exitWith {};
+
         _gunner setPosATL [_mPos#0, _mPos#1, 0];
         
         sleep 0.2;
