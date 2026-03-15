@@ -341,7 +341,7 @@ private _escapeType = if (_escapeIsHeli) then {"helicopter extraction"} else {"a
     _taskId,
     [
         format [
-            "Intelligence reports that a known arms dealer has been located operating outside the main AO. This individual is responsible for supplying enemy forces with weapons, explosives, and equipment across the region.<br/><br/>The target is conducting a deal at the marked location and is protected by a heavily armed security detail. He has a %1 on standby for emergency extraction should things go south.<br/><br/>Your mission is to capture the arms dealer alive using ACE restraints and deliver him to the prison facility at base for interrogation. He holds critical intel on enemy supply networks.<br/><br/>WARNING: Do not kill the target. If the arms dealer is killed or manages to escape, the mission will be considered a failure.<br/><br/>Time limit: 2 hours.",
+            "Intelligence reports that a known arms dealer has been located operating outside the main AO. This individual is responsible for supplying enemy forces with weapons, explosives, and equipment across the region.<br/><br/>The target is conducting a deal at the marked location and is protected by a heavily armed security detail. He has a %1 on standby for emergency extraction should things go south.<br/><br/>Your mission is to capture the arms dealer alive using ACE restraints and deliver him to the prison facility at base for interrogation. He holds critical intel on enemy supply networks.<br/><br/>WARNING: Do not kill the target. If the arms dealer is killed or manages to escape, the mission will be considered a failure.",
             _escapeType
         ],
         "Capture Arms Dealer",
