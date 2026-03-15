@@ -206,15 +206,23 @@ DYN_fnc_militiaSelectTier = {
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
 
-    // Reset all tier buttons: default bg + grey hover EHs
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+
+    // Reset all tier buttons: default bg, text color reflects affordability
     {
-        private _ctrl = _display displayCtrl _x;
+        _x params ["_idc", "_tierCost"];
+        private _ctrl = _display displayCtrl _idc;
         _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
+        if (_rep >= _tierCost) then {
+            _ctrl ctrlSetTextColor [0.85, 0.85, 0.85, 1];
+        } else {
+            _ctrl ctrlSetTextColor [0.40, 0.40, 0.40, 1];
+        };
         _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
         _ctrl ctrlRemoveAllEventHandlers "MouseExit";
         _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.40, 0.40, 0.40, 1] }];
         _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
-    } forEach [9752, 9753, 9754];
+    } forEach [[9752, 50], [9753, 90], [9754, 150]];
 
     // Highlight selected tier green; hover also stays green
     private _idc = switch (_tier) do {
@@ -229,20 +237,71 @@ DYN_fnc_militiaSelectTier = {
     _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
     _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.25, 0.42, 0.25, 1] }];
     _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1] }];
+
+    // Reset balance label to green (clears any red error state from a previous attempt)
+    private _balLbl = _display displayCtrl 9751;
+    _balLbl ctrlSetText format ["%1 pts", _rep];
+    _balLbl ctrlSetTextColor [0.4, 0.9, 0.4, 1];
 };
 
 DYN_fnc_militiaDialogOnLoad = {
-    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
-    (_display displayCtrl 9751) ctrlSetText format ["%1 pts", _rep];
-    // Default selection: ROOKIE
+
+    // Clear any direction selected in a previous session
+    uiNamespace setVariable ["DYN_militia_direction", ""];
+
+    // Direction label and deploy button start in a blank/disabled state
+    (_display displayCtrl 9756) ctrlSetText "—";
+    (_display displayCtrl 9755) ctrlEnable false;
+
+    // Default tier; this also sets the balance label and affordability colours
     ["ROOKIE"] call DYN_fnc_militiaSelectTier;
 };
 
-DYN_fnc_militiaDirectionChosen = {
+// Direction buttons call this — stores selection and highlights the button; no purchase yet.
+DYN_fnc_militiaSelectDirection = {
     params ["_direction"];
-    private _tier = uiNamespace getVariable ["DYN_militia_tier", "ROOKIE"];
+    uiNamespace setVariable ["DYN_militia_direction", _direction];
+    private _display = findDisplay 9750;
+    if (isNull _display) exitWith {};
+
+    // Reset all direction buttons
+    {
+        private _ctrl = _display displayCtrl _x;
+        _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
+        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
+        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.32, 0.32, 0.32, 1] }];
+        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
+    } forEach [9760, 9761, 9762, 9763];
+
+    // Highlight selected direction button (blue)
+    private _idc = switch (_direction) do {
+        case "NORTH": { 9760 };
+        case "WEST":  { 9761 };
+        case "EAST":  { 9762 };
+        case "SOUTH": { 9763 };
+        default       { -1 };
+    };
+    if (_idc > 0) then {
+        private _selCtrl = _display displayCtrl _idc;
+        _selCtrl ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1];
+        _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
+        _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.22, 0.35, 0.55, 1] }];
+        _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1] }];
+    };
+
+    // Update direction label and unlock the deploy button
+    (_display displayCtrl 9756) ctrlSetText format ["DIRECTION: %1", _direction];
+    (_display displayCtrl 9755) ctrlEnable true;
+};
+
+// DEPLOY button calls this — validates and fires the purchase.
+DYN_fnc_militiaDeploy = {
+    private _tier      = uiNamespace getVariable ["DYN_militia_tier",      "ROOKIE"];
+    private _direction = uiNamespace getVariable ["DYN_militia_direction", ""];
     private _cost = switch (_tier) do {
         case "ROOKIE":  {  50 };
         case "REGULAR": {  90 };
