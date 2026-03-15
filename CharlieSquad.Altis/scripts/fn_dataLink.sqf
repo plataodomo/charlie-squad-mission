@@ -300,6 +300,7 @@ private _insideCount = 3 + floor (random 3);
     for "_i" from 1 to _insideCount do {
         private _p = selectRandom _positions;
         private _u = _insideGrp createUnit [selectRandom _insidePool, _p, [], 0, "NONE"];
+        if (isNull _u) then { continue };
         _u disableAI "PATH";
         _u setUnitPos (selectRandom ["UP","MIDDLE"]);
         _u allowFleeing 0;
