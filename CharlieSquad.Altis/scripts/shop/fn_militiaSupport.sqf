@@ -187,7 +187,7 @@ DYN_fnc_purchaseMilitia = {
             case "ROOKIE":  { 0.25 };
             case "REGULAR": { 0.50 };
             case "ELITE":   { 0.75 };
-            default:        { 0.50 };
+            default         { 0.50 };
         };
 
         private _spawnedUnits = [];
