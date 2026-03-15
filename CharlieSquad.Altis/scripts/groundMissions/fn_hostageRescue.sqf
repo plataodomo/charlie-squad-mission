@@ -408,7 +408,7 @@ private _localMarkers = +DYN_ground_markers;
 
     switch (_outcome) do {
         case "SUCCESS": {
-            private _rep = 10 + (4 * _rescued) + round (random 3);
+            private _rep = 5 + (3 * _rescued) + round (random 2);
 
             [_rep, "Hostages Rescued"] call DYN_fnc_changeReputation;
             [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];

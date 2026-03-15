@@ -36,7 +36,7 @@ diag_log format ["[NAVAL-ARTY] Land pos: %1", _landPos];
 // 2. SETTINGS
 // =====================================================
 private _timeout    = 7200;  // 2 hours
-private _repReward  = 10 + floor random 8;
+private _repReward  = 7 + floor random 6;
 private _dirToSea   = [_landPos] call DYN_fnc_dirToWater;
 private _cleanupDelay = 600;
 

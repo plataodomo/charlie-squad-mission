@@ -38,7 +38,7 @@ private _aoCenter = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
 // 1. SETTINGS
 // =====================================================
 private _timeout       = 7200;    // 2 hours
-private _repReward     = 35 + floor (random 11); // 35-45 rep
+private _repReward     = 15 + floor (random 11); // 15-25 rep
 private _cleanupDelay  = 120;     // 2 minutes before entities are deleted
 private _zoneRadius    = 200;     // Operation zone size
 private _escapeIsHeli  = (random 1) > 0.50; // 50/50 ground vs heli

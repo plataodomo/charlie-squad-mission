@@ -63,7 +63,7 @@ diag_log format ["[GROUND-SNIPER] Forest position found: %1", _forestPos];
 // 2. SETTINGS
 // =====================================================
 private _timeout      = 7200;  // 2 hours
-private _repReward    = 15 + floor random 6;
+private _repReward    = 8 + floor random 5;
 private _cleanupDelay = 120;
 private _searchRadius = 300;
 
@@ -370,7 +370,7 @@ diag_log format ["[GROUND-SNIPER] Team spawned. Sniper: %1  Spotter: %2", _snipe
 
         if (!isNull _carrier && (_carrier distance2D _basePos) < 200) then {
             _carrier setVariable ["DYN_hasDogtag_sniper", false, true];
-            private _bonus = 3 + floor random 4;   // 3-6 pts
+            private _bonus = 2 + floor random 3;   // 2-4 pts
             [_bonus, "Sniper Dog Tag Recovered"] call DYN_fnc_changeReputation;
             ["TaskSucceeded", [
                 format ["Dog tag delivered to base! +%1 reputation.", _bonus],

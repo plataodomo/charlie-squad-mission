@@ -583,7 +583,7 @@ private _bbTimeout = 7200;  // 2 hours
     ["NavalComplete", ["Flight Recorder Recovered", "The black box has been delivered. Mission complete."]]
         remoteExecCall ["BIS_fnc_showNotification", 0];
 
-    [12 + floor random 6, "Flight Recorder Recovery"] call DYN_fnc_changeReputation;
+    [8 + floor random 5, "Flight Recorder Recovery"] call DYN_fnc_changeReputation;
     
     { deleteMarker _x } forEach _localMarkers;
     DYN_naval_markers = DYN_naval_markers - _localMarkers;
