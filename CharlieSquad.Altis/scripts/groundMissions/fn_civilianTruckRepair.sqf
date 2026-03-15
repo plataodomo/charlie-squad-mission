@@ -397,13 +397,16 @@ private _localMarkers = +DYN_ground_markers;
             continue;
         };
 
-        // --- Civilian killed: one-time rep penalty ---
+        // --- Civilian killed: penalty, fail the task, end the mission ---
         if (!_civKillPenalized && !isNull _civilian && !alive _civilian) then {
             _civKillPenalized = true;
             [_repPenalty, "Civilian Killed"] call DYN_fnc_changeReputation;
+            [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
             ["TaskFailed", ["Civilian KIA", format ["%1 REP. The driver was killed.", _repPenalty]]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
             diag_log format ["[GROUND-REPAIR] Civilian killed. %1 rep.", _repPenalty];
+            _done = true;
+            continue;
         };
 
         // --- Ambush trigger: enemies break cover when players approach the truck ---
@@ -504,6 +507,8 @@ private _localMarkers = +DYN_ground_markers;
                 _civilian setVariable ["DYN_civDown", false, true];
                 [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
                 [_repRepair, "Civilian Truck Repaired"] call DYN_fnc_changeReputation;
+                ["TaskSucceeded", ["Vehicle Repaired", format ["Civilian truck is operational. +%1 REP.", _repRepair]]]
+                    remoteExecCall ["BIS_fnc_showNotification", 0];
                 diag_log format ["[GROUND-REPAIR] SUCCESS. Truck repaired. +%1 rep.", _repRepair];
 
                 // Civilian stands up, walks to the truck, and drives away
