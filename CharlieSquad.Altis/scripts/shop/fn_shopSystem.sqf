@@ -384,10 +384,11 @@ DYN_fnc_purchaseSupply = {
         false
     };
 
-    // Validate the class exists in the appropriate config section
+    // Validate the class exists — for spawn-type check CfgVehicles/CfgBackpacks;
+    // for item-type check CfgWeapons, CfgMagazines, or CfgItems (covers all ACE items).
     private _classValid = switch (_type) do {
         case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-        default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
+        default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) || isClass (configFile >> "CfgItems" >> _class) };
     };
     if (!_classValid) exitWith {
         diag_log format ["[SHOP] ERROR: Supply class '%1' not found in config (type: %2)", _class, _type];
