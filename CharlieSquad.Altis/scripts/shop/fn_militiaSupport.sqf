@@ -89,6 +89,13 @@ DYN_fnc_purchaseMilitia = {
         [format ["Not enough points! Need %1, have %2.", _cost, _rep]] call _fnErr;
     };
 
+    // --- pre-flight: verify unit classnames exist (catches missing CUP mod) ---
+    private _missingClass = "";
+    { if (!classExists _x) exitWith { _missingClass = _x } } forEach DYN_militia_units;
+    if (_missingClass != "") exitWith {
+        [format ["Militia unit class not found: %1 — is CUP Units loaded?", _missingClass]] call _fnErr;
+    };
+
     // --- confirmed: deduct and lock ---
     [_cost * -1, "Militia Support"] call DYN_fnc_changeReputation;
     DYN_militia_active = true;
@@ -200,10 +207,12 @@ DYN_fnc_purchaseMilitia = {
         if (count _spawnedUnits == 0) exitWith {
             diag_log "[MILITIA] ERROR: No units created — verify CUP class names in DYN_militia_units";
             deleteGroup _grp;
-            // Refund the cost
             [_cost, "Militia Refund (spawn failed)"] call DYN_fnc_changeReputation;
             DYN_militia_active = false;
             publicVariable "DYN_militia_active";
+            if (!isNull _buyer) then {
+                ["SquadError", ["Militia failed to spawn — refund issued."]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            };
         };
 
         diag_log format ["[MILITIA] %1 units spawned", count _spawnedUnits];
@@ -220,7 +229,13 @@ DYN_fnc_purchaseMilitia = {
         private _allVehicles  = [];   // tracked separately so hulls can be deleted
         {
             private _vClass = _x;
+            if (!classExists _vClass) then {
+                diag_log format ["[MILITIA] WARNING: vehicle class not found, skipping: %1", _vClass];
+            } else {
             private _veh = _vClass createVehicle _spawnPos;
+            if (isNull _veh) then {
+                diag_log format ["[MILITIA] WARNING: vehicle failed to create: %1", _vClass];
+            } else {
             createVehicleCrew _veh;
             private _vGrp = createGroup [west, true];
             (crew _veh) joinSilent _vGrp;
@@ -241,6 +256,8 @@ DYN_fnc_purchaseMilitia = {
             _allCrewUnits append (crew _veh);
             _allVehicles pushBack _veh;
             diag_log format ["[MILITIA] Vehicle spawned: %1", _vClass];
+            }; // end isNull _veh check
+            }; // end classExists _vClass check
         } forEach _vehicleClasses;
 
         private _wp1 = _grp addWaypoint [_aoEdge, 80];
