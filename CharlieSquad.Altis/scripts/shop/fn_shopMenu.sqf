@@ -28,6 +28,7 @@ _terminal addAction [
     {
         if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
             hint "Only active Squad Leaders and Acting Leaders can requisition vehicles.";
+            [] spawn { sleep 5; hint ""; };
         };
         createDialog "DYN_ShopDialog";
     },
@@ -45,13 +46,10 @@ _terminal addAction [
     {
         if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
             hint "Only active Squad Leaders can request militia support.";
+            [] spawn { sleep 5; hint ""; };
         };
-        if (missionNamespace getVariable ["DYN_militia_active", false]) exitWith {
-            hint "Friendly militia are already deployed! Wait for them to finish.";
-        };
-        if ((missionNamespace getVariable ["DYN_AO_center", [0,0,0]]) isEqualTo [0,0,0]) exitWith {
-            hint "No active AO. Cannot deploy militia support.";
-        };
+        if (missionNamespace getVariable ["DYN_militia_active", false]) exitWith {};
+        if ((missionNamespace getVariable ["DYN_AO_center", [0,0,0]]) isEqualTo [0,0,0]) exitWith {};
         createDialog "DYN_MilitiaDialog";
     },
     nil,
