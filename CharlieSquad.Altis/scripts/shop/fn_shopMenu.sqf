@@ -75,17 +75,6 @@ DYN_fnc_getVehiclePicClient = {
     _pic
 };
 
-DYN_fnc_shopOnLoad = {
-    DYN_shopSelectedClass = "";
-    DYN_shopCurrentFilter = "Cars";
-    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
-    private _display = findDisplay 9600;
-    if (!isNull _display) then {
-        (_display displayCtrl 9610) ctrlSetText format ["Points: %1", _rep];
-    };
-    ["Cars"] call DYN_fnc_shopFilter;
-};
-
 DYN_fnc_shopFilter = {
     params ["_category"];
     DYN_shopCurrentFilter = _category;
@@ -100,7 +89,7 @@ DYN_fnc_shopFilter = {
             _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
             private _valid = switch (_type) do {
                 case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-                default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+                default       { isClass (configFile >> "CfgWeapons"   >> _class) };
             };
             if (!_valid) then { continue; };
             private _idx = _list lbAdd _name;
@@ -128,6 +117,17 @@ DYN_fnc_shopFilter = {
             };
         } forEach DYN_shopVehicles;
     };
+};
+
+DYN_fnc_shopOnLoad = {
+    DYN_shopSelectedClass = "";
+    DYN_shopCurrentFilter = "Cars";
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    private _display = findDisplay 9600;
+    if (!isNull _display) then {
+        (_display displayCtrl 9610) ctrlSetText format ["Points: %1", _rep];
+    };
+    ["Cars"] call DYN_fnc_shopFilter;
 };
 
 DYN_fnc_shopSearch = {
