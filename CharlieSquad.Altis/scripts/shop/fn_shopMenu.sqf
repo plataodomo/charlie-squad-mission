@@ -224,7 +224,7 @@ DYN_fnc_militiaSelectTier = {
         };
     } forEach [[9752, 50], [9753, 90], [9754, 150]];
 
-    // Highlight selected tier green; hover stays green
+    // Highlight selected tier blue; hover stays blue (consistent with direction buttons)
     private _idc = switch (_tier) do {
         case "ROOKIE":  { 9752 };
         case "REGULAR": { 9753 };
@@ -232,11 +232,11 @@ DYN_fnc_militiaSelectTier = {
         default         { 9752 };
     };
     private _selCtrl = _display displayCtrl _idc;
-    _selCtrl ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
+    _selCtrl ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1];
     _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
     _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
-    _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.25, 0.42, 0.25, 1] }];
-    _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1] }];
+    _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.22, 0.35, 0.55, 1] }];
+    _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1] }];
 
     // Reset balance label to green (clears any red error state from a previous attempt)
     private _balLbl = _display displayCtrl 9751;

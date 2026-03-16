@@ -696,7 +696,7 @@ class DYN_MilitiaDialog
         class AOCircle
         {
             idc = -1; type = 0; style = 48 + 2048;
-            x = 0.594; y = 0.385; w = 0.052; h = 0.090;
+            x = 0.490; y = 0.205; w = 0.260; h = 0.450;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.85, 0.10, 0.10, 0.90};
             text = "\A3\ui_f\data\map\markers\military\dot_ca.paa";

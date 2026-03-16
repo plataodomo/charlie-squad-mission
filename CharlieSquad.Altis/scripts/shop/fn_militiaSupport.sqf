@@ -98,6 +98,15 @@ DYN_fnc_purchaseMilitia = {
         [format ["Militia unit class not found: %1 — is CUP Units loaded?", _missingClass]] call _fnErr;
     };
 
+    // --- pre-flight: verify vehicle classnames exist (catches missing BWA3 mod) ---
+    private _missingVeh = "";
+    {
+        if (!(isClass (configFile >> "CfgVehicles" >> _x))) then { _missingVeh = _x };
+    } forEach (DYN_militia_tierVehicles getOrDefault [_tier, []]);
+    if (_missingVeh != "") exitWith {
+        [format ["Vehicle class not found: %1 — is BWA3 mod loaded?", _missingVeh]] call _fnErr;
+    };
+
     // --- confirmed: deduct and lock ---
     [_cost * -1, "Militia Support"] call DYN_fnc_changeReputation;
     DYN_militia_active = true;
