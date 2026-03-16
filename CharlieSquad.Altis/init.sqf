@@ -345,9 +345,9 @@ if (!isServer) then {} else {
 // LOAD MISSION SCRIPTS
 // =====================================================
 
+[] execVM "scripts\reputation\fn_repSystem.sqf";
 [] execVM "scripts\fn_prisonSystem.sqf";
 [] execVM "scripts\fn_spawnObjectives.sqf";
-[] execVM "scripts\reputation\fn_repSystem.sqf";
 // === VEHICLE SHOP + PERSISTENCE ===
 // Persistence MUST load first (defines tracking functions)
 // Shop system uses tracking when vehicles are purchased
