@@ -42,6 +42,15 @@
 [] spawn {
     waitUntil { !isNull player };
 
+    // Cache the west player list every 5 s so the per-frame Draw handler
+    // does not call allPlayers + side/group on every rendered frame.
+    [] spawn {
+        while {true} do {
+            uiNamespace setVariable ["DYN_cachedWestPlayers", allPlayers select { side (group _x) == west }];
+            sleep 5;
+        };
+    };
+
     // Add our Draw handler the first time the player opens the map.
     // The "Map" event fires each time the map opens (true) or closes (false).
     addMissionEventHandler ["Map", {
@@ -78,7 +87,7 @@
                     name _x,
                     1, 0.035, "RobotoCondensed", "right"
                 ];
-            } forEach (allPlayers select { side (group _x) == west });
+            } forEach (uiNamespace getVariable ["DYN_cachedWestPlayers", []]);
         }];
 
         uiNamespace setVariable ["DYN_mapDrawHandlerSet", true];

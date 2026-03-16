@@ -122,7 +122,7 @@ private _fn_spawnHeli = {
 
         while { DYN_AO_active && {alive _heli} } do {
             private _dl = call _fn_dlActive;
-            sleep (if (_dl) then {4} else {8});
+            sleep (if (_dl) then {6} else {12});
 
             // Only check players (much smaller list than all vehicles)
             private _targets = allPlayers select {

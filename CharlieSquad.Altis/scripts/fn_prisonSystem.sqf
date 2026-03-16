@@ -22,7 +22,7 @@ private _fn_cellOccupied = {
 };
 
 while { true } do {
-    sleep 3;
+    sleep 6;
 
     private _cells = nearestObjects [_dropPos, ["Land_HelipadEmpty_F"], _cellSearch];
     if (_cells isEqualTo []) then { continue };

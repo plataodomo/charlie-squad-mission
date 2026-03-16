@@ -404,7 +404,7 @@ DYN_fnc_startActingLeaderMonitor = {
 
     [] spawn {
         while {true} do {
-            sleep 2;
+            sleep 5;
 
             if (!([player] call DYN_fnc_isInCustomSquad)) then {
                 DYN_lastActingLeader = objNull;
