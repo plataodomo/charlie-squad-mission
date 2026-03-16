@@ -6,7 +6,7 @@ class DYN_RulesDialog {
     movingEnable = false;
     enableSimulation = true;
     onLoad = "[] spawn DYN_fnc_rulesDialogLoad;";
-    onKeyDown = "if ((_this select 1) == 1) exitWith { true }; false";
+    onUnload = "if !(uiNamespace getVariable ['DYN_rulesAgreed', false]) then { [] spawn { createDialog 'DYN_RulesDialog'; }; };";
 
     // ─── Layout reference ────────────────────────────────────────────────
     //  Dialog  : x=0.08  y=0.02  w=0.84  h=0.96   (0.08–0.92 / 0.02–0.98)
@@ -138,7 +138,7 @@ class DYN_RulesDialog {
             soundEnter[] = {"", 0.1, 1};
             soundPush[]  = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
-            action = "closeDialog 0;";
+            action = "uiNamespace setVariable ['DYN_rulesAgreed', true]; closeDialog 0;";
         };
     };
 };
