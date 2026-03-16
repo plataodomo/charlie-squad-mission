@@ -277,7 +277,10 @@ DYN_fnc_purchaseMilitia = {
         // so the new leader doesn't freeze in a post-combat scan state
         _grp addEventHandler ["LeaderChanged", {
             private _g = _this select 0;
-            if (count (waypoints _g) > 0) then { setCurrentWaypoint [_g, 0] };
+            private _wps = waypoints _g;
+            if (count _wps > 0) then {
+                setCurrentWaypoint (_wps select 0);
+            };
         }];
 
         // =====================================================
