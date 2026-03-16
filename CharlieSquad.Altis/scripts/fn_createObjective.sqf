@@ -358,7 +358,10 @@ if !(_waterProbe isEqualTo []) then {
     [_liberationRep, format ["%1 Liberated", _cityName]] call DYN_fnc_changeReputation;
 
     { if !([_x] call BIS_fnc_taskCompleted) then { [_x, "CANCELED"] remoteExec ["BIS_fnc_taskSetState", 0, _x]; }; } forEach DYN_AO_bonusTasks;
-    { [_x] call BIS_fnc_deleteTask } forEach DYN_AO_sideTasks;
+    {
+        [_x] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _x];
+    } forEach DYN_AO_sideTasks;
     DYN_AO_sideTasks = [];
     { if (!isNull _x) then { _x hideObjectGlobal false; _x setVariable ["DYN_hiddenByAO", false, false]; }; } forEach DYN_AO_hiddenTerrain;
     DYN_AO_hiddenTerrain = [];

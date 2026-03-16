@@ -140,16 +140,16 @@ if (isNil "DYN_fnc_addResIntelAction") then {
 
                 _target setVariable ["DYN_resIntelDownloading", true, true];
 
-                missionNamespace setVariable ["DYN_progressTarget", _target];
-                missionNamespace setVariable ["DYN_progressCaller", _caller];
-                missionNamespace setVariable ["DYN_progressActive", true];
+                uiNamespace setVariable ["DYN_progressTarget", _target];
+                uiNamespace setVariable ["DYN_progressCaller", _caller];
+                uiNamespace setVariable ["DYN_progressActive", true];
 
                 _caller action ["SwitchWeapon", _caller, _caller, 99];
 
                 [_caller] spawn {
                     params ["_unit"];
                     sleep 0.5;
-                    while {missionNamespace getVariable ["DYN_progressActive", false]} do {
+                    while {uiNamespace getVariable ["DYN_progressActive", false]} do {
                         if (!alive _unit) exitWith {};
                         _unit playMoveNow "AinvPknlMstpSnonWnonDnon_medicUp";
                         sleep 8;
@@ -160,24 +160,24 @@ if (isNil "DYN_fnc_addResIntelAction") then {
                     10,
                     "SECURING INTEL",
                     {
-                        missionNamespace setVariable ["DYN_progressActive", false];
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        uiNamespace setVariable ["DYN_progressActive", false];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
                         if (!isNull _c) then { _c playMoveNow ""; _c switchMove ""; };
                         if (!isNull _t) then { [_t] remoteExecCall ["DYN_fnc_serverResIntelUsed", 2]; };
                     },
                     {
-                        missionNamespace setVariable ["DYN_progressActive", false];
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        uiNamespace setVariable ["DYN_progressActive", false];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
                         if (!isNull _c) then { _c playMoveNow ""; _c switchMove ""; };
                         if (!isNull _t) then { _t setVariable ["DYN_resIntelDownloading", false, true]; };
                         hint "Download cancelled.";
                         [] spawn { sleep 2; hintSilent ""; };
                     },
                     {
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
                         !isNull _t && {!isNull _c} && {alive _c} && {(_c distance _t) < 3}
                     }
                 ] call DYN_fnc_showProgressBar;
