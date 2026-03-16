@@ -381,14 +381,15 @@ if (isNil "DYN_fnc_addLaptopHoldAction") then {
 
                 if (_target getVariable ["DYN_intelDownloading", false]) exitWith {
                     hint "Someone is already downloading from this laptop.";
+                    [] spawn { sleep 3; hint ""; };
                 };
 
                 _target setVariable ["DYN_intelDownloading", true, true];
 
                 // Store references
-                missionNamespace setVariable ["DYN_progressTarget", _target];
-                missionNamespace setVariable ["DYN_progressCaller", _caller];
-                missionNamespace setVariable ["DYN_progressActive", true];
+                uiNamespace setVariable ["DYN_progressTarget", _target];
+                uiNamespace setVariable ["DYN_progressCaller", _caller];
+                uiNamespace setVariable ["DYN_progressActive", true];
 
                 // Holster weapon for clean animation
                 _caller action ["SwitchWeapon", _caller, _caller, 99];
@@ -397,7 +398,7 @@ if (isNil "DYN_fnc_addLaptopHoldAction") then {
                 [_caller] spawn {
                     params ["_unit"];
                     sleep 0.5;
-                    while {missionNamespace getVariable ["DYN_progressActive", false]} do {
+                    while {uiNamespace getVariable ["DYN_progressActive", false]} do {
                         if (!alive _unit) exitWith {};
                         _unit playMoveNow "AinvPknlMstpSnonWnonDnon_medicUp";
                         sleep 8;
@@ -409,10 +410,10 @@ if (isNil "DYN_fnc_addLaptopHoldAction") then {
                     "DOWNLOADING INTEL",
                     {
                         // On Complete
-                        missionNamespace setVariable ["DYN_progressActive", false];
+                        uiNamespace setVariable ["DYN_progressActive", false];
 
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                         if (!isNull _c) then {
                             _c playMoveNow "";
@@ -425,10 +426,10 @@ if (isNil "DYN_fnc_addLaptopHoldAction") then {
                     },
                     {
                         // On Cancel
-                        missionNamespace setVariable ["DYN_progressActive", false];
+                        uiNamespace setVariable ["DYN_progressActive", false];
 
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                         if (!isNull _c) then {
                             _c playMoveNow "";
@@ -444,8 +445,8 @@ if (isNil "DYN_fnc_addLaptopHoldAction") then {
                     },
                     {
                         // Condition check - stay alive and near laptop
-                        private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                        private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                        private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                        private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                         !isNull _t
                         && {!isNull _c}

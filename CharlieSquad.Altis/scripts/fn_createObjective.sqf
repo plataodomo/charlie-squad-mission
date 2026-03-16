@@ -234,6 +234,8 @@ if !(_roads2 isEqualTo []) then {
         _driver disableAI "TARGET";
         _driver setCaptive true;
 
+        DYN_AO_enemyGroups pushBack _grp;
+
         for "_w" from 1 to 6 do {
             private _r = selectRandom _roads2;
             private _wp = _grp addWaypoint [getPosATL _r, 0];
@@ -332,7 +334,7 @@ if !(_waterProbe isEqualTo []) then {
     waitUntil {
         sleep 5;
         if ((diag_tickTime - _aoStartT) < 20) exitWith { false };
-        if ((count DYN_AO_sideTasks) < 1) exitWith { false };
+        if ((count DYN_AO_sideTasks) < 1 && (diag_tickTime - _aoStartT) < 300) exitWith { false };
         private _sideDone = ({ [_x] call BIS_fnc_taskCompleted } count DYN_AO_sideTasks) == count DYN_AO_sideTasks;
         private _jamDone = missionNamespace getVariable ["DYN_gpsJammerDisabled", true];
         private _killReq = missionNamespace getVariable ["DYN_AO_killRequired", 0.60];
@@ -364,7 +366,7 @@ if !(_waterProbe isEqualTo []) then {
     { if (!isNull _x) then { deleteVehicle _x; }; } forEach DYN_AO_mines;
     { if (!isNull _x) then { deleteVehicle _x; }; } forEach DYN_AO_objects;
 
-    { if (!isNull _x) then { { if (!isNull _x) then { deleteVehicle _x; }; } forEach crew _x; deleteVehicle _x; }; } forEach DYN_AO_enemyVehs;
+    { if (!isNull _x) then { private _veh = _x; { if (!isNull _x) then { deleteVehicle _x; }; } forEach crew _veh; deleteVehicle _veh; }; } forEach DYN_AO_enemyVehs;
     { if (!isNull _x) then { if (_x getVariable ["DYN_prisonDelivered", false]) then { continue }; deleteVehicle _x; }; } forEach DYN_AO_enemies;
 
     { if (!isNull _x) then { deleteVehicle _x; }; } forEach DYN_AO_civVehs;
