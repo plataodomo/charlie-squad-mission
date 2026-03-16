@@ -135,7 +135,7 @@ DYN_shopSupplies = [
     // ===== FUEL =====
     ["ACE_Jerrycan",     "Jerrycan",       5, 1, "item"],
     // ===== PORTABLE STORAGE =====
-    ["B_AssaultPack_blk","Field Pack",     5, 1, "spawn"]
+    ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
 ];
 publicVariable "DYN_shopSupplies";
 
@@ -414,6 +414,8 @@ DYN_fnc_purchaseSupply = {
                 ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
             };
         } else {
+            // Mark as ACE-carryable so players can pick it up via ACE interact
+            _obj setVariable ["ACE_isCarryable", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
             ["ShopPurchase", [format ["%1 delivered at supply point (%2 pts)", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
