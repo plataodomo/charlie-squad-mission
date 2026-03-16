@@ -13,7 +13,7 @@ if (isNull _terminal) exitWith {};
 // mid-mission could click the terminal before
 // DYN_fnc_isActiveLeader is defined and get a script error.
 // =====================================================
-waitUntil { !isNil "DYN_fnc_isActiveLeader" };
+waitUntil { sleep 0.5; !isNil "DYN_fnc_isActiveLeader" };
 
 // =====================================================
 // Also wait for the vehicle list to be broadcast from
@@ -21,7 +21,7 @@ waitUntil { !isNil "DYN_fnc_isActiveLeader" };
 // in fn_shopSystem.sqf but may not have arrived yet for
 // a JIP player.
 // =====================================================
-waitUntil { !isNil "DYN_shopVehicles" };
+waitUntil { sleep 0.5; !isNil "DYN_shopVehicles" };
 
 _terminal addAction [
     "<t color='#00FF00'>Vehicle Requisition</t>",

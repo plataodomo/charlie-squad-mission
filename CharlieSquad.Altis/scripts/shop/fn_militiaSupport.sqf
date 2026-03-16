@@ -60,7 +60,17 @@ DYN_fnc_purchaseMilitia = {
     if (!isServer) exitWith {};
 
     _tier = toUpper _tier;
-    private _cost = DYN_militia_tierCost getOrDefault [_tier, 20];
+    _direction = toUpper _direction;
+
+    // --- input validation ---
+    if !(_tier in ["ROOKIE", "REGULAR", "ELITE"]) exitWith {
+        diag_log format ["[MILITIA] Rejected: invalid tier '%1' from %2", _tier, _buyerUID];
+    };
+    if !(_direction in ["NORTH", "SOUTH", "EAST", "WEST"]) exitWith {
+        diag_log format ["[MILITIA] Rejected: invalid direction '%1' from %2", _direction, _buyerUID];
+    };
+
+    private _cost = DYN_militia_tierCost get _tier;
 
     // Locate buyer
     private _buyer = objNull;
@@ -115,7 +125,7 @@ DYN_fnc_purchaseMilitia = {
     private _vehicleClasses = DYN_militia_tierVehicles getOrDefault [_tier, []];
     diag_log format ["[MILITIA] Purchase confirmed by %1 — direction: %2  tier: %3", _buyerUID, _direction, _tier];
 
-    private _bearing = switch (toUpper _direction) do {
+    private _bearing = switch (_direction) do {
         case "NORTH": { 0 };
         case "EAST":  { 90 };
         case "SOUTH": { 180 };
@@ -341,4 +351,4 @@ DYN_fnc_purchaseMilitia = {
 };
 publicVariable "DYN_fnc_purchaseMilitia";
 
-diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 20 sec [TEST] | units: 10)";
+diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 20 sec | units: 10)";

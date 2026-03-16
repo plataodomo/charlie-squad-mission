@@ -215,8 +215,7 @@ DYN_fnc_getSpawnPosByCategory = {
                 _err = "Vehicle spawn is occupied! Move any parked vehicles.";
             } else {
                 _pos = _gPos;
-                private _shopDir = markerDir "shop_spawn";
-                if (_shopDir != 0) then { _dir = _shopDir; };
+                _dir = markerDir "shop_spawn";
             };
         };
     };
@@ -305,9 +304,10 @@ DYN_fnc_purchaseVehicle = {
     private _veh = createVehicle [_classname, _finalPos, [], 0, "NONE"];
 
     if (isNull _veh) exitWith {
-        diag_log "[SHOP] Failed to create vehicle";
+        diag_log "[SHOP] Failed to create vehicle — refunding points";
+        [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
         if (!isNull _buyer) then {
-            ["SquadError", ["Failed to create vehicle!"]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            ["SquadError", ["Failed to create vehicle — points refunded!"]] remoteExec ["BIS_fnc_showNotification", _buyer];
         };
         false
     };
