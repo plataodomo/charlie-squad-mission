@@ -133,7 +133,7 @@ DYN_shopSupplies = [
     ["ACE_Track",        "Spare Track",    5, 1, "item"],
     ["ACE_Wheel",        "Spare Wheel",    5, 1, "item"],
     // ===== FUEL =====
-    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "item"],
+    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "spawn"],
     // ===== PORTABLE STORAGE =====
     ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
 ];
@@ -417,6 +417,8 @@ DYN_fnc_purchaseSupply = {
             clearMagazineCargoGlobal _obj;
             clearItemCargoGlobal     _obj;
             clearBackpackCargoGlobal _obj;
+            // Lock so only ACE carry can move it (prevents vanilla drag/climb-in)
+            _obj lock 2;
             // Mark as ACE-carryable so players can pick it up via ACE interact
             _obj setVariable ["ACE_isCarryable", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
