@@ -91,7 +91,9 @@ DYN_fnc_purchaseMilitia = {
 
     // --- pre-flight: verify unit classnames exist (catches missing CUP mod) ---
     private _missingClass = "";
-    { if (!(classExists _x)) exitWith { _missingClass = _x } } forEach DYN_militia_units;
+    {
+        if (isClass (configFile >> "CfgVehicles" >> _x)) then {} else { _missingClass = _x };
+    } forEach DYN_militia_units;
     if (_missingClass != "") exitWith {
         [format ["Militia unit class not found: %1 — is CUP Units loaded?", _missingClass]] call _fnErr;
     };
@@ -229,9 +231,7 @@ DYN_fnc_purchaseMilitia = {
         private _allVehicles  = [];   // tracked separately so hulls can be deleted
         {
             private _vClass = _x;
-            if (!(classExists _vClass)) then {
-                diag_log format ["[MILITIA] WARNING: vehicle class not found, skipping: %1", _vClass];
-            } else {
+            if (isClass (configFile >> "CfgVehicles" >> _vClass)) then {
             private _veh = _vClass createVehicle _spawnPos;
             if (isNull _veh) then {
                 diag_log format ["[MILITIA] WARNING: vehicle failed to create: %1", _vClass];
@@ -257,7 +257,7 @@ DYN_fnc_purchaseMilitia = {
             _allVehicles pushBack _veh;
             diag_log format ["[MILITIA] Vehicle spawned: %1", _vClass];
             }; // end isNull _veh check
-            }; // end classExists _vClass check
+        }; // end isClass _vClass check
         } forEach _vehicleClasses;
 
         private _wp1 = _grp addWaypoint [_aoEdge, 80];
