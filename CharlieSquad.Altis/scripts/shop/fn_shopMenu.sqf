@@ -87,11 +87,9 @@ DYN_fnc_shopFilter = {
     if (_category == "Supplies") then {
         {
             _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
-            private _valid = switch (_type) do {
-                case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-                default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
-            };
-            if (!_valid) then { continue; };
+            // Only validate spawn-type entries (world objects); item/magazine types
+            // are hand-curated in DYN_shopSupplies and validated server-side on purchase.
+            if (_type == "spawn" && { !(isClass (configFile >> "CfgBackpacks" >> _class)) && !(isClass (configFile >> "CfgVehicles" >> _class)) }) then { continue; };
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
             _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
@@ -156,11 +154,7 @@ DYN_fnc_shopSearch = {
     } forEach DYN_shopVehicles;
     {
         _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
-        private _valid = switch (_type) do {
-            case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-            default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
-        };
-        if (!_valid) then { continue; };
+        if (_type == "spawn" && { !(isClass (configFile >> "CfgBackpacks" >> _class)) && !(isClass (configFile >> "CfgVehicles" >> _class)) }) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
