@@ -113,7 +113,7 @@ DYN_fnc_purchaseMilitia = {
     _etaMkr setMarkerShape "ICON";
     _etaMkr setMarkerType  "b_inf";
     _etaMkr setMarkerColor "ColorWEST";
-    _etaMkr setMarkerText  format ["Militia ETA 10min | %1", _direction];
+    _etaMkr setMarkerText  format ["Militia ETA 20sec | %1", _direction];
     _etaMkr setMarkerSize  [0.8, 0.8];
 
     // --- announce ---
@@ -124,27 +124,21 @@ DYN_fnc_purchaseMilitia = {
         default         { "Militia" };
     };
     ["MilitiaInbound",
-        [format ["Militia inbound from %1 in 10 min! (%2)", _direction, _tierLabel]]
+        [format ["Militia inbound from %1 in 20 sec! (%2)", _direction, _tierLabel]]
     ] remoteExec ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
     [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier, _buyer] spawn {
         params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier", "_buyer"];
 
-        // 5-minute warning — buyer only
-        sleep 300;
+        // 10-second warning — buyer only  [TEST: reduced from 10 min]
+        sleep 10;
         ["MilitiaInbound",
-            [format ["Militia assault in 5 minutes from %1!", _direction]]
+            [format ["Militia assault in 10 seconds from %1!", _direction]]
         ] remoteExec ["BIS_fnc_showNotification", _buyer];
+        _etaMkr setMarkerText format ["Militia 10 SEC | %1", _direction];
 
-        // 1-minute warning — buyer only
-        sleep 240;
-        ["MilitiaInbound",
-            [format ["Militia assault in 1 minute from %1!", _direction]]
-        ] remoteExec ["BIS_fnc_showNotification", _buyer];
-        _etaMkr setMarkerText format ["Militia 1 MIN | %1", _direction];
-
-        sleep 60;
+        sleep 10;
         deleteMarker _etaMkr;
 
         // =====================================================
@@ -307,4 +301,4 @@ DYN_fnc_purchaseMilitia = {
 };
 publicVariable "DYN_fnc_purchaseMilitia";
 
-diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 10 min | units: 10)";
+diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 20 sec [TEST] | units: 10)";

@@ -208,23 +208,20 @@ DYN_fnc_militiaSelectTier = {
 
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
 
-    // Reset all tier buttons: default bg, text color reflects affordability
+    // Reset all tier buttons: base bg + grey hover via colorBackgroundActive; text dim if unaffordable
     {
         _x params ["_idc", "_tierCost"];
         private _ctrl = _display displayCtrl _idc;
         _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
+        _ctrl ctrlSetAttribute ["colorBackgroundActive", [0.30, 0.30, 0.30, 1]];
         if (_rep >= _tierCost) then {
             _ctrl ctrlSetTextColor [0.85, 0.85, 0.85, 1];
         } else {
             _ctrl ctrlSetTextColor [0.40, 0.40, 0.40, 1];
         };
-        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
-        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
-        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.40, 0.40, 0.40, 1] }];
-        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
     } forEach [[9752, 50], [9753, 90], [9754, 150]];
 
-    // Highlight selected tier green; hover also stays green
+    // Highlight selected tier green; hover stays green
     private _idc = switch (_tier) do {
         case "ROOKIE":  { 9752 };
         case "REGULAR": { 9753 };
@@ -233,10 +230,7 @@ DYN_fnc_militiaSelectTier = {
     };
     private _selCtrl = _display displayCtrl _idc;
     _selCtrl ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
-    _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
-    _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
-    _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.25, 0.42, 0.25, 1] }];
-    _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1] }];
+    _selCtrl ctrlSetAttribute ["colorBackgroundActive", [0.25, 0.42, 0.25, 1]];
 
     // Reset balance label to green (clears any red error state from a previous attempt)
     private _balLbl = _display displayCtrl 9751;
@@ -266,17 +260,14 @@ DYN_fnc_militiaSelectDirection = {
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
 
-    // Reset all direction buttons
+    // Reset all direction buttons: base bg + grey hover via colorBackgroundActive
     {
         private _ctrl = _display displayCtrl _x;
         _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
-        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
-        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
-        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.32, 0.32, 0.32, 1] }];
-        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
+        _ctrl ctrlSetAttribute ["colorBackgroundActive", [0.32, 0.32, 0.32, 1]];
     } forEach [9760, 9761, 9762, 9763];
 
-    // Highlight selected direction button (blue)
+    // Highlight selected direction button (blue); hover stays blue
     private _idc = switch (_direction) do {
         case "NORTH": { 9760 };
         case "WEST":  { 9761 };
@@ -287,10 +278,7 @@ DYN_fnc_militiaSelectDirection = {
     if (_idc > 0) then {
         private _selCtrl = _display displayCtrl _idc;
         _selCtrl ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1];
-        _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
-        _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
-        _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.22, 0.35, 0.55, 1] }];
-        _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1] }];
+        _selCtrl ctrlSetAttribute ["colorBackgroundActive", [0.22, 0.35, 0.55, 1]];
     };
 
     // Update direction label and unlock the deploy button
@@ -319,6 +307,6 @@ DYN_fnc_militiaDeploy = {
     };
     closeDialog 0;
     [getPlayerUID player, _direction, _tier] remoteExec ["DYN_fnc_purchaseMilitia", 2];
-    hint format ["Militia support purchased!\n%1 assaulting from %2 in 10 minutes.", _tier, _direction];
+    hint format ["Militia support purchased!\n%1 assaulting from %2 in 20 seconds.", _tier, _direction];
 };
 
