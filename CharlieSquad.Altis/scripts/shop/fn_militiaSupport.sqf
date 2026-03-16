@@ -91,7 +91,7 @@ DYN_fnc_purchaseMilitia = {
 
     // --- pre-flight: verify unit classnames exist (catches missing CUP mod) ---
     private _missingClass = "";
-    { if (!classExists _x) exitWith { _missingClass = _x } } forEach DYN_militia_units;
+    { if (!(classExists _x)) exitWith { _missingClass = _x } } forEach DYN_militia_units;
     if (_missingClass != "") exitWith {
         [format ["Militia unit class not found: %1 — is CUP Units loaded?", _missingClass]] call _fnErr;
     };
@@ -229,7 +229,7 @@ DYN_fnc_purchaseMilitia = {
         private _allVehicles  = [];   // tracked separately so hulls can be deleted
         {
             private _vClass = _x;
-            if (!classExists _vClass) then {
+            if (!(classExists _vClass)) then {
                 diag_log format ["[MILITIA] WARNING: vehicle class not found, skipping: %1", _vClass];
             } else {
             private _veh = _vClass createVehicle _spawnPos;
