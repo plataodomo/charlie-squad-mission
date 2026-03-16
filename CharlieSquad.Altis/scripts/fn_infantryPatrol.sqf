@@ -96,7 +96,8 @@ DYN_fnc_patrolCycle = {
             _roads = _roads select { (getPos _x) distance2D _center <= _radius };
 
             if (count _roads > 0) then {
-                _dest = getPos (selectRandom _roads);
+                private _rd = selectRandom _roads;
+                _dest = [getPos _rd select 0, getPos _rd select 1, 0];
             };
         };
 
@@ -168,7 +169,8 @@ DYN_fnc_patrolCycle = {
         if (count _groupsInCombat == 0) then { continue; };
 
         private _troubledGroup = selectRandom _groupsInCombat;
-        private _contactPos = getPos (leader _troubledGroup);
+        private _ldrPos = getPos (leader _troubledGroup);
+        private _contactPos = [_ldrPos select 0, _ldrPos select 1, 0];
 
         if ((_contactPos distance2D _pos) > _rad) then { continue; };
 
