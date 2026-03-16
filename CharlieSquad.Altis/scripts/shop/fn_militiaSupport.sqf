@@ -21,19 +21,19 @@ DYN_militia_active = false;
 publicVariable "DYN_militia_active";
 
 // =====================================================
-// UNIT ROSTER — CUP BLUFOR US Army (10 units)
+// UNIT ROSTER — CUP BLUFOR German Army (10 units)
 // =====================================================
 DYN_militia_units = [
-    "CUP_B_US_Army_SoldierS_TL",
-    "CUP_B_US_Army_SoldierS_Rifleman",
-    "CUP_B_US_Army_SoldierS_Rifleman",
-    "CUP_B_US_Army_SoldierS_Rifleman",
-    "CUP_B_US_Army_SoldierS_Grenadier",
-    "CUP_B_US_Army_SoldierS_Grenadier",
-    "CUP_B_US_Army_SoldierS_AR",
-    "CUP_B_US_Army_SoldierS_AT",
-    "CUP_B_US_Army_SoldierS_Medic",
-    "CUP_B_US_Army_SoldierS_Rifleman"
+    "CUP_B_GER_Soldier_TL",
+    "CUP_B_GER_Soldier",
+    "CUP_B_GER_Soldier",
+    "CUP_B_GER_Soldier",
+    "CUP_B_GER_Soldier_GL",
+    "CUP_B_GER_Soldier_GL",
+    "CUP_B_GER_Soldier_MG3",
+    "CUP_B_GER_Soldier_AT",
+    "CUP_B_GER_Medic",
+    "CUP_B_GER_Soldier"
 ];
 
 // =====================================================
@@ -41,8 +41,8 @@ DYN_militia_units = [
 // =====================================================
 // Tier definitions
 //   ROOKIE  —  50 pts — 10 infantry, no vehicles (untrained)
-//   REGULAR —  90 pts — 10 infantry + 2x HMMWV HMG (light)
-//   ELITE   — 150 pts — 10 infantry + 1x APC + 1x MBT (heavy armor)
+//   REGULAR —  90 pts — 10 infantry + 2x Eagle IV (light)
+//   ELITE   — 150 pts — 10 infantry + 1x Puma IFV + 1x Leopard 2 (heavy armor)
 DYN_militia_tierCost = createHashMapFromArray [
     ["ROOKIE",   50],
     ["REGULAR",  90],
@@ -51,8 +51,8 @@ DYN_militia_tierCost = createHashMapFromArray [
 
 DYN_militia_tierVehicles = createHashMapFromArray [
     ["ROOKIE",  []],
-    ["REGULAR", ["CUP_B_HMMWV_M1151_M2_US", "CUP_B_HMMWV_M1151_M2_US"]],
-    ["ELITE",   ["CUP_B_M2A2_US", "CUP_B_M1A1_US"]]
+    ["REGULAR", ["BWA3_Eagle_FLW100_Tropen", "BWA3_Eagle_FLW100_Tropen"]],
+    ["ELITE",   ["BWA3_Puma_Tropen", "BWA3_Leopard2_Tropen"]]
 ];
 
 DYN_fnc_purchaseMilitia = {
