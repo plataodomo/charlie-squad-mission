@@ -129,10 +129,10 @@ publicVariable "DYN_shopVehicles";
 // Items are ACE 3 inventory items delivered in a supply crate at the shop spawn.
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_SpareTrack", "Spare Track",    1, 1],
-    ["ACE_SpareWheel", "Spare Wheel",    1, 1],
+    ["ACE_SpareTrack", "Spare Track",    5, 1],
+    ["ACE_SpareWheel", "Spare Wheel",    5, 1],
     // ===== FUEL =====
-    ["ACE_Jerrycan",   "Jerrycan",       1, 1]
+    ["ACE_Jerrycan",   "Jerrycan",       5, 1]
 ];
 publicVariable "DYN_shopSupplies";
 
