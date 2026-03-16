@@ -6,6 +6,7 @@ class DYN_RulesDialog {
     movingEnable = false;
     enableSimulation = true;
     onLoad = "[] spawn DYN_fnc_rulesDialogLoad;";
+    onKeyDown = "if ((_this select 1) == 1) exitWith { true }; false";
 
     // ─── Layout reference ────────────────────────────────────────────────
     //  Dialog  : x=0.08  y=0.02  w=0.84  h=0.96   (0.08–0.92 / 0.02–0.98)

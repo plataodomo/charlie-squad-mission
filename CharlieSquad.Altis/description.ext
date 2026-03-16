@@ -876,7 +876,7 @@ class DYN_MilitiaDialog
             x = 0.218; y = 0.547; w = 0.21; h = 0.022;
             colorBackground[] = {0,0,0,0};
             colorText[] = {0.55, 0.55, 0.55, 1};
-            text = "10 soldiers + APC + tank";
+            text = "10 soldiers + Puma IFV";
             font = "RobotoCondensed"; sizeEx = 0.024; shadow = 0;
         };
         class Sep3

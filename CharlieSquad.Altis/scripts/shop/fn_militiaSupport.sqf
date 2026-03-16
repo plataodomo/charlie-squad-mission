@@ -42,7 +42,7 @@ DYN_militia_units = [
 // Tier definitions
 //   ROOKIE  —  50 pts — 10 infantry, no vehicles (untrained)
 //   REGULAR —  90 pts — 10 infantry + 2x Eagle IV (light)
-//   ELITE   — 150 pts — 10 infantry + 1x Puma IFV + 1x Leopard 2 (heavy armor)
+//   ELITE   — 150 pts — 10 infantry + 1x Puma IFV
 DYN_militia_tierCost = createHashMapFromArray [
     ["ROOKIE",   50],
     ["REGULAR",  90],
@@ -52,7 +52,7 @@ DYN_militia_tierCost = createHashMapFromArray [
 DYN_militia_tierVehicles = createHashMapFromArray [
     ["ROOKIE",  []],
     ["REGULAR", ["BWA3_Eagle_FLW100_Tropen", "BWA3_Eagle_FLW100_Tropen"]],
-    ["ELITE",   ["BWA3_Puma_Tropen", "BWA3_Leopard2_Tropen"]]
+    ["ELITE",   ["BWA3_Puma_Tropen"]]
 ];
 
 DYN_fnc_purchaseMilitia = {
@@ -215,7 +215,17 @@ DYN_fnc_purchaseMilitia = {
                 _unit setSkill ["aimingSpeed",    _skillBase + random 0.08];
                 _unit setSkill ["spotDistance",   _skillBase + random 0.10];
                 _unit setSkill ["courage",        0.50 + _skillBase * 0.4];
-                _unit allowFleeing (0.20 - _skillBase * 0.15);
+                _unit allowFleeing 0;
+                _unit setUnitPos "UP";  // prevent prone-crawling during approach
+                // Clean up body 90s after death — don't wait for the whole squad to be wiped
+                _unit addEventHandler ["Killed", {
+                    params ["_unit"];
+                    [_unit] spawn {
+                        params ["_u"];
+                        sleep 90;
+                        if (!isNull _u) then { deleteVehicle _u };
+                    };
+                }];
             };
         } forEach DYN_militia_units;
 
@@ -339,6 +349,7 @@ DYN_fnc_purchaseMilitia = {
                 sleep 15;
                 ({ alive _x } count _units) == 0
                 || diag_tickTime > _timeout
+                || !DYN_AO_active
             };
             { if (alive _x) then { deleteVehicle _x } } forEach _units;
             { if (!isNull _x) then { deleteVehicle _x } } forEach _vehicles;
