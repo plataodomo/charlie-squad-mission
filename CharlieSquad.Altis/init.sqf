@@ -387,7 +387,7 @@ if (!isServer) then {} else {
                 [_x, _markerPos, _cancelRadius, _healTime] remoteExecCall ["MED_fnc_startHealing", _x];
             };
         } forEach allPlayers;
-        sleep 3;
+        sleep 6;
     };
 };
 
@@ -432,6 +432,7 @@ if (isNil "DYN_deadCleanupInit") then {
     [] spawn {
         while {true} do {
             sleep 30;
+            if (DYN_corpseQueue isEqualTo []) then { continue };
             private _now = diag_tickTime;
             private _remaining = [];
             {
