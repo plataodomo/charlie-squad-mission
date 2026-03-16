@@ -130,10 +130,10 @@ publicVariable "DYN_shopVehicles";
 //   type "spawn" — spawned directly as a world object (e.g. a carryable backpack)
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_SpareTrack",   "Spare Track",    5, 1, "item"],
-    ["ACE_SpareWheel",   "Spare Wheel",    5, 1, "item"],
+    ["ACE_Track",        "Spare Track",    5, 1, "item"],
+    ["ACE_Wheel",        "Spare Wheel",    5, 1, "item"],
     // ===== FUEL =====
-    ["ACE_Jerrycan",     "Jerrycan",       5, 1, "item"],
+    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "spawn"],
     // ===== PORTABLE STORAGE =====
     ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
 ];
@@ -384,16 +384,13 @@ DYN_fnc_purchaseSupply = {
         false
     };
 
-    // Validate the class exists — for spawn-type check CfgVehicles/CfgBackpacks;
-    // for item-type check CfgWeapons, CfgMagazines, or CfgItems (covers all ACE items).
-    private _classValid = switch (_type) do {
-        case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-        default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) || isClass (configFile >> "CfgItems" >> _class) };
-    };
-    if (!_classValid) exitWith {
-        diag_log format ["[SHOP] ERROR: Supply class '%1' not found in config (type: %2)", _class, _type];
+    // Only validate spawn-type entries (world objects must exist in CfgVehicles/CfgBackpacks).
+    // Item-type entries are hand-curated and delivered via addItemCargoGlobal which handles
+    // missing classes gracefully — no client-side mod check needed here.
+    if (_type == "spawn" && { !(isClass (configFile >> "CfgBackpacks" >> _class)) && !(isClass (configFile >> "CfgVehicles" >> _class)) }) exitWith {
+        diag_log format ["[SHOP] ERROR: Spawn class '%1' not found in CfgVehicles or CfgBackpacks", _class];
         if (!isNull _buyer) then {
-            ["SquadError", ["Supply item class not found — is ACE 3 loaded?"]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            ["SquadError", [format ["Spawn class '%1' not found in loaded mods!", _class]]] remoteExec ["BIS_fnc_showNotification", _buyer];
         };
         false
     };
@@ -420,6 +417,8 @@ DYN_fnc_purchaseSupply = {
             clearMagazineCargoGlobal _obj;
             clearItemCargoGlobal     _obj;
             clearBackpackCargoGlobal _obj;
+            // Lock so only ACE carry can move it (prevents vanilla drag/climb-in)
+            _obj lock 2;
             // Mark as ACE-carryable so players can pick it up via ACE interact
             _obj setVariable ["ACE_isCarryable", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
