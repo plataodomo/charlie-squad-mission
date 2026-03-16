@@ -130,10 +130,10 @@ publicVariable "DYN_shopVehicles";
 //   type "spawn" — spawned directly as a world object (e.g. a carryable backpack)
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_SpareTrack",   "Spare Track",    5, 1, "item"],
-    ["ACE_SpareWheel",   "Spare Wheel",    5, 1, "item"],
+    ["ACE_Track",        "Spare Track",    5, 1, "item"],
+    ["ACE_Wheel",        "Spare Wheel",    5, 1, "item"],
     // ===== FUEL =====
-    ["ACE_Jerrycan",     "Jerrycan",       5, 1, "item"],
+    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "item"],
     // ===== PORTABLE STORAGE =====
     ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
 ];
