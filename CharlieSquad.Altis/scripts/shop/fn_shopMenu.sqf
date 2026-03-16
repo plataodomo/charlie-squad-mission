@@ -158,7 +158,7 @@ DYN_fnc_shopSearch = {
         _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
         private _valid = switch (_type) do {
             case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-            default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+            default       { isClass (configFile >> "CfgWeapons"   >> _class) };
         };
         if (!_valid) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
