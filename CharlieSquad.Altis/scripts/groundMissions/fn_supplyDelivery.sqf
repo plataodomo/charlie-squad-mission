@@ -412,8 +412,10 @@ private _localMarkers = +DYN_ground_markers;
     DYN_ground_markers = DYN_ground_markers - _lMarkers;
 
     sleep 15;
-    [_tid]        call BIS_fnc_deleteTask;
-    [_pickupTid]  call BIS_fnc_deleteTask;
+    [_tid]       remoteExec ["BIS_fnc_deleteTask", 0];
+    [_pickupTid] remoteExec ["BIS_fnc_deleteTask", 0];
+    remoteExec ["", 0, _tid];
+    remoteExec ["", 0, _pickupTid];
 
     DYN_ground_active = false;
 

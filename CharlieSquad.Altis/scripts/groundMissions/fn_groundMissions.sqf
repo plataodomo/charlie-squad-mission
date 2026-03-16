@@ -120,7 +120,10 @@ DYN_fnc_groundCleanup = {
     { if (!isNull _x) then { deleteVehicle _x } } forEach DYN_ground_objects;
     { if (!isNull _x) then { deleteGroup _x } } forEach DYN_ground_enemyGroups;
     { deleteMarker _x } forEach DYN_ground_markers;
-    { [_x] call BIS_fnc_deleteTask } forEach DYN_ground_tasks;
+    {
+        [_x] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _x];
+    } forEach DYN_ground_tasks;
 
     DYN_ground_objects     = [];
     DYN_ground_enemies     = [];
