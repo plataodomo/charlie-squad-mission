@@ -208,12 +208,15 @@ DYN_fnc_militiaSelectTier = {
 
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
 
-    // Reset all tier buttons: base bg + grey hover via colorBackgroundActive; text dim if unaffordable
+    // Reset all tier buttons: base bg + grey hover EHs; text dim if unaffordable
     {
         _x params ["_idc", "_tierCost"];
         private _ctrl = _display displayCtrl _idc;
         _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
-        _ctrl ctrlSetAttribute ["colorBackgroundActive", [0.30, 0.30, 0.30, 1]];
+        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
+        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.30, 0.30, 0.30, 1] }];
+        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
         if (_rep >= _tierCost) then {
             _ctrl ctrlSetTextColor [0.85, 0.85, 0.85, 1];
         } else {
@@ -230,7 +233,10 @@ DYN_fnc_militiaSelectTier = {
     };
     private _selCtrl = _display displayCtrl _idc;
     _selCtrl ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1];
-    _selCtrl ctrlSetAttribute ["colorBackgroundActive", [0.25, 0.42, 0.25, 1]];
+    _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
+    _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
+    _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.25, 0.42, 0.25, 1] }];
+    _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.18, 0.30, 0.18, 1] }];
 
     // Reset balance label to green (clears any red error state from a previous attempt)
     private _balLbl = _display displayCtrl 9751;
@@ -241,6 +247,11 @@ DYN_fnc_militiaSelectTier = {
 DYN_fnc_militiaDialogOnLoad = {
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
+
+    // Balance label — set directly here as a safety net before tier selection runs
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    (_display displayCtrl 9751) ctrlSetText format ["%1 pts", _rep];
+    (_display displayCtrl 9751) ctrlSetTextColor [0.4, 0.9, 0.4, 1];
 
     // Clear any direction selected in a previous session
     uiNamespace setVariable ["DYN_militia_direction", ""];
@@ -260,11 +271,14 @@ DYN_fnc_militiaSelectDirection = {
     private _display = findDisplay 9750;
     if (isNull _display) exitWith {};
 
-    // Reset all direction buttons: base bg + grey hover via colorBackgroundActive
+    // Reset all direction buttons: base bg + grey hover EHs
     {
         private _ctrl = _display displayCtrl _x;
         _ctrl ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1];
-        _ctrl ctrlSetAttribute ["colorBackgroundActive", [0.32, 0.32, 0.32, 1]];
+        _ctrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _ctrl ctrlRemoveAllEventHandlers "MouseExit";
+        _ctrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.32, 0.32, 0.32, 1] }];
+        _ctrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.20, 0.20, 0.20, 1] }];
     } forEach [9760, 9761, 9762, 9763];
 
     // Highlight selected direction button (blue); hover stays blue
@@ -278,7 +292,10 @@ DYN_fnc_militiaSelectDirection = {
     if (_idc > 0) then {
         private _selCtrl = _display displayCtrl _idc;
         _selCtrl ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1];
-        _selCtrl ctrlSetAttribute ["colorBackgroundActive", [0.22, 0.35, 0.55, 1]];
+        _selCtrl ctrlRemoveAllEventHandlers "MouseEnter";
+        _selCtrl ctrlRemoveAllEventHandlers "MouseExit";
+        _selCtrl ctrlAddEventHandler ["MouseEnter", { (_this select 0) ctrlSetBackgroundColor [0.22, 0.35, 0.55, 1] }];
+        _selCtrl ctrlAddEventHandler ["MouseExit",  { (_this select 0) ctrlSetBackgroundColor [0.15, 0.25, 0.40, 1] }];
     };
 
     // Update direction label and unlock the deploy button
