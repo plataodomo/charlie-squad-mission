@@ -387,7 +387,7 @@ DYN_fnc_purchaseSupply = {
     // Validate the class exists in the appropriate config section
     private _classValid = switch (_type) do {
         case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-        default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+        default       { isClass (configFile >> "CfgWeapons"   >> _class) };
     };
     if (!_classValid) exitWith {
         diag_log format ["[SHOP] ERROR: Supply class '%1' not found in config (type: %2)", _class, _type];
