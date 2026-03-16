@@ -182,17 +182,19 @@ DYN_fnc_shopSelectVehicle = {
         // Supply item — look up in DYN_shopSupplies
         private _itemClass = _class select [7];
         {
-            _x params ["_c", "_name", "_cost", "_qty", ["_type", "item"]];
+            _x params ["_c", "_name", "_cost", "_qty", ["_type", "item"], ["_overridePic", ""]];
             if (_c == _itemClass) exitWith {
-                private _pic = "";
-                if (_type == "spawn") then {
-                    _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "editorPreview");
-                    if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "overviewPicture"); };
-                    if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "picture"); };
-                    if (_pic == "") then { _pic = getText (configFile >> "CfgBackpacks" >> _itemClass >> "picture"); };
-                } else {
-                    _pic = getText (configFile >> "CfgWeapons" >> _itemClass >> "picture");
-                    if (_pic == "") then { _pic = getText (configFile >> "CfgMagazines" >> _itemClass >> "picture"); };
+                private _pic = _overridePic;
+                if (_pic == "") then {
+                    if (_type == "spawn") then {
+                        _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "editorPreview");
+                        if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "overviewPicture"); };
+                        if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "picture"); };
+                        if (_pic == "") then { _pic = getText (configFile >> "CfgBackpacks" >> _itemClass >> "picture"); };
+                    } else {
+                        _pic = getText (configFile >> "CfgWeapons" >> _itemClass >> "picture");
+                        if (_pic == "") then { _pic = getText (configFile >> "CfgMagazines" >> _itemClass >> "picture"); };
+                    };
                 };
                 if (_pic == "") then { _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa"; };
                 (_display displayCtrl 9604) ctrlSetText _pic;
