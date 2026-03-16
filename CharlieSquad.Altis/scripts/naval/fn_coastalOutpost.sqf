@@ -737,7 +737,8 @@ private _localObjects = +DYN_naval_objects;
     DYN_naval_markers = DYN_naval_markers - _localMarkers;
 
     sleep 15;
-    [_tid] call BIS_fnc_deleteTask;
+    [_tid] remoteExec ["BIS_fnc_deleteTask", 0];
+    remoteExec ["", 0, _tid];
 
     DYN_naval_active = false;
 

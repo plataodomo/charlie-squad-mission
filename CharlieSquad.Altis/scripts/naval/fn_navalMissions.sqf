@@ -271,7 +271,10 @@ DYN_fnc_navalCleanup = {
     { deleteMarker _x } forEach DYN_naval_markers;
 
     // Clean tasks
-    { [_x] call BIS_fnc_deleteTask } forEach DYN_naval_tasks;
+    {
+        [_x] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _x];
+    } forEach DYN_naval_tasks;
 
     DYN_naval_objects       = [];
     DYN_naval_enemies       = [];

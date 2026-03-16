@@ -213,7 +213,8 @@ diag_log format ["[NAVAL-PATROL] %1 boats spawned at %2", count _actualBoats, _w
     DYN_naval_markers = DYN_naval_markers - _localMarkers;
 
     sleep 15;
-    [_tid] call BIS_fnc_deleteTask;
+    [_tid] remoteExec ["BIS_fnc_deleteTask", 0];
+    remoteExec ["", 0, _tid];
 
     DYN_naval_active = false;
 

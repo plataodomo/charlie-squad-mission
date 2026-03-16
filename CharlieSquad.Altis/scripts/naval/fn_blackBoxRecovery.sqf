@@ -491,7 +491,8 @@ private _bbTimeout = 7200;  // 2 hours
         DYN_naval_markers = DYN_naval_markers - _localMarkers;
 
         sleep 20;
-        [_taskId] call BIS_fnc_deleteTask;
+        [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
 
         sleep 300;
@@ -523,7 +524,8 @@ private _bbTimeout = 7200;  // 2 hours
         DYN_naval_markers = DYN_naval_markers - _localMarkers;
         
         sleep 20;
-        [_taskId] call BIS_fnc_deleteTask;
+        [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
         
         sleep 300;
@@ -552,7 +554,8 @@ private _bbTimeout = 7200;  // 2 hours
         DYN_naval_markers = DYN_naval_markers - _localMarkers;
         
         sleep 20;
-        [_taskId] call BIS_fnc_deleteTask;
+        [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
+        remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
         
         sleep 300;

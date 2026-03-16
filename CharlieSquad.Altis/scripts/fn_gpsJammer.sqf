@@ -389,16 +389,16 @@ DYN_fnc_addGPSJammerHoldAction = {
 
             _terminal setVariable ["DYN_gpsHacking", true, true];
 
-            missionNamespace setVariable ["DYN_progressTarget", _terminal];
-            missionNamespace setVariable ["DYN_progressCaller", _caller];
-            missionNamespace setVariable ["DYN_progressActive", true];
+            uiNamespace setVariable ["DYN_progressTarget", _terminal];
+            uiNamespace setVariable ["DYN_progressCaller", _caller];
+            uiNamespace setVariable ["DYN_progressActive", true];
 
             _caller action ["SwitchWeapon", _caller, _caller, 99];
 
             [_caller] spawn {
                 params ["_unit"];
                 sleep 0.5;
-                while {missionNamespace getVariable ["DYN_progressActive", false]} do {
+                while {uiNamespace getVariable ["DYN_progressActive", false]} do {
                     if (!alive _unit) exitWith {};
                     _unit playMoveNow "Acts_carFixingWheel";
                     sleep 14;
@@ -409,9 +409,9 @@ DYN_fnc_addGPSJammerHoldAction = {
                 12,
                 "DISABLING GPS JAMMER",
                 {
-                    missionNamespace setVariable ["DYN_progressActive", false];
-                    private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                    private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                    uiNamespace setVariable ["DYN_progressActive", false];
+                    private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                    private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                     if (!isNull _c) then {
                         _c playMoveNow "";
@@ -422,9 +422,9 @@ DYN_fnc_addGPSJammerHoldAction = {
                     };
                 },
                 {
-                    missionNamespace setVariable ["DYN_progressActive", false];
-                    private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                    private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                    uiNamespace setVariable ["DYN_progressActive", false];
+                    private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                    private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                     if (!isNull _c) then {
                         _c playMoveNow "";
@@ -437,8 +437,8 @@ DYN_fnc_addGPSJammerHoldAction = {
                     [] spawn { sleep 2; hintSilent ""; };
                 },
                 {
-                    private _t = missionNamespace getVariable ["DYN_progressTarget", objNull];
-                    private _c = missionNamespace getVariable ["DYN_progressCaller", objNull];
+                    private _t = uiNamespace getVariable ["DYN_progressTarget", objNull];
+                    private _c = uiNamespace getVariable ["DYN_progressCaller", objNull];
 
                     !isNull _t
                     && {!isNull _c}
