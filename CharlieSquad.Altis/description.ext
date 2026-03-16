@@ -421,7 +421,7 @@ class DYN_ShopDialog
             idc = 9621;
             type = 1;
             style = 2;
-            x = 0.065; y = 0.233; w = 0.068; h = 0.033;
+            x = 0.065; y = 0.233; w = 0.058; h = 0.033;
             colorBackground[] = {0.25, 0.25, 0.25, 1};
             colorBackgroundActive[] = {0.35, 0.50, 0.35, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -442,11 +442,12 @@ class DYN_ShopDialog
             soundEscape[] = {"", 0.1, 1};
             action = "['Cars'] call DYN_fnc_shopFilter;";
         };
-        class CatTrucks: CatCars { idc = 9622; x = 0.137; text = "TRUCKS"; action = "['Trucks'] call DYN_fnc_shopFilter;"; };
-        class CatArmor: CatCars  { idc = 9623; x = 0.209; text = "ARMOR";  action = "['Armor'] call DYN_fnc_shopFilter;"; };
-        class CatHeli: CatCars   { idc = 9624; x = 0.281; text = "HELIS";  action = "['Helicopters'] call DYN_fnc_shopFilter;"; };
-        class CatJets: CatCars   { idc = 9625; x = 0.353; text = "JETS";   action = "['Jets'] call DYN_fnc_shopFilter;"; };
-        class CatBoats: CatCars  { idc = 9626; x = 0.425; text = "BOATS";  action = "['Boats'] call DYN_fnc_shopFilter;"; };
+        class CatTrucks: CatCars  { idc = 9622; x = 0.127; text = "TRUCKS";  action = "['Trucks'] call DYN_fnc_shopFilter;"; };
+        class CatArmor: CatCars   { idc = 9623; x = 0.189; text = "ARMOR";   action = "['Armor'] call DYN_fnc_shopFilter;"; };
+        class CatHeli: CatCars    { idc = 9624; x = 0.251; text = "HELIS";   action = "['Helicopters'] call DYN_fnc_shopFilter;"; };
+        class CatJets: CatCars    { idc = 9625; x = 0.313; text = "JETS";    action = "['Jets'] call DYN_fnc_shopFilter;"; };
+        class CatBoats: CatCars   { idc = 9626; x = 0.375; text = "BOATS";   action = "['Boats'] call DYN_fnc_shopFilter;"; };
+        class CatSupplies: CatCars { idc = 9627; x = 0.437; text = "SUPPLY"; action = "['Supplies'] call DYN_fnc_shopFilter;"; };
         class VehicleList
         {
             idc = 9603;
