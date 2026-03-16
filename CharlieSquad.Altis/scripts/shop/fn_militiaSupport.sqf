@@ -132,19 +132,13 @@ DYN_fnc_purchaseMilitia = {
         case "ELITE":   { "Elite infantry + heavy armor" };
         default         { "Militia" };
     };
-    ["MilitiaInbound",
-        [format ["Militia inbound from %1 in 20 sec! (%2)", _direction, _tierLabel]]
-    ] remoteExec ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
     [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier, _buyer] spawn {
         params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier", "_buyer"];
 
-        // 10-second warning — buyer only  [TEST: reduced from 10 min]
+        // 10-second warning — update map marker only
         sleep 10;
-        ["MilitiaInbound",
-            [format ["Militia assault in 10 seconds from %1!", _direction]]
-        ] remoteExec ["BIS_fnc_showNotification", _buyer];
         _etaMkr setMarkerText format ["Militia 10 SEC | %1", _direction];
 
         sleep 10;
@@ -279,6 +273,13 @@ DYN_fnc_purchaseMilitia = {
         _wp3 setWaypointBehaviour        "COMBAT";
         _wp3 setWaypointCombatMode       "RED";
 
+        // When leader dies and leadership transfers, reset to first waypoint
+        // so the new leader doesn't freeze in a post-combat scan state
+        _grp addEventHandler ["LeaderChanged", {
+            private _g = _this select 0;
+            if (count (waypoints _g) > 0) then { setCurrentWaypoint [_g, 0] };
+        }];
+
         // =====================================================
         // MAP MARKER — live position indicator
         // =====================================================
@@ -290,16 +291,26 @@ DYN_fnc_purchaseMilitia = {
         _liveMkr setMarkerText  "Militia";
         _liveMkr setMarkerSize  [0.8, 0.8];
 
-        // Notify arrival
-        ["MilitiaEngaging",
-            [format ["Militia engaging from %1! 10 friendly units assaulting the AO.", _direction]]
-        ] remoteExec ["BIS_fnc_showNotification", 0];
+        diag_log format ["[MILITIA] Engaging from %1", _direction];
 
         // =====================================================
         // MONITOR — clean up when done or after 30-minute timeout
         // =====================================================
         private _watchUnits = _spawnedUnits + _allCrewUnits;
         private _timeout    = diag_tickTime + 1800;
+
+        // Nudge group leader toward AO every 40s — prevents AI freezing
+        // in post-combat scan state (especially after leader death + transfer)
+        [_grp, _aoCenter, _timeout] spawn {
+            params ["_g", "_target", "_t"];
+            while {!isNull _g && { ({alive _x} count (units _g)) > 0 } && { diag_tickTime < _t }} do {
+                sleep 40;
+                if (!isNull (leader _g) && { alive (leader _g) }) then {
+                    (leader _g) doMove _target;
+                };
+            };
+        };
+
         [_watchUnits, _allVehicles, _timeout, _liveMkr] spawn {
             params ["_units", "_vehicles", "_timeout", "_mkr"];
             waitUntil {
