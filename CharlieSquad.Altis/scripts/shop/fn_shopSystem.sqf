@@ -125,14 +125,17 @@ DYN_shopVehicles = [
 ];
 publicVariable "DYN_shopVehicles";
 
-// Format: [itemClass, displayName, cost, quantity]
-// Items are ACE 3 inventory items delivered in a supply crate at the shop spawn.
+// Format: [itemClass, displayName, cost, quantity, type]
+//   type "item"  — delivered inside a Box_NATO_Equip_F crate at shop_spawn
+//   type "spawn" — spawned directly as a world object (e.g. a carryable backpack)
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_SpareTrack", "Spare Track",    5, 1],
-    ["ACE_SpareWheel", "Spare Wheel",    5, 1],
+    ["ACE_SpareTrack",   "Spare Track",    5, 1, "item"],
+    ["ACE_SpareWheel",   "Spare Wheel",    5, 1, "item"],
     // ===== FUEL =====
-    ["ACE_Jerrycan",   "Jerrycan",       5, 1]
+    ["ACE_Jerrycan",     "Jerrycan",       5, 1, "item"],
+    // ===== PORTABLE STORAGE =====
+    ["B_AssaultPack_blk","Field Pack",     5, 1, "spawn"]
 ];
 publicVariable "DYN_shopSupplies";
 
@@ -355,11 +358,12 @@ DYN_fnc_purchaseSupply = {
     private _cost = 0;
     private _name = "";
     private _qty  = 0;
+    private _type = "item";
 
     {
-        _x params ["_c", "_n", "_co", "_q"];
+        _x params ["_c", "_n", "_co", "_q", ["_tp", "item"]];
         if (_c == _class) exitWith {
-            _found = true; _cost = _co; _name = _n; _qty = _q;
+            _found = true; _cost = _co; _name = _n; _qty = _q; _type = _tp;
         };
     } forEach DYN_shopSupplies;
 
@@ -380,8 +384,13 @@ DYN_fnc_purchaseSupply = {
         false
     };
 
-    if (!isClass (configFile >> "CfgWeapons" >> _class)) exitWith {
-        diag_log format ["[SHOP] ERROR: Supply class '%1' not found — is ACE 3 loaded?", _class];
+    // Validate the class exists in the appropriate config section
+    private _classValid = switch (_type) do {
+        case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
+        default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+    };
+    if (!_classValid) exitWith {
+        diag_log format ["[SHOP] ERROR: Supply class '%1' not found in config (type: %2)", _class, _type];
         if (!isNull _buyer) then {
             ["SquadError", ["Supply item class not found — is ACE 3 loaded?"]] remoteExec ["BIS_fnc_showNotification", _buyer];
         };
@@ -391,36 +400,43 @@ DYN_fnc_purchaseSupply = {
     // Deduct cost before spawning
     [_cost * -1, format ["Purchased %1", _name]] call DYN_fnc_changeReputation;
 
-    // Drop crate near shop spawn
+    // Drop near shop spawn
     private _spawnPos = [] call DYN_fnc_getShopSpawnPos;
     private _angle    = random 360;
     private _dropPos  = [(_spawnPos select 0) + (sin _angle) * 6, (_spawnPos select 1) + (cos _angle) * 6, 0];
-    private _crate    = createVehicle ["Box_NATO_Equip_F", _dropPos, [], 0, "NONE"];
 
-    if (isNull _crate) exitWith {
-        [_cost, format ["Refund — %1 crate failed to spawn", _name]] call DYN_fnc_changeReputation;
-        if (!isNull _buyer) then {
-            ["SquadError", ["Failed to create supply crate — points refunded!"]] remoteExec ["BIS_fnc_showNotification", _buyer];
+    if (_type == "spawn") then {
+        // Spawn the object directly (e.g. a backpack players can pick up)
+        private _obj = createVehicle [_class, _dropPos, [], 0, "NONE"];
+        if (isNull _obj) then {
+            [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
+            if (!isNull _buyer) then {
+                ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            };
+        } else {
+            [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
+            diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
+            ["ShopPurchase", [format ["%1 delivered at supply point (%2 pts)", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
         };
-        false
+    } else {
+        // Deliver inside a supply crate
+        private _crate = createVehicle ["Box_NATO_Equip_F", _dropPos, [], 0, "NONE"];
+        if (isNull _crate) then {
+            [_cost, format ["Refund — %1 crate failed to spawn", _name]] call DYN_fnc_changeReputation;
+            if (!isNull _buyer) then {
+                ["SquadError", ["Failed to create supply crate — points refunded!"]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            };
+        } else {
+            clearWeaponCargoGlobal   _crate;
+            clearMagazineCargoGlobal _crate;
+            clearItemCargoGlobal     _crate;
+            clearBackpackCargoGlobal _crate;
+            _crate addItemCargoGlobal [_class, _qty];
+            [_crate] spawn { params ["_c"]; sleep 600; if (!isNull _c) then { deleteVehicle _c; }; };
+            diag_log format ["[SHOP] Supply crate: %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
+            ["ShopPurchase", [format ["%1 x%2 delivered to supply crate (%3 pts)", _name, _qty, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
+        };
     };
-
-    clearWeaponCargoGlobal   _crate;
-    clearMagazineCargoGlobal _crate;
-    clearItemCargoGlobal     _crate;
-    clearBackpackCargoGlobal _crate;
-
-    _crate addItemCargoGlobal [_class, _qty];
-
-    // Auto-delete the crate after 10 minutes
-    [_crate] spawn {
-        params ["_c"];
-        sleep 600;
-        if (!isNull _c) then { deleteVehicle _c; };
-    };
-
-    diag_log format ["[SHOP] Supply crate: %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
-    ["ShopPurchase", [format ["%1 x%2 delivered to supply crate (%3 pts)", _name, _qty, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
 
     true
 };
