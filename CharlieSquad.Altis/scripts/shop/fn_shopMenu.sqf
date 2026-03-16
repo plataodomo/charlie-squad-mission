@@ -89,7 +89,7 @@ DYN_fnc_shopFilter = {
             _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
             private _valid = switch (_type) do {
                 case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-                default       { isClass (configFile >> "CfgWeapons"   >> _class) };
+                default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
             };
             if (!_valid) then { continue; };
             private _idx = _list lbAdd _name;
@@ -158,7 +158,7 @@ DYN_fnc_shopSearch = {
         _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
         private _valid = switch (_type) do {
             case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-            default       { isClass (configFile >> "CfgWeapons"   >> _class) };
+            default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
         };
         if (!_valid) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
@@ -192,10 +192,13 @@ DYN_fnc_shopSelectVehicle = {
             if (_c == _itemClass) exitWith {
                 private _pic = "";
                 if (_type == "spawn") then {
-                    _pic = getText (configFile >> "CfgBackpacks" >> _itemClass >> "picture");
+                    _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "editorPreview");
+                    if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "overviewPicture"); };
                     if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "picture"); };
+                    if (_pic == "") then { _pic = getText (configFile >> "CfgBackpacks" >> _itemClass >> "picture"); };
                 } else {
                     _pic = getText (configFile >> "CfgWeapons" >> _itemClass >> "picture");
+                    if (_pic == "") then { _pic = getText (configFile >> "CfgMagazines" >> _itemClass >> "picture"); };
                 };
                 if (_pic == "") then { _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa"; };
                 (_display displayCtrl 9604) ctrlSetText _pic;
@@ -261,7 +264,6 @@ DYN_fnc_shopBuy = {
     if (_isSupply) then {
         [DYN_shopSelectedClass, getPlayerUID player] remoteExec ["DYN_fnc_purchaseSupply", 2];
         closeDialog 0;
-        hint format ["Ordering %1...", _name];
     } else {
         [DYN_shopSelectedClass, getPlayerUID player] remoteExec ["DYN_fnc_purchaseVehicle", 2];
         closeDialog 0;

@@ -75,11 +75,20 @@ class CfgNotifications
         sound = "";
     };
     class ShopPurchase {
-        title = "VEHICLE PURCHASED";
+        title = "VEHICLE REQUISITIONED";
         iconPicture = "\A3\ui_f\data\map\markers\nato\b_motor_inf.paa";
         description = "%1";
         color[] = {0.4, 0.9, 0.4, 1};
         duration = 5;
+        priority = 7;
+        sound = "taskSucceeded";
+    };
+    class SupplyDelivered {
+        title = "SUPPLY DELIVERED";
+        iconPicture = "\A3\ui_f\data\map\markers\nato\b_support.paa";
+        description = "%1 — Cost: %2 pts";
+        color[] = {0.3, 0.75, 1.0, 1};
+        duration = 6;
         priority = 7;
         sound = "taskSucceeded";
     };

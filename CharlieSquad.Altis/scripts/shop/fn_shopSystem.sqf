@@ -387,7 +387,7 @@ DYN_fnc_purchaseSupply = {
     // Validate the class exists in the appropriate config section
     private _classValid = switch (_type) do {
         case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
-        default       { isClass (configFile >> "CfgWeapons"   >> _class) };
+        default       { isClass (configFile >> "CfgWeapons" >> _class) || isClass (configFile >> "CfgMagazines" >> _class) };
     };
     if (!_classValid) exitWith {
         diag_log format ["[SHOP] ERROR: Supply class '%1' not found in config (type: %2)", _class, _type];
@@ -400,13 +400,13 @@ DYN_fnc_purchaseSupply = {
     // Deduct cost before spawning
     [_cost * -1, format ["Purchased %1", _name]] call DYN_fnc_changeReputation;
 
-    // Drop near shop spawn
-    private _spawnPos = [] call DYN_fnc_getShopSpawnPos;
-    private _angle    = random 360;
-    private _dropPos  = [(_spawnPos select 0) + (sin _angle) * 6, (_spawnPos select 1) + (cos _angle) * 6, 0];
+    // Drop to the right side of shop_spawn (marker direction + 90 degrees)
+    private _spawnPos  = [] call DYN_fnc_getShopSpawnPos;
+    private _rightDir  = (markerDir "shop_spawn") + 90;
+    private _dropPos   = [(_spawnPos select 0) + (sin _rightDir) * 6, (_spawnPos select 1) + (cos _rightDir) * 6, 0];
 
     if (_type == "spawn") then {
-        // Spawn the object directly (e.g. a backpack players can pick up)
+        // Spawn the object directly (e.g. a supply crate players can carry)
         private _obj = createVehicle [_class, _dropPos, [], 0, "NONE"];
         if (isNull _obj) then {
             [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
@@ -414,11 +414,16 @@ DYN_fnc_purchaseSupply = {
                 ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
             };
         } else {
+            // Clear default contents so crate arrives empty
+            clearWeaponCargoGlobal   _obj;
+            clearMagazineCargoGlobal _obj;
+            clearItemCargoGlobal     _obj;
+            clearBackpackCargoGlobal _obj;
             // Mark as ACE-carryable so players can pick it up via ACE interact
             _obj setVariable ["ACE_isCarryable", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
-            ["ShopPurchase", [format ["%1 delivered at supply point (%2 pts)", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
+            ["SupplyDelivered", [_name, _cost]] remoteExec ["BIS_fnc_showNotification", 0];
         };
     } else {
         // Deliver inside a supply crate
@@ -436,7 +441,7 @@ DYN_fnc_purchaseSupply = {
             _crate addItemCargoGlobal [_class, _qty];
             [_crate] spawn { params ["_c"]; sleep 600; if (!isNull _c) then { deleteVehicle _c; }; };
             diag_log format ["[SHOP] Supply crate: %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
-            ["ShopPurchase", [format ["%1 x%2 delivered to supply crate (%3 pts)", _name, _qty, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
+            ["SupplyDelivered", [format ["%1 x%2", _name, _qty], _cost]] remoteExec ["BIS_fnc_showNotification", 0];
         };
     };
 
