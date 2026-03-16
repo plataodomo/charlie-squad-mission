@@ -21,7 +21,7 @@ waitUntil { sleep 0.5; !isNil "DYN_fnc_isActiveLeader" };
 // in fn_shopSystem.sqf but may not have arrived yet for
 // a JIP player.
 // =====================================================
-waitUntil { sleep 0.5; !isNil "DYN_shopVehicles" };
+waitUntil { sleep 0.5; !isNil "DYN_shopVehicles" && !isNil "DYN_shopSupplies" };
 
 _terminal addAction [
     "<t color='#00FF00'>Vehicle Requisition</t>",
@@ -94,22 +94,36 @@ DYN_fnc_shopFilter = {
     private _list = _display displayCtrl 9603;
     lbClear _list;
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
-    {
-        _x params ["_class", "_name", "_cost", "_cat"];
-        if (!isClass (configFile >> "CfgVehicles" >> _class)) then {
-            continue;
-        };
-        if (_category == _cat) then {
+
+    if (_category == "Supplies") then {
+        {
+            _x params ["_class", "_name", "_cost", "_qty"];
+            if (!isClass (configFile >> "CfgWeapons" >> _class)) then { continue; };
             private _idx = _list lbAdd _name;
-            _list lbSetData [_idx, _class];
+            _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
             _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
             if (_rep >= _cost) then {
                 _list lbSetColor [_idx, [1, 1, 1, 1]];
             } else {
                 _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
             };
-        };
-    } forEach DYN_shopVehicles;
+        } forEach DYN_shopSupplies;
+    } else {
+        {
+            _x params ["_class", "_name", "_cost", "_cat"];
+            if (!isClass (configFile >> "CfgVehicles" >> _class)) then { continue; };
+            if (_category == _cat) then {
+                private _idx = _list lbAdd _name;
+                _list lbSetData [_idx, _class];
+                _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
+                if (_rep >= _cost) then {
+                    _list lbSetColor [_idx, [1, 1, 1, 1]];
+                } else {
+                    _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
+                };
+            };
+        } forEach DYN_shopVehicles;
+    };
 };
 
 DYN_fnc_shopSearch = {
@@ -124,9 +138,7 @@ DYN_fnc_shopSearch = {
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     {
         _x params ["_class", "_name", "_cost", "_cat"];
-        if (!isClass (configFile >> "CfgVehicles" >> _class)) then {
-            continue;
-        };
+        if (!isClass (configFile >> "CfgVehicles" >> _class)) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, _class];
@@ -138,6 +150,20 @@ DYN_fnc_shopSearch = {
             };
         };
     } forEach DYN_shopVehicles;
+    {
+        _x params ["_class", "_name", "_cost", "_qty"];
+        if (!isClass (configFile >> "CfgWeapons" >> _class)) then { continue; };
+        if ((toLower _name) find _searchText >= 0) then {
+            private _idx = _list lbAdd _name;
+            _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
+            _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
+            if (_rep >= _cost) then {
+                _list lbSetColor [_idx, [1, 1, 1, 1]];
+            } else {
+                _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
+            };
+        };
+    } forEach DYN_shopSupplies;
 };
 
 DYN_fnc_shopSelectVehicle = {
@@ -148,49 +174,86 @@ DYN_fnc_shopSelectVehicle = {
     if (_idx < 0) exitWith {};
     private _class = _list lbData _idx;
     DYN_shopSelectedClass = _class;
-    {
-        _x params ["_vClass", "_name", "_cost", "_cat"];
-        if (_vClass == _class) exitWith {
-            private _pic = [_class] call DYN_fnc_getVehiclePicClient;
-            (_display displayCtrl 9604) ctrlSetText _pic;
-            (_display displayCtrl 9605) ctrlSetText _name;
-            (_display displayCtrl 9606) ctrlSetText format ["Cost: %1 points", _cost];
-            private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
-            if (_rep >= _cost) then {
-                (_display displayCtrl 9607) ctrlSetText "AVAILABLE";
-                (_display displayCtrl 9607) ctrlSetTextColor [0.4, 0.9, 0.4, 1];
-            } else {
-                (_display displayCtrl 9607) ctrlSetText format ["NEED %1 MORE POINTS", _cost - _rep];
-                (_display displayCtrl 9607) ctrlSetTextColor [0.9, 0.3, 0.3, 1];
+    private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+
+    if (_class find "SUPPLY:" == 0) then {
+        // Supply item — look up in DYN_shopSupplies
+        private _itemClass = _class select [7];
+        {
+            _x params ["_c", "_name", "_cost", "_qty"];
+            if (_c == _itemClass) exitWith {
+                private _cfg = configFile >> "CfgWeapons" >> _itemClass;
+                private _pic = getText (_cfg >> "picture");
+                if (_pic == "") then { _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa"; };
+                (_display displayCtrl 9604) ctrlSetText _pic;
+                (_display displayCtrl 9605) ctrlSetText _name;
+                (_display displayCtrl 9606) ctrlSetText format ["Cost: %1 points | Qty: %2", _cost, _qty];
+                if (_rep >= _cost) then {
+                    (_display displayCtrl 9607) ctrlSetText "AVAILABLE";
+                    (_display displayCtrl 9607) ctrlSetTextColor [0.4, 0.9, 0.4, 1];
+                } else {
+                    (_display displayCtrl 9607) ctrlSetText format ["NEED %1 MORE POINTS", _cost - _rep];
+                    (_display displayCtrl 9607) ctrlSetTextColor [0.9, 0.3, 0.3, 1];
+                };
             };
-        };
-    } forEach DYN_shopVehicles;
+        } forEach DYN_shopSupplies;
+    } else {
+        // Vehicle item — existing logic
+        {
+            _x params ["_vClass", "_name", "_cost", "_cat"];
+            if (_vClass == _class) exitWith {
+                private _pic = [_class] call DYN_fnc_getVehiclePicClient;
+                (_display displayCtrl 9604) ctrlSetText _pic;
+                (_display displayCtrl 9605) ctrlSetText _name;
+                (_display displayCtrl 9606) ctrlSetText format ["Cost: %1 points", _cost];
+                if (_rep >= _cost) then {
+                    (_display displayCtrl 9607) ctrlSetText "AVAILABLE";
+                    (_display displayCtrl 9607) ctrlSetTextColor [0.4, 0.9, 0.4, 1];
+                } else {
+                    (_display displayCtrl 9607) ctrlSetText format ["NEED %1 MORE POINTS", _cost - _rep];
+                    (_display displayCtrl 9607) ctrlSetTextColor [0.9, 0.3, 0.3, 1];
+                };
+            };
+        } forEach DYN_shopVehicles;
+    };
 };
 
 DYN_fnc_shopBuy = {
     if (DYN_shopSelectedClass == "") exitWith {
-        hint "Select a vehicle first!";
+        hint "Select an item first!";
     };
     if (!([player] call DYN_fnc_isActiveLeader)) exitWith {
         hint "You are no longer an active Squad Leader.";
         closeDialog 0;
     };
+    private _isSupply = DYN_shopSelectedClass find "SUPPLY:" == 0;
     private _cost = 0;
     private _name = "";
-    {
-        _x params ["_class", "_dname", "_dcost"];
-        if (_class == DYN_shopSelectedClass) exitWith {
-            _cost = _dcost;
-            _name = _dname;
-        };
-    } forEach DYN_shopVehicles;
+    if (_isSupply) then {
+        private _itemClass = DYN_shopSelectedClass select [7];
+        {
+            _x params ["_c", "_n", "_co"];
+            if (_c == _itemClass) exitWith { _cost = _co; _name = _n; };
+        } forEach DYN_shopSupplies;
+    } else {
+        {
+            _x params ["_class", "_dname", "_dcost"];
+            if (_class == DYN_shopSelectedClass) exitWith { _cost = _dcost; _name = _dname; };
+        } forEach DYN_shopVehicles;
+    };
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     if (_rep < _cost) exitWith {
         hint format ["Not enough points!\nNeed: %1\nHave: %2", _cost, _rep];
     };
-    [DYN_shopSelectedClass, getPlayerUID player] remoteExec ["DYN_fnc_purchaseVehicle", 2];
-    closeDialog 0;
-    hint format ["Requisitioning %1...", _name];
+    if (_isSupply) then {
+        [DYN_shopSelectedClass, getPlayerUID player] remoteExec ["DYN_fnc_purchaseSupply", 2];
+        closeDialog 0;
+        hint format ["Ordering %1...", _name];
+    } else {
+        [DYN_shopSelectedClass, getPlayerUID player] remoteExec ["DYN_fnc_purchaseVehicle", 2];
+        closeDialog 0;
+        hint format ["Requisitioning %1...", _name];
+    };
 };
 
 // =====================================================
