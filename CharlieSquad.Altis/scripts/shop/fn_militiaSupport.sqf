@@ -273,13 +273,13 @@ DYN_fnc_purchaseMilitia = {
         _wp3 setWaypointBehaviour        "COMBAT";
         _wp3 setWaypointCombatMode       "RED";
 
-        // When leader dies and leadership transfers, reset to first waypoint
-        // so the new leader doesn't freeze in a post-combat scan state
+        // When leader dies and leadership transfers, nudge new leader toward
+        // the first waypoint position so they don't freeze post-combat
         _grp addEventHandler ["LeaderChanged", {
-            private _g = _this select 0;
+            params ["_g", "_newLeader"];
             private _wps = waypoints _g;
             if (count _wps > 0) then {
-                setCurrentWaypoint (_wps select 0);
+                _newLeader doMove (waypointPosition (_wps select 0));
             };
         }];
 
