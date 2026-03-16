@@ -97,8 +97,12 @@ DYN_fnc_shopFilter = {
 
     if (_category == "Supplies") then {
         {
-            _x params ["_class", "_name", "_cost", "_qty"];
-            if (!isClass (configFile >> "CfgWeapons" >> _class)) then { continue; };
+            _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
+            private _valid = switch (_type) do {
+                case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
+                default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+            };
+            if (!_valid) then { continue; };
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
             _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
@@ -151,8 +155,12 @@ DYN_fnc_shopSearch = {
         };
     } forEach DYN_shopVehicles;
     {
-        _x params ["_class", "_name", "_cost", "_qty"];
-        if (!isClass (configFile >> "CfgWeapons" >> _class)) then { continue; };
+        _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
+        private _valid = switch (_type) do {
+            case "spawn": { isClass (configFile >> "CfgBackpacks" >> _class) || isClass (configFile >> "CfgVehicles" >> _class) };
+            default:      { isClass (configFile >> "CfgWeapons"   >> _class) };
+        };
+        if (!_valid) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
@@ -180,14 +188,19 @@ DYN_fnc_shopSelectVehicle = {
         // Supply item — look up in DYN_shopSupplies
         private _itemClass = _class select [7];
         {
-            _x params ["_c", "_name", "_cost", "_qty"];
+            _x params ["_c", "_name", "_cost", "_qty", ["_type", "item"]];
             if (_c == _itemClass) exitWith {
-                private _cfg = configFile >> "CfgWeapons" >> _itemClass;
-                private _pic = getText (_cfg >> "picture");
+                private _pic = "";
+                if (_type == "spawn") then {
+                    _pic = getText (configFile >> "CfgBackpacks" >> _itemClass >> "picture");
+                    if (_pic == "") then { _pic = getText (configFile >> "CfgVehicles" >> _itemClass >> "picture"); };
+                } else {
+                    _pic = getText (configFile >> "CfgWeapons" >> _itemClass >> "picture");
+                };
                 if (_pic == "") then { _pic = "\A3\ui_f\data\map\markers\nato\b_unknown.paa"; };
                 (_display displayCtrl 9604) ctrlSetText _pic;
                 (_display displayCtrl 9605) ctrlSetText _name;
-                (_display displayCtrl 9606) ctrlSetText format ["Cost: %1 points | Qty: %2", _cost, _qty];
+                (_display displayCtrl 9606) ctrlSetText format ["Cost: %1 points", _cost];
                 if (_rep >= _cost) then {
                     (_display displayCtrl 9607) ctrlSetText "AVAILABLE";
                     (_display displayCtrl 9607) ctrlSetTextColor [0.4, 0.9, 0.4, 1];
