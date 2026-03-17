@@ -526,7 +526,7 @@ class DYN_ShopDialog
         {
             idc = 9604;
             type = 0;
-            style = 48 + 2048;
+            style = 48;
             x = 0.535; y = 0.20; w = 0.38; h = 0.34;
             colorBackground[] = {0,0,0,0};
             colorText[] = {1, 1, 1, 1};
