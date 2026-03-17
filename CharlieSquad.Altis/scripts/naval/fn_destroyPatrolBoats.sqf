@@ -133,6 +133,21 @@ for "_i" from 1 to _boatCount do {
 
     // Kick off initial movement so boats don't sit idle at spawn
     driver _boat doMove ([_waterCenter, 100 + random 200, random 360] call DYN_fnc_posOffset);
+
+    // Stop the boat dead in the water when all crew are killed so it doesn't
+    // ghost-drive forever — players still need to destroy it with weapons.
+    [_boat, _grp] spawn {
+        params ["_b", "_g"];
+        waitUntil {
+            sleep 2;
+            !alive _b || ({ alive _x } count crew _b) == 0
+        };
+        if (alive _b) then {
+            _b setVelocity [0, 0, 0];
+            _b engineOn false;
+            { _g deleteWaypoint _x } forEach (waypoints _g);
+        };
+    };
 };
 
 private _actualBoats = DYN_naval_enemyVehs select { !isNull _x && alive _x };
