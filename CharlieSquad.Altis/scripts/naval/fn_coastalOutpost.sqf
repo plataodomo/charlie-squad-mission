@@ -110,9 +110,10 @@ private _fn_spawnCompObj = {
     private _rotVecs = [_dirVec, _upVec, _rot] call _fn_rotDirUp;
     _obj setVectorDirAndUp _rotVecs;
 
-    // Snap to terrain: use 0 for decorative (sim off), 0.05 for interactive (sim on)
-    // to prevent clipping into uneven coastal terrain which causes physics explosions
-    private _snapZ = if (_simEnabled) then { 0.05 } else { 0 };
+    // Snap to terrain: lift origin slightly above terrain surface so props whose
+    // model pivot is not at the very base (logs, barrels, piles) don't sink.
+    // 0.15 for decorative (sim off), 0.05 for interactive (sim on — physics settles them).
+    private _snapZ = if (_simEnabled) then { 0.05 } else { 0.15 };
     private _posATL = getPosATL _obj;
     _obj setPosATL [_posATL select 0, _posATL select 1, _snapZ];
 
@@ -611,6 +612,8 @@ private _cqbBuildings = nearestObjects [_landPos, ["Land_Cargo_House_V3_F"], 120
 if (!isNull _compositionHMG) then {
     private _hmgGrp = createGroup east;
     DYN_naval_enemyGroups pushBack _hmgGrp;
+    _hmgGrp setBehaviour "AWARE";
+    _hmgGrp setCombatMode "RED";
     private _hmgGunner = _hmgGrp createUnit [selectRandom _infPool, getPos _compositionHMG, [], 0, "NONE"];
     if (!isNull _hmgGunner) then {
         _hmgGunner moveInGunner _compositionHMG;
@@ -628,6 +631,8 @@ sleep 13;
     if (!isNull _x && {_x isKindOf "Car"}) then {
         private _vGrp = createGroup east;
         DYN_naval_enemyGroups pushBack _vGrp;
+        _vGrp setBehaviour "AWARE";
+        _vGrp setCombatMode "RED";
 
         private _driver = _vGrp createUnit [selectRandom _infPool, getPos _x, [], 0, "NONE"];
         if (!isNull _driver) then {
@@ -646,6 +651,19 @@ sleep 13;
                 DYN_naval_enemies pushBack _gunner;
             };
         };
+
+        // Patrol waypoints so the driver actually moves when combat starts
+        for "_w" from 1 to 4 do {
+            private _wpPos = [_landPos, 20 + random 30, _w * 90] call DYN_fnc_posOffset;
+            if (surfaceIsWater _wpPos) then {
+                _wpPos = [_landPos, 15, (_w * 90) + 180] call DYN_fnc_posOffset;
+            };
+            private _wp = _vGrp addWaypoint [_wpPos, 0];
+            _wp setWaypointType "MOVE";
+            _wp setWaypointSpeed "NORMAL";
+            _wp setWaypointBehaviour "AWARE";
+        };
+        (_vGrp addWaypoint [getPos _x, 0]) setWaypointType "CYCLE";
     };
 } forEach DYN_naval_enemyVehs;
 
