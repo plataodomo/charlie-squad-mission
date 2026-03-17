@@ -492,7 +492,7 @@ private _bbTimeout = 7200;  // 2 hours
 
         sleep 20;
         [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
-        remoteExec ["", 0, _taskId];
+        [] remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
 
         sleep 300;
@@ -525,7 +525,7 @@ private _bbTimeout = 7200;  // 2 hours
         
         sleep 20;
         [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
-        remoteExec ["", 0, _taskId];
+        [] remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
         
         sleep 300;
@@ -555,7 +555,7 @@ private _bbTimeout = 7200;  // 2 hours
         
         sleep 20;
         [_taskId] remoteExec ["BIS_fnc_deleteTask", 0];
-        remoteExec ["", 0, _taskId];
+        [] remoteExec ["", 0, _taskId];
         DYN_naval_active = false;
         
         sleep 300;

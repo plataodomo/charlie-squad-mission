@@ -1202,7 +1202,7 @@ if (_deliveryPos isEqualTo [0,0,0]) then { _deliveryPos = _basePos };
     };
     sleep 5;
     [_tid] remoteExec ["BIS_fnc_deleteTask", 0];
-    remoteExec ["", 0, _tid];
+    [] remoteExec ["", 0, _tid];
     { deleteMarker _x } forEach _rMkrs;  // route arrow markers (empty array if none were spawned)
     private _aV = +DYN_ground_enemyVehs; private _aE = +DYN_ground_enemies; private _aG = +DYN_ground_enemyGroups;
     { if (!isNull _x) then { { if (!isNull _x) then { _x setPosATL [0,0,0]; deleteVehicle _x } } forEach crew _x; deleteVehicle _x } } forEach _aV;

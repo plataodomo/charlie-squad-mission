@@ -774,7 +774,7 @@ private _localObjects = +DYN_naval_objects;
 
     sleep 15;
     [_tid] remoteExec ["BIS_fnc_deleteTask", 0];
-    remoteExec ["", 0, _tid];
+    [] remoteExec ["", 0, _tid];
 
     DYN_naval_active = false;
 

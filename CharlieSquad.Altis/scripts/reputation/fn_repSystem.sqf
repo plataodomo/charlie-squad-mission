@@ -405,7 +405,7 @@ DYN_fnc_awardPrisonerRep = {
     private _rep = 5;
     switch (toLower _type) do {
         case "hvt": { _rep = 10 };
-        case "officer": { _rep = 6 };
+        case "enemy officer": { _rep = 6 };
         case "arms dealer": { _rep = 12 };
         default { _rep = 3 };
     };
