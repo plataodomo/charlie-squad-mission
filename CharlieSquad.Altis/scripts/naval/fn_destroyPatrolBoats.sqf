@@ -78,6 +78,7 @@ for "_i" from 1 to _boatCount do {
     private _boat = createVehicle [selectRandom _boatClasses, _spawnPos, [], 0, "NONE"];
     _boat setDir (random 360);
     _boat setPosASL [_spawnPos#0, _spawnPos#1, 0];
+    _boat setHit ["HitHull", 0.4];  // Reduced armor — boats are lightly armoured
 
     { deleteVehicle _x } forEach crew _boat;
 
