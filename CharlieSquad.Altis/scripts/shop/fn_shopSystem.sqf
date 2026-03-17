@@ -434,13 +434,20 @@ DYN_fnc_purchaseSupply = {
                 ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
             };
         } else {
-            clearWeaponCargoGlobal   _holder;
-            clearMagazineCargoGlobal _holder;
-            clearItemCargoGlobal     _holder;
-            clearBackpackCargoGlobal _holder;
-            for "_i" from 1 to _qty do { _holder addItemCargoGlobal [_class, 1]; };
-            [_holder] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
-            diag_log format ["[SHOP] Spawned %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
+            [_holder, _class, _qty, _name, _dropPos, _cost] spawn {
+                params ["_o", "_c", "_q", "_n", "_pos", "_pts"];
+                // Wait for box default-cargo init to complete on all machines
+                // before clearing and filling, otherwise the engine overwrites our cargo
+                sleep 0.5;
+                clearWeaponCargoGlobal   _o;
+                clearMagazineCargoGlobal _o;
+                clearItemCargoGlobal     _o;
+                clearBackpackCargoGlobal _o;
+                for "_i" from 1 to _q do { _o addItemCargoGlobal [_c, 1]; };
+                diag_log format ["[SHOP] Spawned %1 x%2 at %3 for %4 pts", _n, _q, _pos, _pts];
+                sleep 599.5;
+                if (!isNull _o) then { deleteVehicle _o; };
+            };
         };
     };
 
