@@ -430,10 +430,7 @@ DYN_fnc_purchaseSupply = {
         if (isNull _buyer) exitWith {
             diag_log format ["[SHOP] Buyer not found for item delivery: %1", _class];
         };
-        [_class, _qty] remoteExec [{
-            params ["_c", "_q"];
-            for "_i" from 1 to _q do { player addItemToBackpack _c; };
-        }, _buyer];
+        for "_i" from 1 to _qty do { _buyer addItemToBackpack _class; };
         diag_log format ["[SHOP] Gave %1 x%2 to %3 for %4 pts", _name, _qty, _buyerUID, _cost];
     };
 
