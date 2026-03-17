@@ -273,7 +273,7 @@ DYN_fnc_navalCleanup = {
     // Clean tasks
     {
         [_x] remoteExec ["BIS_fnc_deleteTask", 0];
-        remoteExec ["", 0, _x];
+        [] remoteExec ["", 0, _x];
     } forEach DYN_naval_tasks;
 
     DYN_naval_objects       = [];

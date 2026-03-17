@@ -122,7 +122,7 @@ DYN_fnc_groundCleanup = {
     { deleteMarker _x } forEach DYN_ground_markers;
     {
         [_x] remoteExec ["BIS_fnc_deleteTask", 0];
-        remoteExec ["", 0, _x];
+        [] remoteExec ["", 0, _x];
     } forEach DYN_ground_tasks;
 
     DYN_ground_objects     = [];
