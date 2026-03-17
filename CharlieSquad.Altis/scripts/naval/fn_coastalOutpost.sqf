@@ -463,7 +463,7 @@ diag_log format ["[NAVAL-OUTPOST] Composition complete at %1, rotation %2 (%3 tr
 // 5. SPAWN INFANTRY (increased enemy count)
 // =====================================================
 private _taskId = format ["naval_outpost_%1", round (diag_tickTime * 1000)];
-private _enemyCount = 16 + floor random 9; // 16-24 enemies
+private _enemyCount = 22 + floor random 9; // 22-30 enemies
 
 // --- Garrison group (inside outpost) ---
 private _grpGarrison = createGroup east;
@@ -570,6 +570,42 @@ for "_i" from 1 to (floor (_enemyCount * 0.15)) do {
         DYN_naval_enemies pushBack _u;
     };
 };
+
+// ---- CQB building garrison — enemies inside the composition's Cargo Houses ----
+private _cqbBuildings = nearestObjects [_landPos, ["Land_Cargo_House_V3_F"], 120];
+{
+    private _bld = _x;
+    private _positions = [_bld] call BIS_fnc_buildingPositions;
+    if (_positions isEqualTo []) then { continue };
+    _positions = _positions call BIS_fnc_arrayShuffle;
+
+    private _bGrp = createGroup east;
+    DYN_naval_enemyGroups pushBack _bGrp;
+    _bGrp setBehaviour "AWARE";
+    _bGrp setCombatMode "RED";
+
+    private _count = (3 + floor (random 3)) min (count _positions); // 3-5 per building
+    for "_u" from 0 to (_count - 1) do {
+        private _bPos = _positions select _u;
+        private _unit = _bGrp createUnit [selectRandom _infPool, _bPos, [], 0, "NONE"];
+        if (isNull _unit) then { continue };
+        _unit setPosATL _bPos;
+        _unit disableAI "PATH";
+        _unit setUnitPos (selectRandom ["UP", "MIDDLE"]);
+        _unit allowFleeing 0;
+        _unit setSkill 0.50;
+        DYN_naval_enemies pushBack _unit;
+    };
+
+    // Re-enable PATH when entering COMBAT so they can exit and engage
+    [_bGrp] spawn {
+        params ["_g"];
+        waitUntil { sleep 2; isNull _g || { !(alive leader _g) } || { behaviour leader _g == "COMBAT" } };
+        if (!isNull _g && { alive leader _g }) then {
+            { if (alive _x) then { _x enableAI "PATH"; }; } forEach units _g;
+        };
+    };
+} forEach _cqbBuildings;
 
 // ---- Crew the composition HMG ----
 if (!isNull _compositionHMG) then {

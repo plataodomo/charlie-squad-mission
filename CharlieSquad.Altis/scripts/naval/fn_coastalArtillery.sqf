@@ -475,7 +475,7 @@ _grpTowerBase setBehaviour "AWARE";
 _grpTowerBase setCombatMode "RED";
 _grpTowerBase setSpeedMode "LIMITED";
 
-private _towerBaseCount = 2 + floor (random 2); // 2-3 guards at base
+private _towerBaseCount = 3 + floor (random 3); // 3-5 guards at base
 for "_i" from 1 to _towerBaseCount do {
     private _bp = [_bigTowerWorldPos, 3, 14, 3, 0, 0.3, 0] call BIS_fnc_findSafePos;
     if (_bp isEqualTo [0,0,0] || {surfaceIsWater _bp}) then { _bp = _bigTowerWorldPos getPos [6 + random 6, _i * 90]; };
@@ -542,7 +542,7 @@ _grpArtyGuard setCombatMode "RED";
 
 {
     private _vPos = getPosATL _x;
-    for "_i" from 1 to 3 do {
+    for "_i" from 1 to 5 do {
         private _p = [_vPos, 2 + random 5, random 360] call DYN_fnc_posOffset;
         private _u = _grpArtyGuard createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
         if (!isNull _u) then {
@@ -559,7 +559,7 @@ _grpHQ setBehaviour "AWARE";
 _grpHQ setCombatMode "RED";
 
 private _hqWorldPos = [1641.86, 1474.76, 0] call _fn_relToWorld;
-for "_i" from 1 to 5 do {
+for "_i" from 1 to 8 do {
     private _p = [_hqWorldPos, 2 + random 6, random 360] call DYN_fnc_posOffset;
     private _u = _grpHQ createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
@@ -575,7 +575,7 @@ _grpBarracks setBehaviour "SAFE";
 _grpBarracks setCombatMode "YELLOW";
 
 private _barracksPos = [1634.51, 1444.54, 0] call _fn_relToWorld;
-for "_i" from 1 to 5 do {
+for "_i" from 1 to 8 do {
     private _p = [_barracksPos, 3 + random 10, random 360] call DYN_fnc_posOffset;
     private _u = _grpBarracks createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
@@ -591,7 +591,7 @@ _grpGate setBehaviour "AWARE";
 _grpGate setCombatMode "RED";
 
 private _gateWorldPos = [1629.6, 1481.8, 0] call _fn_relToWorld;
-for "_i" from 1 to 3 do {
+for "_i" from 1 to 5 do {
     private _p = [_gateWorldPos, 1 + random 3, random 360] call DYN_fnc_posOffset;
     private _u = _grpGate createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
@@ -605,7 +605,7 @@ for "_i" from 1 to 3 do {
 private _grpInteriorPatrol = createGroup east;
 DYN_naval_enemyGroups pushBack _grpInteriorPatrol;
 
-for "_i" from 1 to 4 do {
+for "_i" from 1 to 6 do {
     private _baseP = [1629, 1461, 0] call _fn_relToWorld;
     private _p = [_baseP, 5 + random 10, random 360] call DYN_fnc_posOffset;
     private _u = _grpInteriorPatrol createUnit [selectRandom _infPool, _p, [], 0, "FORM"];
@@ -643,7 +643,7 @@ _grpMedic setBehaviour "AWARE";
 _grpMedic setCombatMode "RED";
 
 private _medicPos = [1610.65, 1444.48, 0] call _fn_relToWorld;
-for "_i" from 1 to 3 do {
+for "_i" from 1 to 5 do {
     private _p = [_medicPos, 2 + random 5, random 360] call DYN_fnc_posOffset;
     private _u = _grpMedic createUnit [selectRandom _infPool, _p, [], 0, "NONE"];
     if (!isNull _u) then {
@@ -746,7 +746,7 @@ for "_g" from 1 to _gazCount do {
 // =====================================================
 // 7b. FOOT PATROLS OUTSIDE COMPOUND
 // =====================================================
-for "_fp" from 1 to 2 do {
+for "_fp" from 1 to 3 do {
     private _fpGrp = createGroup east;
     DYN_naval_enemyGroups pushBack _fpGrp;
 
@@ -761,7 +761,7 @@ for "_fp" from 1 to 2 do {
         _fpSpawn = [_landPos, 35, _dirToSea + 180] call DYN_fnc_posOffset;
     };
 
-    private _fpSize = 4 + floor random 3;
+    private _fpSize = 5 + floor random 4;
     for "_i" from 1 to _fpSize do {
         private _p = [_fpSpawn, random 5, random 360] call DYN_fnc_posOffset;
         if (surfaceIsWater _p) then { _p = _fpSpawn };
