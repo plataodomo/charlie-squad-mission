@@ -409,16 +409,20 @@ private _routeMarkers = [];
 if (random 1 < 0.5 && { count _routePoints > 4 }) then {
     private _total = count _routePoints;
     for "_mi" from 0 to 4 do {
-        private _idx = round (_mi * (_total - 1) / 4);
-        if (_idx >= _total - 1) then { _idx = _total - 2 };  // need a "next" point for direction
-        private _p     = _routePoints select _idx;
-        private _pNext = _routePoints select (_idx + 1);
+        private _idx = (round (_mi * (_total - 1) / 4)) min (_total - 1);
+        private _p = _routePoints select _idx;
+        // For the final point there is no "next" — use incoming direction instead
+        private _dir = if (_idx < _total - 1) then {
+            _p getDir (_routePoints select (_idx + 1))
+        } else {
+            (_routePoints select (_idx - 1)) getDir _p
+        };
         private _mkName = format ["convoy_arrow_%1_%2", round (diag_tickTime * 1000), _mi];
         createMarker [_mkName, _p];
         _mkName setMarkerShape "ICON";
         _mkName setMarkerType  "mil_arrow";
         _mkName setMarkerColor "ColorYellow";
-        _mkName setMarkerDir   (_p getDir _pNext);
+        _mkName setMarkerDir   _dir;
         _mkName setMarkerAlpha 0.8;
         _routeMarkers pushBack _mkName;
     };
