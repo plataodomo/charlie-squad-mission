@@ -172,40 +172,49 @@ if (_hostages isEqualTo []) exitWith {
 // 4. GUARDS
 // =====================================================
 // Interior: guards per hostage building
-// 2 guards placed at the hostage's exact room position + 2-3 spread across other floors
+// 2 guards in the hostage's room (own group, SENTRY there)
+// 2-3 extra guards each in their own solo group, SENTRY at their own floor position
+// — solo groups prevent ArmA from pathing everyone down to the hostage's room
 {
     _x params ["_bldg", "_hostagePos"];
     private _allPos = [_bldg] call BIS_fnc_buildingPositions;
     if (_allPos isEqualTo []) then { continue };
 
+    // 2 guards holding the hostage's room
     private _indoorGrp = createGroup east;
     DYN_ground_enemyGroups pushBack _indoorGrp;
 
-    // 2 guards in the same room as the hostage
     for "_g" from 1 to 2 do {
         private _u = _indoorGrp createUnit [selectRandom _guardPool, _hostagePos, [], 0, "NONE"];
         _u setDir (random 360);
+        _u setUnitPos "UP";
         _u allowFleeing 0;
         [_u] call DYN_fnc_boostOpforAwareness;
         DYN_ground_enemies pushBack _u;
     };
 
-    // 2-3 additional guards spread across other positions in the building
-    private _extraCount = 2 + round (random 1);
-    for "_g" from 1 to _extraCount do {
-        private _gPos = selectRandom _allPos;
-        private _u    = _indoorGrp createUnit [selectRandom _guardPool, _gPos, [], 0, "NONE"];
-        _u setDir (random 360);
-        _u allowFleeing 0;
-        [_u] call DYN_fnc_boostOpforAwareness;
-        DYN_ground_enemies pushBack _u;
-    };
-
-    // SENTRY — hold position, engage on sight
-    private _wp = _indoorGrp addWaypoint [_hostagePos, 10];
+    private _wp = _indoorGrp addWaypoint [_hostagePos, 5];
     _wp setWaypointType "SENTRY";
     _wp setWaypointBehaviour "AWARE";
     _wp setWaypointCombatMode "RED";
+
+    // 2-3 extra guards — each in a solo group, holding their own floor position
+    private _extraCount = 2 + round (random 1);
+    for "_g" from 1 to _extraCount do {
+        private _gPos    = selectRandom _allPos;
+        private _soloGrp = createGroup east;
+        DYN_ground_enemyGroups pushBack _soloGrp;
+        private _u = _soloGrp createUnit [selectRandom _guardPool, _gPos, [], 0, "NONE"];
+        _u setDir (random 360);
+        _u setUnitPos "UP";
+        _u allowFleeing 0;
+        [_u] call DYN_fnc_boostOpforAwareness;
+        DYN_ground_enemies pushBack _u;
+        private _gwp = _soloGrp addWaypoint [_gPos, 5];
+        _gwp setWaypointType "SENTRY";
+        _gwp setWaypointBehaviour "AWARE";
+        _gwp setWaypointCombatMode "RED";
+    };
 
 } forEach _usedBldgs;
 
