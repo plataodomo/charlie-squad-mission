@@ -399,10 +399,9 @@ DYN_fnc_purchaseSupply = {
     // Deduct cost before spawning
     [_cost * -1, format ["Purchased %1", _name]] call DYN_fnc_changeReputation;
 
-    // Drop to the right side of shop_spawn (marker direction + 90 degrees)
+    // Spawn at the center of shop_spawn
     private _spawnPos  = [] call DYN_fnc_getShopSpawnPos;
-    private _rightDir  = (markerDir "shop_spawn") + 90;
-    private _dropPos   = [(_spawnPos select 0) + (sin _rightDir) * 6, (_spawnPos select 1) + (cos _rightDir) * 6, 0];
+    private _dropPos   = _spawnPos;
 
     if (_type == "spawn") then {
         // Spawn the object directly (e.g. a supply crate or fuel can players can carry)
