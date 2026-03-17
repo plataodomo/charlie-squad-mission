@@ -426,15 +426,18 @@ DYN_fnc_purchaseSupply = {
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
         };
     } else {
-        // "item" type — add directly to buyer's inventory
-        if (isNull _buyer) exitWith {
-            diag_log format ["[SHOP] Buyer not found for item delivery: %1", _class];
+        // "item" type — spawn a ground holder at the drop position
+        private _holder = createVehicle ["GroundWeaponHolder", _dropPos, [], 0, "NONE"];
+        if (isNull _holder) then {
+            [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
+            if (!isNull _buyer) then {
+                ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
+            };
+        } else {
+            for "_i" from 1 to _qty do { _holder addItemCargoGlobal [_class, 1]; };
+            [_holder] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
+            diag_log format ["[SHOP] Spawned %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
         };
-        [_class, _qty] remoteExec [{
-            params ["_c", "_q"];
-            for "_i" from 1 to _q do { player addItemToBackpack _c; };
-        }, _buyer];
-        diag_log format ["[SHOP] Gave %1 x%2 to %3 for %4 pts", _name, _qty, _buyerUID, _cost];
     };
 
     true
