@@ -131,12 +131,12 @@ publicVariable "DYN_shopVehicles";
 //   picture      — optional explicit UI icon path (used when automatic config lookup returns empty)
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_Track",        "Spare Track",    5, 1, "spawn"],
-    ["ACE_Wheel",        "Spare Wheel",    5, 1, "spawn"],
+    ["ACE_Track",        "Spare Track",    10, 1, "spawn"],
+    ["ACE_Wheel",        "Spare Wheel",    10, 1, "spawn"],
     // ===== FUEL =====
-    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "spawn"],
+    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 15, 1, "spawn"],
     // ===== PORTABLE STORAGE =====
-    ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
+    ["Box_NATO_Equip_F", "Supply Crate",   20, 1, "spawn"]
 ];
 publicVariable "DYN_shopSupplies";
 
