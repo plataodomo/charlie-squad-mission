@@ -274,7 +274,7 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
         "investigate"
     ] remoteExec ["BIS_fnc_taskCreate", 0, _resTaskId];
 
-    private _nearBuildings = nearestObjects [_lPos, ["House", "Building"], 160];
+    private _nearBuildings = nearestObjects [_lPos, ["House", "Building"], 200];
     _nearBuildings = _nearBuildings select { !isNull _x };
     _nearBuildings = _nearBuildings call BIS_fnc_arrayShuffle;
 
@@ -307,32 +307,23 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
     };
     (_patrolGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
 
-    // --- Squad 2: Interior garrison (inside buildings) ---
-    private _garrisonGrp = createGroup east;
-    _garrisonGrp setBehaviour "AWARE";
-    _garrisonGrp setCombatMode "RED";
-    _areaGroups pushBack _garrisonGrp;
+    // --- Squad 2: CQB garrison — one group per occupied building ---
+    // Mirror the main AO pattern: disableAI PATH while holding, re-enable on COMBAT.
+    private _garrisonBuildings = _nearBuildings select {
+        count ([_x] call BIS_fnc_buildingPositions) > 0
+    };
+    private _maxBuildings = 12 min (count _garrisonBuildings);
+    _garrisonBuildings = _garrisonBuildings select [0, _maxBuildings];
 
-    private _garrisonCount = 4 + floor (random 3);  // 4-6 units
-    if (!(_nearBuildings isEqualTo [])) then {
-        private _useHouses = (_garrisonCount min (count _nearBuildings)) max 1;
-        for "_h" from 0 to (_useHouses - 1) do {
-            private _bld = _nearBuildings select _h;
-            private _positions = [_bld] call BIS_fnc_buildingPositions;
-            if (_positions isEqualTo []) then { continue };
-            private _u = _garrisonGrp createUnit [selectRandom _infantryPool, selectRandom _positions, [], 0, "NONE"];
-            if (!isNull _u) then {
-                _u setUnitPos (selectRandom ["UP","MIDDLE"]);
-                _u allowFleeing 0;
-                if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
-                _areaEnemies pushBack _u;
-            };
-        };
-    } else {
-        // No buildings — spawn as additional patrol
-        for "_i" from 0 to (_garrisonCount - 1) do {
+    if (_garrisonBuildings isEqualTo []) then {
+        // No usable buildings — fall back to a small static patrol
+        private _fbGrp = createGroup east;
+        _fbGrp setBehaviour "AWARE";
+        _fbGrp setCombatMode "RED";
+        _areaGroups pushBack _fbGrp;
+        for "_i" from 0 to 3 do {
             private _p = _lPos getPos [20 + random 60, random 360];
-            private _u = _garrisonGrp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
+            private _u = _fbGrp createUnit [selectRandom _infantryPool, _p, [], 0, "FORM"];
             if (!isNull _u) then {
                 _u allowFleeing 0;
                 if (!isNil "DYN_fnc_boostOpforAwareness") then { [_u] call DYN_fnc_boostOpforAwareness; };
@@ -340,12 +331,44 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
             };
         };
         for "_w" from 1 to 4 do {
-            private _wpPos = _lPos getPos [40 + random 80, _w * 90];
-            private _wp = _garrisonGrp addWaypoint [_wpPos, 15];
-            _wp setWaypointType "MOVE";
-            _wp setWaypointSpeed "LIMITED";
+            (_fbGrp addWaypoint [_lPos getPos [40 + random 80, _w * 90], 15]) setWaypointType "MOVE";
         };
-        (_garrisonGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+        (_fbGrp addWaypoint [_lPos, 0]) setWaypointType "CYCLE";
+    } else {
+        {
+            private _bld      = _x;
+            private _positions = [_bld] call BIS_fnc_buildingPositions;
+            if (_positions isEqualTo []) then { continue };
+            _positions = _positions call BIS_fnc_arrayShuffle;
+
+            private _bGrp = createGroup east;
+            _bGrp setBehaviour "AWARE";
+            _bGrp setCombatMode "RED";
+            _areaGroups pushBack _bGrp;
+
+            // 2-3 soldiers per building
+            private _count = (2 + floor (random 2)) min (count _positions);
+            for "_u" from 0 to (_count - 1) do {
+                private _bPos = _positions select _u;
+                private _unit = _bGrp createUnit [selectRandom _infantryPool, _bPos, [], 0, "NONE"];
+                if (isNull _unit) then { continue };
+                _unit setPosATL _bPos;
+                _unit disableAI "PATH";
+                _unit setUnitPos (selectRandom ["UP", "MIDDLE"]);
+                _unit allowFleeing 0;
+                if (!isNil "DYN_fnc_boostOpforAwareness") then { [_unit] call DYN_fnc_boostOpforAwareness; };
+                _areaEnemies pushBack _unit;
+            };
+
+            // Re-enable PATH on COMBAT so units can exit and engage rather than staying frozen
+            [_bGrp] spawn {
+                params ["_g"];
+                waitUntil { sleep 2; isNull _g || { !(alive leader _g) } || { behaviour leader _g == "COMBAT" } };
+                if (!isNull _g && { alive leader _g }) then {
+                    { if (alive _x) then { _x enableAI "PATH"; }; } forEach units _g;
+                };
+            };
+        } forEach _garrisonBuildings;
     };
 
     // --- Squad 3: Second patrol covering a wider perimeter ---
