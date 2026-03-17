@@ -110,9 +110,10 @@ private _fn_spawnCompObj = {
     private _rotVecs = [_dirVec, _upVec, _rot] call _fn_rotDirUp;
     _obj setVectorDirAndUp _rotVecs;
 
-    // Snap to terrain: use 0 for decorative (sim off), 0.05 for interactive (sim on)
-    // to prevent clipping into uneven coastal terrain which causes physics explosions
-    private _snapZ = if (_simEnabled) then { 0.05 } else { 0 };
+    // Snap to terrain: lift origin slightly above terrain surface so props whose
+    // model pivot is not at the very base (logs, barrels, piles) don't sink.
+    // 0.15 for decorative (sim off), 0.05 for interactive (sim on — physics settles them).
+    private _snapZ = if (_simEnabled) then { 0.05 } else { 0.15 };
     private _posATL = getPosATL _obj;
     _obj setPosATL [_posATL select 0, _posATL select 1, _snapZ];
 
