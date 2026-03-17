@@ -131,10 +131,10 @@ publicVariable "DYN_shopVehicles";
 //   picture      — optional explicit UI icon path (used when automatic config lookup returns empty)
 DYN_shopSupplies = [
     // ===== SPARE PARTS =====
-    ["ACE_Track",        "Spare Track",    5, 1, "item",  "\A3\ui_f\data\igui\cfg\holdactions\holdaction_repairmobility_ca.paa"],
-    ["ACE_Wheel",        "Spare Wheel",    5, 1, "item",  "\A3\ui_f\data\igui\cfg\holdactions\holdaction_repairmobility_ca.paa"],
+    ["ACE_Track",        "Spare Track",    5, 1, "item"],
+    ["ACE_Wheel",        "Spare Wheel",    5, 1, "item"],
     // ===== FUEL =====
-    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "spawn", "\A3\ui_f\data\igui\cfg\holdactions\holdaction_refuel_ca.paa"],
+    ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 5, 1, "spawn"],
     // ===== PORTABLE STORAGE =====
     ["Box_NATO_Equip_F", "Supply Crate",   5, 1, "spawn"]
 ];
@@ -426,14 +426,18 @@ DYN_fnc_purchaseSupply = {
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
         };
     } else {
-        // "item" type — spawn a ground holder at the drop position
-        private _holder = createVehicle ["GroundWeaponHolder", _dropPos, [], 0, "NONE"];
+        // "item" type — spawn a small crate at the drop position and fill it
+        private _holder = createVehicle ["Box_NATO_Equip_F", _dropPos, [], 0, "NONE"];
         if (isNull _holder) then {
             [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
             if (!isNull _buyer) then {
                 ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
             };
         } else {
+            clearWeaponCargoGlobal   _holder;
+            clearMagazineCargoGlobal _holder;
+            clearItemCargoGlobal     _holder;
+            clearBackpackCargoGlobal _holder;
             for "_i" from 1 to _qty do { _holder addItemCargoGlobal [_class, 1]; };
             [_holder] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 x%2 at %3 for %4 pts", _name, _qty, _dropPos, _cost];
