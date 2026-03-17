@@ -426,29 +426,15 @@ DYN_fnc_purchaseSupply = {
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
         };
     } else {
-        // "item" type — spawn a small crate at the drop position and fill it
-        private _holder = createVehicle ["Box_NATO_Equip_F", _dropPos, [], 0, "NONE"];
-        if (isNull _holder) then {
-            [_cost, format ["Refund — %1 failed to spawn", _name]] call DYN_fnc_changeReputation;
-            if (!isNull _buyer) then {
-                ["SquadError", [format ["%1 failed to spawn — points refunded!", _name]]] remoteExec ["BIS_fnc_showNotification", _buyer];
-            };
-        } else {
-            [_holder, _class, _qty, _name, _dropPos, _cost] spawn {
-                params ["_o", "_c", "_q", "_n", "_pos", "_pts"];
-                // Wait for box default-cargo init to complete on all machines
-                // before clearing and filling, otherwise the engine overwrites our cargo
-                sleep 0.5;
-                clearWeaponCargoGlobal   _o;
-                clearMagazineCargoGlobal _o;
-                clearItemCargoGlobal     _o;
-                clearBackpackCargoGlobal _o;
-                for "_i" from 1 to _q do { _o addItemCargoGlobal [_c, 1]; };
-                diag_log format ["[SHOP] Spawned %1 x%2 at %3 for %4 pts", _n, _q, _pos, _pts];
-                sleep 599.5;
-                if (!isNull _o) then { deleteVehicle _o; };
-            };
+        // "item" type — add directly to buyer's backpack
+        if (isNull _buyer) exitWith {
+            diag_log format ["[SHOP] Buyer not found for item delivery: %1", _class];
         };
+        [_class, _qty] remoteExec [{
+            params ["_c", "_q"];
+            for "_i" from 1 to _q do { player addItemToBackpack _c; };
+        }, _buyer];
+        diag_log format ["[SHOP] Gave %1 x%2 to %3 for %4 pts", _name, _qty, _buyerUID, _cost];
     };
 
     true
