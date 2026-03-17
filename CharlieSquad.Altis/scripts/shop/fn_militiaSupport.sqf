@@ -141,7 +141,7 @@ DYN_fnc_purchaseMilitia = {
     _etaMkr setMarkerShape "ICON";
     _etaMkr setMarkerType  "b_inf";
     _etaMkr setMarkerColor "ColorWEST";
-    _etaMkr setMarkerText  format ["Militia ETA 20sec | %1", _direction];
+    _etaMkr setMarkerText  format ["Militia ETA 10 MIN | %1", _direction];
     _etaMkr setMarkerSize  [0.8, 0.8];
 
     // --- announce ---
@@ -156,11 +156,11 @@ DYN_fnc_purchaseMilitia = {
     [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier, _buyer] spawn {
         params ["_direction", "_bearing", "_aoCenter", "_aoRadius", "_etaMkr", "_vehicleClasses", "_cost", "_tier", "_buyer"];
 
-        // 10-second warning — update map marker only
-        sleep 10;
-        _etaMkr setMarkerText format ["Militia 10 SEC | %1", _direction];
+        // 1-minute warning — update map marker only
+        sleep 540;
+        _etaMkr setMarkerText format ["Militia 1 MIN | %1", _direction];
 
-        sleep 10;
+        sleep 60;
         deleteMarker _etaMkr;
 
         // =====================================================
@@ -362,4 +362,4 @@ DYN_fnc_purchaseMilitia = {
 };
 publicVariable "DYN_fnc_purchaseMilitia";
 
-diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 20 sec | units: 10)";
+diag_log "[MILITIA] Militia support system ready (ROOKIE=50pts REGULAR=90pts ELITE=150pts | delay: 10 min | units: 10)";

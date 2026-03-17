@@ -396,6 +396,6 @@ DYN_fnc_militiaDeploy = {
     };
     closeDialog 0;
     [getPlayerUID player, _direction, _tier] remoteExec ["DYN_fnc_purchaseMilitia", 2];
-    hint format ["Militia support purchased!\n%1 assaulting from %2 in 20 seconds.", _tier, _direction];
+    hint format ["Militia support purchased!\n%1 assaulting from %2 in 10 minutes.", _tier, _direction];
 };
 
