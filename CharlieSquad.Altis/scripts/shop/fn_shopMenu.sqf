@@ -63,6 +63,7 @@ _terminal addAction [
 
 DYN_shopSelectedClass = "";
 DYN_shopCurrentFilter = "Cars";
+DYN_shopSortOrder = "asc";
 
 // Get vehicle picture from config
 DYN_fnc_getVehiclePicClient = {
@@ -75,6 +76,34 @@ DYN_fnc_getVehiclePicClient = {
     _pic
 };
 
+// Sort an array of shop items (vehicles or supplies) by cost (index 2), ascending or descending.
+DYN_fnc_shopSortItems = {
+    params ["_items", "_ascending"];
+    private _keyed = _items apply { [_x select 2, _x] };
+    _keyed sort _ascending;
+    _keyed apply { _x select 1 }
+};
+
+// Toggle sort order between ascending and descending, then refresh the list.
+DYN_fnc_shopToggleSort = {
+    if (DYN_shopSortOrder == "asc") then {
+        DYN_shopSortOrder = "desc";
+    } else {
+        DYN_shopSortOrder = "asc";
+    };
+    private _display = findDisplay 9600;
+    if (!isNull _display) then {
+        private _label = if (DYN_shopSortOrder == "asc") then { "SORT ^" } else { "SORT v" };
+        (_display displayCtrl 9611) ctrlSetText _label;
+        private _searchText = toLower (ctrlText (_display displayCtrl 9601));
+        if (_searchText != "") then {
+            [] call DYN_fnc_shopSearch;
+        } else {
+            [DYN_shopCurrentFilter] call DYN_fnc_shopFilter;
+        };
+    };
+};
+
 DYN_fnc_shopFilter = {
     params ["_category"];
     DYN_shopCurrentFilter = _category;
@@ -83,13 +112,20 @@ DYN_fnc_shopFilter = {
     private _list = _display displayCtrl 9603;
     lbClear _list;
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    private _ascending = DYN_shopSortOrder != "desc";
 
     if (_category == "Supplies") then {
+        private _filtered = [];
         {
             _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
             // Only validate spawn-type entries (world objects); item/magazine types
             // are hand-curated in DYN_shopSupplies and validated server-side on purchase.
             if (_type == "spawn" && { !(isClass (configFile >> "CfgBackpacks" >> _class)) && !(isClass (configFile >> "CfgVehicles" >> _class)) }) then { continue; };
+            _filtered pushBack _x;
+        } forEach DYN_shopSupplies;
+        _filtered = [_filtered, _ascending] call DYN_fnc_shopSortItems;
+        {
+            _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
             private _idx = _list lbAdd _name;
             _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
             _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
@@ -98,32 +134,40 @@ DYN_fnc_shopFilter = {
             } else {
                 _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
             };
-        } forEach DYN_shopSupplies;
+        } forEach _filtered;
     } else {
+        private _filtered = [];
         {
             _x params ["_class", "_name", "_cost", "_cat"];
             if (!isClass (configFile >> "CfgVehicles" >> _class)) then { continue; };
             if (_category == _cat) then {
-                private _idx = _list lbAdd _name;
-                _list lbSetData [_idx, _class];
-                _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
-                if (_rep >= _cost) then {
-                    _list lbSetColor [_idx, [1, 1, 1, 1]];
-                } else {
-                    _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
-                };
+                _filtered pushBack _x;
             };
         } forEach DYN_shopVehicles;
+        _filtered = [_filtered, _ascending] call DYN_fnc_shopSortItems;
+        {
+            _x params ["_class", "_name", "_cost", "_cat"];
+            private _idx = _list lbAdd _name;
+            _list lbSetData [_idx, _class];
+            _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
+            if (_rep >= _cost) then {
+                _list lbSetColor [_idx, [1, 1, 1, 1]];
+            } else {
+                _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
+            };
+        } forEach _filtered;
     };
 };
 
 DYN_fnc_shopOnLoad = {
     DYN_shopSelectedClass = "";
     DYN_shopCurrentFilter = "Cars";
+    DYN_shopSortOrder = "asc";
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
     private _display = findDisplay 9600;
     if (!isNull _display) then {
         (_display displayCtrl 9610) ctrlSetText format ["Points: %1", _rep];
+        (_display displayCtrl 9611) ctrlSetText "SORT ^";
     };
     ["Cars"] call DYN_fnc_shopFilter;
 };
@@ -138,34 +182,49 @@ DYN_fnc_shopSearch = {
         [DYN_shopCurrentFilter] call DYN_fnc_shopFilter;
     };
     private _rep = missionNamespace getVariable ["DYN_Reputation", 0];
+    private _ascending = DYN_shopSortOrder != "desc";
+
+    private _filtered = [];
     {
         _x params ["_class", "_name", "_cost", "_cat"];
         if (!isClass (configFile >> "CfgVehicles" >> _class)) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
-            private _idx = _list lbAdd _name;
-            _list lbSetData [_idx, _class];
-            _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
-            if (_rep >= _cost) then {
-                _list lbSetColor [_idx, [1, 1, 1, 1]];
-            } else {
-                _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
-            };
+            _filtered pushBack _x;
         };
     } forEach DYN_shopVehicles;
+    _filtered = [_filtered, _ascending] call DYN_fnc_shopSortItems;
+    {
+        _x params ["_class", "_name", "_cost", "_cat"];
+        private _idx = _list lbAdd _name;
+        _list lbSetData [_idx, _class];
+        _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
+        if (_rep >= _cost) then {
+            _list lbSetColor [_idx, [1, 1, 1, 1]];
+        } else {
+            _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
+        };
+    } forEach _filtered;
+
+    private _filteredSupplies = [];
     {
         _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
         if (_type == "spawn" && { !(isClass (configFile >> "CfgBackpacks" >> _class)) && !(isClass (configFile >> "CfgVehicles" >> _class)) }) then { continue; };
         if ((toLower _name) find _searchText >= 0) then {
-            private _idx = _list lbAdd _name;
-            _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
-            _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
-            if (_rep >= _cost) then {
-                _list lbSetColor [_idx, [1, 1, 1, 1]];
-            } else {
-                _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
-            };
+            _filteredSupplies pushBack _x;
         };
     } forEach DYN_shopSupplies;
+    _filteredSupplies = [_filteredSupplies, _ascending] call DYN_fnc_shopSortItems;
+    {
+        _x params ["_class", "_name", "_cost", "_qty", ["_type", "item"]];
+        private _idx = _list lbAdd _name;
+        _list lbSetData [_idx, format ["SUPPLY:%1", _class]];
+        _list lbSetTextRight [_idx, format ["%1 pts", _cost]];
+        if (_rep >= _cost) then {
+            _list lbSetColor [_idx, [1, 1, 1, 1]];
+        } else {
+            _list lbSetColor [_idx, [0.5, 0.5, 0.5, 0.5]];
+        };
+    } forEach _filteredSupplies;
 };
 
 DYN_fnc_shopSelectVehicle = {
