@@ -674,35 +674,27 @@ private _localMarkers  = +DYN_ground_markers;
     waitUntil {
         sleep 5;
 
-        // ---- Repair pod ----
+        // ---- Track destruction (no per-asset rep, awarded all at once on completion) ----
         if (!_repairDone && (_repairPod call _isDead)) then {
             _repairDone = true;
-            [_repPerSlingload, "Enemy Repair Pod Destroyed"] call DYN_fnc_changeReputation;
-            diag_log format ["[GROUND-FOB] Repair pod destroyed. +%1 rep.", _repPerSlingload];
+            diag_log "[GROUND-FOB] Repair pod destroyed.";
         };
 
-        // ---- Ammo pod ----
         if (!_ammoDone && (_ammoPod call _isDead)) then {
             _ammoDone = true;
-            [_repPerSlingload, "Enemy Ammo Pod Destroyed"] call DYN_fnc_changeReputation;
-            diag_log format ["[GROUND-FOB] Ammo pod destroyed. +%1 rep.", _repPerSlingload];
+            diag_log "[GROUND-FOB] Ammo pod destroyed.";
         };
 
-        // ---- Fuel pod ----
         if (!_fuelDone && (_fuelPod call _isDead)) then {
             _fuelDone = true;
-            [_repPerSlingload, "Enemy Fuel Pod Destroyed"] call DYN_fnc_changeReputation;
-            diag_log format ["[GROUND-FOB] Fuel pod destroyed. +%1 rep.", _repPerSlingload];
+            diag_log "[GROUND-FOB] Fuel pod destroyed.";
         };
 
-        // ---- Ammo vehicles (all must be destroyed for the reward) ----
         if (!_ammoBoxDone) then {
             private _allGone = (_ammoBoxes findIf { !(_x call _isDead) }) isEqualTo -1;
             if (_allGone && { count _ammoBoxes > 0 }) then {
                 _ammoBoxDone = true;
-                private _boxRep = _repPerAmmoBox * count _ammoBoxes;
-                [_boxRep, "Enemy Ammo Vehicles Destroyed"] call DYN_fnc_changeReputation;
-                diag_log format ["[GROUND-FOB] All ammo vehicles destroyed. +%1 rep.", _boxRep];
+                diag_log "[GROUND-FOB] All ammo vehicles destroyed.";
             };
         };
 
@@ -716,12 +708,14 @@ private _localMarkers  = +DYN_ground_markers;
     private _allDone = _repairDone && _ammoDone && _fuelDone && _ammoBoxDone;
 
     if (_allDone) then {
+        private _totalRep = (_repPerSlingload * 3) + (_repPerAmmoBox * count _ammoBoxes);
+        [_totalRep, "FOB Destroyed"] call DYN_fnc_changeReputation;
         [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskSucceeded", [
             "FOB Hunting complete! All enemy supply assets have been destroyed.",
             "FOB Hunting"
         ]] remoteExecCall ["BIS_fnc_showNotification", 0];
-        diag_log "[GROUND-FOB] SUCCESS - all targets destroyed.";
+        diag_log format ["[GROUND-FOB] SUCCESS - all targets destroyed. +%1 rep.", _totalRep];
     } else {
         [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskFailed", [
