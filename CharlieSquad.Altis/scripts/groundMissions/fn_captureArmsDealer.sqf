@@ -705,7 +705,7 @@ private _localMarkers  = +DYN_ground_markers;
             _startTime = diag_tickTime;
             _tOut = _escortTimeout;
 
-            ["TaskSucceeded", ["Arms Dealer Captured!", format ["Target secured. Escort him to the prison facility at base. You have %1 minutes.", round (_escortTimeout / 60)]]]
+            ["TaskSucceeded", ["Arms Dealer Captured!", "Target secured. Escort him to the prison facility at base."]]
                 remoteExecCall ["BIS_fnc_showNotification", 0];
 
             diag_log "[GROUND-DEALER] Dealer captured — escort phase started, timer reset to 45 min.";
