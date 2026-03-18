@@ -388,7 +388,7 @@ class DYN_ShopDialog
             idc = 9601;
             type = 2;
             style = 0;
-            x = 0.065; y = 0.185; w = 0.33; h = 0.038;
+            x = 0.065; y = 0.185; w = 0.24; h = 0.038;
             colorBackground[] = {0.18, 0.18, 0.18, 1};
             colorSelection[] = {0.3, 0.5, 0.3, 1};
             colorText[] = {1, 1, 1, 1};
@@ -404,7 +404,7 @@ class DYN_ShopDialog
             idc = -1;
             type = 1;
             style = 2;
-            x = 0.40; y = 0.185; w = 0.09; h = 0.038;
+            x = 0.31; y = 0.185; w = 0.075; h = 0.038;
             colorBackground[] = {0.20, 0.20, 0.20, 1};
             colorBackgroundActive[] = {0.32, 0.32, 0.32, 1};
             colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
@@ -424,6 +424,32 @@ class DYN_ShopDialog
             soundPush[] = {"", 0.1, 1};
             soundEscape[] = {"", 0.1, 1};
             action = "[] call DYN_fnc_shopSearch;";
+        };
+        class SortBtn
+        {
+            idc = 9611;
+            type = 1;
+            style = 2;
+            x = 0.39; y = 0.185; w = 0.10; h = 0.038;
+            colorBackground[] = {0.20, 0.20, 0.20, 1};
+            colorBackgroundActive[] = {0.32, 0.32, 0.32, 1};
+            colorBackgroundDisabled[] = {0.12, 0.12, 0.12, 1};
+            colorText[] = {0.78, 0.78, 0.78, 1};
+            colorFocused[] = {0.20, 0.20, 0.20, 1};
+            colorBorder[] = {0, 0, 0, 0};
+            colorDisabled[] = {0.35, 0.35, 0.35, 1};
+            colorShadow[] = {0, 0, 0, 0};
+            text = "SORT ^";
+            font = "RobotoCondensed";
+            sizeEx = 0.026;
+            offsetX = 0; offsetY = 0;
+            offsetPressedX = 0.001; offsetPressedY = 0.001;
+            borderSize = 0;
+            soundClick[] = {"\A3\ui_f\data\sound\RscButton\soundClick", 0.09, 1};
+            soundEnter[] = {"", 0.1, 1};
+            soundPush[] = {"", 0.1, 1};
+            soundEscape[] = {"", 0.1, 1};
+            action = "[] call DYN_fnc_shopToggleSort;";
         };
         class CatCars
         {
