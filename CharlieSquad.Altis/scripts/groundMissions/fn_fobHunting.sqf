@@ -21,7 +21,8 @@ diag_log "[GROUND-FOB] Setting up FOB Hunting mission...";
 // =====================================================
 // 1. SETTINGS
 // =====================================================
-private _fobCenter    = [7395, 6412, 0];   // Centre of the FOB compound
+private _hardcodedCenter = [7395, 6412, 0];  // Centre of the FOB composition (may be in water)
+private _fobCenter       = _hardcodedCenter; // Updated to a valid land position below
 private _searchRadius = 200;               // Radius for target object search
 private _timeout      = 7200;             // 2 hours
 private _cleanupDelay = 120;              // Seconds before entity despawn after mission end
@@ -432,6 +433,46 @@ private _logics = [];
 private _logicIDs = [];
 ////////////////////////////////////////////////////////////////////////////////////////////
 // ---- end inlined FOB building composition ----
+
+// =====================================================
+// DYNAMIC POSITIONING — relocate FOB to valid land
+// =====================================================
+private _basePos  = getMarkerPos "respawn_west";
+private _aoCenter = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
+
+for "_attempt" from 1 to 150 do {
+    private _testPos = [_basePos, 2500 + random 10000, random 360] call DYN_fnc_posOffset;
+
+    if (surfaceIsWater _testPos) then { continue };
+    if (getTerrainHeightASL _testPos < 1) then { continue };
+    if !(_aoCenter isEqualTo [0,0,0]) then {
+        if (_testPos distance2D _aoCenter < 1000) then { continue };
+    };
+
+    // Basic flatness check — reject steep slopes
+    private _heights = [0, 90, 180, 270] apply {
+        getTerrainHeightASL ([_testPos, 60, _x] call DYN_fnc_posOffset)
+    };
+    if ((selectMax _heights) - (selectMin _heights) > 10) then { continue };
+
+    _fobCenter = _testPos;
+    break;
+};
+
+if (surfaceIsWater _fobCenter) exitWith {
+    diag_log "[GROUND-FOB] ERROR: No valid land position found. Aborting.";
+    { if (!isNull _x) then { deleteVehicle _x } } forEach _objects;
+    DYN_ground_active = false;
+};
+
+// Shift every building object from its hardcoded position to the chosen land centre
+private _delta = [
+    (_fobCenter select 0) - (_hardcodedCenter select 0),
+    (_fobCenter select 1) - (_hardcodedCenter select 1),
+    0
+];
+{ if (!isNull _x) then { _x setPos (getPos _x vectorAdd _delta) } } forEach _objects;
+diag_log format ["[GROUND-FOB] FOB relocated to %1", _fobCenter];
 
 // Allow object initialisation to settle
 sleep 2;
