@@ -848,6 +848,23 @@ _fobBuildingComposition = {
 // ---- end inlined FOB building composition ----
 
 // =====================================================
+// SPAWN FOB OBJECTS AT HARDCODED CENTER
+// (will be shifted to valid land position below)
+// =====================================================
+private _fobBuildingTarget = [_hardcodedCenter, [0, 0, 0]] call _fobBuildingComposition;
+
+// Create target supply assets inside the FOB perimeter
+private _spawnRep  = createVehicle ["B_Slingload_01_Repair_F", [_hardcodedCenter#0 - 15, _hardcodedCenter#1 + 10, 0], [], 0, "NONE"];
+private _spawnAmmo = createVehicle ["B_Slingload_01_Ammo_F",   [_hardcodedCenter#0,       _hardcodedCenter#1 + 10, 0], [], 0, "NONE"];
+private _spawnFuel = createVehicle ["B_Slingload_01_Fuel_F",   [_hardcodedCenter#0 + 15,  _hardcodedCenter#1 + 10, 0], [], 0, "NONE"];
+private _spawnBox1 = createVehicle ["Box_EAF_AmmoVeh_F",       [_hardcodedCenter#0 - 10,  _hardcodedCenter#1 - 25, 0], [], 0, "NONE"];
+private _spawnBox2 = createVehicle ["Box_EAF_AmmoVeh_F",       [_hardcodedCenter#0 + 10,  _hardcodedCenter#1 - 25, 0], [], 0, "NONE"];
+{ DYN_ground_objects pushBack _x } forEach [_spawnRep, _spawnAmmo, _spawnFuel, _spawnBox1, _spawnBox2];
+
+// Snapshot all created objects for relocation and cleanup
+private _objects = +DYN_ground_objects;
+
+// =====================================================
 // DYNAMIC POSITIONING — relocate FOB to valid land
 // =====================================================
 private _basePos  = getMarkerPos "respawn_west";
