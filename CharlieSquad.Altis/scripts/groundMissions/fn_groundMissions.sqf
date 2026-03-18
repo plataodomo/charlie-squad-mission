@@ -155,7 +155,8 @@ while {true} do {
         "scripts\groundMissions\fn_captureArmsDealer.sqf",
         "scripts\groundMissions\fn_civilianTruckRepair.sqf",
         "scripts\groundMissions\fn_supplyDelivery.sqf",
-        "scripts\groundMissions\fn_hostageRescue.sqf"
+        "scripts\groundMissions\fn_hostageRescue.sqf",
+        "scripts\groundMissions\fn_fobHunting.sqf"
     ];
 
     private _pick = selectRandom _missions;
