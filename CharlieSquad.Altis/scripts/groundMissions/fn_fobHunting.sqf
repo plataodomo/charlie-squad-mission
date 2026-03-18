@@ -486,7 +486,7 @@ private _spawnZones = [
     [45, 160],   // South courtyard
     [45, 250],   // West inner wall
     [20,  40],   // Deep interior NE (near slingloads)
-    [25, 220],   // Deep interior SW (near ammo boxes)
+    [25, 220]    // Deep interior SW (near ammo boxes)
 ];
 
 private _infantryTypes = [
@@ -540,7 +540,7 @@ private _infantryTypes = [
 // Two static MG posts near the FOB perimeter walls
 private _mgPosts = [
     [60,  15],
-    [65, 195],
+    [65, 195]
 ];
 
 {
