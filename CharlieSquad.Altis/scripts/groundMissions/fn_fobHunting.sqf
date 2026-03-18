@@ -622,7 +622,7 @@ DYN_ground_markers pushBack _mkr;
     west,
     _taskId,
     [
-        "Intelligence has confirmed an active enemy Forward Operating Base. The FOB is heavily garrisoned and holds critical supply assets that are sustaining enemy operations in the region.<br/><br/><t color='#FF4444'>OBJECTIVES - destroy all of the following:</t><br/><br/>- Repair Pod (B_Slingload_01_Repair_F)<br/>- Ammunition Pod (B_Slingload_01_Ammo_F)<br/>- Fuel Pod (B_Slingload_01_Fuel_F)<br/>- Ammunition Vehicles (Box_EAF_AmmoVeh_F)<br/><br/>Expect a heavily armed garrison. All supply assets must be eliminated to complete the mission.",
+        "Intelligence confirms an active enemy Forward Operating Base. The FOB is heavily garrisoned and houses critical supply assets that sustain enemy operations in the region.<br/><br/>Destroy the following:<br/><br/>- Repair Pod<br/>- Ammunition Pod<br/>- Fuel Pod<br/>- Ammunition Vehicles<br/><br/>Expect a heavily armed garrison. All supply assets must be eliminated.",
         "FOB Hunting",
         ""
     ],
