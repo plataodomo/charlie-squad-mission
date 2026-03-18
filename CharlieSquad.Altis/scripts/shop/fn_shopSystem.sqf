@@ -136,7 +136,8 @@ DYN_shopSupplies = [
     // ===== FUEL =====
     ["rhsusf_props_ScepterMFC_OD", "Fuel Can", 15, 1, "spawn"],
     // ===== PORTABLE STORAGE =====
-    ["Box_NATO_Equip_F", "Supply Crate",   20, 1, "spawn"]
+    ["Box_NATO_Ammo_F",  "Small Supply Crate", 15, 1, "spawn"],
+    ["ACE_Box_Ammo",     "Supply Crate",        20, 1, "spawn"]
 ];
 publicVariable "DYN_shopSupplies";
 
