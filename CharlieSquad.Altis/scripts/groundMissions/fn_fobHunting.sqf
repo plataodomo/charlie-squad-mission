@@ -79,7 +79,7 @@ if (isNull _repairPod || isNull _ammoPod || isNull _fuelPod || count _ammoBoxes 
 };
 
 diag_log format [
-    "[GROUND-FOB] Targets confirmed — Repair: %1  Ammo: %2  Fuel: %3  AmmoBoxes: %4",
+    "[GROUND-FOB] Targets confirmed - Repair: %1  Ammo: %2  Fuel: %3  AmmoBoxes: %4",
     !isNull _repairPod, !isNull _ammoPod, !isNull _fuelPod, count _ammoBoxes
 ];
 
@@ -88,7 +88,7 @@ diag_log format [
 // =====================================================
 // Six infantry groups spread around the compound interior and perimeter
 private _spawnZones = [
-    [30,  10],   // Near gate — north approach
+    [30,  10],   // Near gate - north approach
     [45,  80],   // East inner wall
     [45, 160],   // South courtyard
     [45, 250],   // West inner wall
@@ -108,7 +108,7 @@ private _infantryTypes = [
     private _dist = _x select 0;
     private _dir  = _x select 1;
     private _spawnPos = [_fobCenter, _dist, _dir] call DYN_fnc_posOffset;
-    private _grpSize  = 4 + floor random 5;  // 4–8 per group
+    private _grpSize  = 4 + floor random 5;  // 4-8 per group
     private _grp = createGroup east;
 
     for "_i" from 1 to _grpSize do {
@@ -171,7 +171,7 @@ private _mgPosts = [
     };
 } forEach _mgPosts;
 
-// Outer roving patrol — 1 group circling outside the walls
+// Outer roving patrol - 1 group circling outside the walls
 private _outerPatrolGrp = createGroup east;
 private _outerPatrolSize = 4 + floor random 3;
 
@@ -229,7 +229,7 @@ DYN_ground_markers pushBack _mkr;
     west,
     _taskId,
     [
-        "Intelligence has confirmed an active enemy Forward Operating Base. The FOB is heavily garrisoned and holds critical supply assets that are sustaining enemy operations in the region.<br/><br/><t color='#FF4444'>OBJECTIVES — destroy all of the following:</t><br/><br/>- Repair Pod (B_Slingload_01_Repair_F)<br/>- Ammunition Pod (B_Slingload_01_Ammo_F)<br/>- Fuel Pod (B_Slingload_01_Fuel_F)<br/>- Ammunition Vehicles (Box_EAF_AmmoVeh_F)<br/><br/>Expect a heavily armed garrison. All supply assets must be eliminated to complete the mission.",
+        "Intelligence has confirmed an active enemy Forward Operating Base. The FOB is heavily garrisoned and holds critical supply assets that are sustaining enemy operations in the region.<br/><br/><t color='#FF4444'>OBJECTIVES - destroy all of the following:</t><br/><br/>- Repair Pod (B_Slingload_01_Repair_F)<br/>- Ammunition Pod (B_Slingload_01_Ammo_F)<br/>- Fuel Pod (B_Slingload_01_Fuel_F)<br/>- Ammunition Vehicles (Box_EAF_AmmoVeh_F)<br/><br/>Expect a heavily armed garrison. All supply assets must be eliminated to complete the mission.",
         "FOB Hunting",
         ""
     ],
@@ -271,7 +271,7 @@ private _localMarkers  = +DYN_ground_markers;
     private _fuelDone    = false;
     private _ammoBoxDone = false;
 
-    // Helper — vehicle considered destroyed at 90 % damage or when no longer alive
+    // Helper - vehicle considered destroyed at 90 % damage or when no longer alive
     private _isDead = { (damage _this >= 0.9) || { !alive _this } || { isNull _this } };
 
     waitUntil {
@@ -324,14 +324,14 @@ private _localMarkers  = +DYN_ground_markers;
             "FOB Hunting complete! All enemy supply assets have been destroyed.",
             "FOB Hunting"
         ]] remoteExecCall ["BIS_fnc_showNotification", 0];
-        diag_log "[GROUND-FOB] SUCCESS — all targets destroyed.";
+        diag_log "[GROUND-FOB] SUCCESS - all targets destroyed.";
     } else {
         [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskFailed", [
             "FOB Hunting Failed",
             "Not all supply assets were destroyed before the deadline."
         ]] remoteExecCall ["BIS_fnc_showNotification", 0];
-        diag_log "[GROUND-FOB] TIMED OUT — mission failed.";
+        diag_log "[GROUND-FOB] TIMED OUT - mission failed.";
     };
 
     { deleteMarker _x } forEach _localMarkers;
