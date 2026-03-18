@@ -11,6 +11,7 @@
     Capture him alive using ACE restraints and deliver to prison at base.
 
     Fail conditions: Arms dealer killed, escapes, or 2-hour timer expires.
+    Capturing the arms dealer alive resets the timer to a 45-minute escort window.
     Success: Arms dealer captured and delivered to prison_dropoff.
 
     Uses existing systems:
@@ -37,7 +38,8 @@ private _aoCenter = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
 // =====================================================
 // 1. SETTINGS
 // =====================================================
-private _timeout       = 7200;    // 2 hours
+private _timeout       = 7200;    // 2 hours to locate and capture the dealer
+private _escortTimeout = 2700;    // 45 minutes to escort him back to base after capture
 private _repReward     = 15 + floor (random 11); // 15-25 rep
 private _cleanupDelay  = 120;     // 2 minutes before entities are deleted
 private _zoneRadius    = 200;     // Operation zone size
@@ -679,34 +681,48 @@ private _localObjects  = +DYN_ground_objects;
 private _localMarkers  = +DYN_ground_markers;
 
 [
-    _taskId, _timeout, _repReward, _cleanupDelay,
+    _taskId, _timeout, _escortTimeout, _repReward, _cleanupDelay,
     _dealer, _escapeVeh, _escapePos, _escapeIsHeli,
     _localEnemies, _localGroups, _localVehs, _localObjects, _localMarkers
 ] spawn {
     params [
-        "_tid", "_tOut", "_rep", "_despawnDelay",
+        "_tid", "_tOut", "_escortTimeout", "_rep", "_despawnDelay",
         "_dealer", "_escVeh", "_escPos", "_isHeli",
         "_localEnemies", "_localGroups", "_localVehs", "_localObjects", "_localMarkers"
     ];
 
     private _startTime = diag_tickTime;
     private _escapeDistThreshold = if (_isHeli) then { 2500 } else { 500 };
+    private _captured = false;
 
     waitUntil {
         sleep 5;
+
+        // When the dealer is first captured (ACE handcuffed), reset the timer
+        // to an escort window so players have time to bring him back to base.
+        if (!_captured && {_dealer getVariable ["DYN_dealerCaptured", false]}) then {
+            _captured = true;
+            _startTime = diag_tickTime;
+            _tOut = _escortTimeout;
+
+            ["TaskSucceeded", ["Arms Dealer Captured!", "Target secured. Escort him to the prison facility at base."]]
+                remoteExecCall ["BIS_fnc_showNotification", 0];
+
+            diag_log "[GROUND-DEALER] Dealer captured — escort phase started, timer reset to 45 min.";
+        };
 
         // Success: Dealer captured and delivered to prison
         _dealer getVariable ["DYN_prisonDelivered", false]
         // Fail: Dealer killed
         || {!alive _dealer}
-        // Fail: Dealer reached escape destination
-        || {alive _dealer && (_dealer distance2D _escPos) < _escapeDistThreshold}
+        // Fail: Dealer reached escape destination (only relevant before capture)
+        || {!_captured && alive _dealer && (_dealer distance2D _escPos) < _escapeDistThreshold}
         // Fail: Timeout
         || {(diag_tickTime - _startTime) > _tOut}
     };
 
     private _delivered = _dealer getVariable ["DYN_prisonDelivered", false];
-    private _escaped   = alive _dealer && (_dealer distance2D _escPos) < _escapeDistThreshold;
+    private _escaped   = !_captured && alive _dealer && (_dealer distance2D _escPos) < _escapeDistThreshold;
     private _dead      = !alive _dealer;
     private _timedOut  = (diag_tickTime - _startTime) > _tOut;
 
