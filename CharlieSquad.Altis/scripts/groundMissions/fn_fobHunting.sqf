@@ -43,7 +43,6 @@ private _layer136 = (_allWhitelisted || {"fob_10" in _layerWhiteList}) && {!("fo
 private _layer135 = (_allWhitelisted || {"fob_9" in _layerWhiteList}) && {!("fob_9" in _layerBlackList)};
 private _layer134 = (_allWhitelisted || {"fob_8" in _layerWhiteList}) && {!("fob_8" in _layerBlackList)};
 private _layer133 = (_allWhitelisted || {"fob_7" in _layerWhiteList}) && {!("fob_7" in _layerBlackList)};
-private _layer3 = (_allWhitelisted || {"walled fob v2" in _layerWhiteList}) && {!("walled fob v2" in _layerBlackList)};
 private _layer6 = (_allWhitelisted || {"fob_5" in _layerWhiteList}) && {!("fob_5" in _layerBlackList)};
 private _layer5 = (_allWhitelisted || {"fob_4" in _layerWhiteList}) && {!("fob_4" in _layerBlackList)};
 private _layer802 = (_allWhitelisted || {"walled fob v2" in _layerWhiteList}) && {!("walled fob v2" in _layerBlackList)};
@@ -432,9 +431,6 @@ private _waypointIDs = [];
 private _logics = [];
 private _logicIDs = [];
 ////////////////////////////////////////////////////////////////////////////////////////////
-// Layers
-if (_layer6) then {missionNamespace setVariable ["FOB_Hunting_targets",[[_item297,_item298,_item299],[]]];}; 
-if (_layerRoot) then {missionNamespace setVariable ["FOB_Hunting_ammoveh",[[_item813,_item815],[]]];};
 // ---- end inlined FOB building composition ----
 
 // Allow object initialisation to settle
