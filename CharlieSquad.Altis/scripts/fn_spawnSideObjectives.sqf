@@ -576,10 +576,10 @@ for "_i" from 1 to _cacheCount do {
         "destroy"
     ] remoteExec ["BIS_fnc_taskCreate", 0, _taskId];
 
-    private _crateW = createVehicle ["Box_FIA_Wps_F", _bldPos, [], 0, "CAN_COLLIDE"];
+    private _crateW = createVehicle ["Box_NATO_Wps_F", _bldPos, [], 0, "CAN_COLLIDE"];
     private _ammoPos = _bldPos getPos [1.5 + random 1.5, random 360];
     _ammoPos set [2, _bldPos select 2];
-    private _crateA = createVehicle ["Box_FIA_Ammo_F", _ammoPos, [], 0, "CAN_COLLIDE"];
+    private _crateA = createVehicle ["Box_NATO_Ammo_F", _ammoPos, [], 0, "CAN_COLLIDE"];
 
     DYN_AO_objects pushBack _crateW;
     DYN_AO_objects pushBack _crateA;
