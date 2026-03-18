@@ -360,10 +360,12 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
                 _areaEnemies pushBack _unit;
             };
 
-            // Re-enable PATH on COMBAT so units can exit and engage rather than staying frozen
+            // Re-enable PATH on COMBAT so units can exit and engage rather than staying frozen.
+            // Also release after 4 minutes so they don't stay hidden forever if combat never reaches them.
             [_bGrp] spawn {
                 params ["_g"];
-                waitUntil { sleep 2; isNull _g || { !(alive leader _g) } || { behaviour leader _g == "COMBAT" } };
+                private _holdStart = diag_tickTime;
+                waitUntil { sleep 2; isNull _g || { !(alive leader _g) } || { behaviour leader _g == "COMBAT" } || { (diag_tickTime - _holdStart) > 240 } };
                 if (!isNull _g && { alive leader _g }) then {
                     { if (alive _x) then { _x enableAI "PATH"; }; } forEach units _g;
                 };
@@ -497,17 +499,20 @@ diag_log format ["[RESISTANCE] Spawning %1 resistance area(s) around AO", _areaC
 
     [_lap] remoteExec ["DYN_fnc_addResIntelAction", 0, true];
 
-    // --- Complete task when 80% of area enemies are eliminated ---
-    // OR despawn cleanly when main AO ends
+    // --- Complete task when 90% of area enemies are eliminated ---
+    // OR despawn cleanly when main AO ends.
+    // Threshold allows for 1-2 garrison units stuck inside buildings with no LoS.
     [_mName, _resTaskId, _areaEnemies, _areaGroups, _lName] spawn {
         params ["_marker", "_taskId", "_enemies", "_groups", "_name"];
+        private _totalEnemies = count _enemies;
+        private _clearThreshold = floor (_totalEnemies * 0.1) max 1;
         waitUntil {
             sleep 5;
             private _alive = { !isNull _x && alive _x } count _enemies;
-            _alive == 0 || {!(missionNamespace getVariable ["DYN_AO_active", false])}
+            _alive <= _clearThreshold || {!(missionNamespace getVariable ["DYN_AO_active", false])}
         };
         private _alive = { !isNull _x && alive _x } count _enemies;
-        if (_alive == 0) then {
+        if (_alive <= _clearThreshold) then {
             [_taskId, "SUCCEEDED", true] remoteExec ["BIS_fnc_taskSetState", 0, _taskId];
             private _clearRep = 3 + floor (random 3);   // 3-5 pts
             if (!isNil "DYN_fnc_changeReputation") then {
