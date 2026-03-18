@@ -146,7 +146,7 @@ for "_i" from 1 to _boatCount do {
         if (alive _b) then {
             _b setVelocity [0, 0, 0];
             _b engineOn false;
-            { _g deleteWaypoint _x } forEach (waypoints _g);
+            { deleteWaypoint _x } forEach (waypoints _g);
         };
     };
 };
