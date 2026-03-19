@@ -1001,7 +1001,7 @@ private _infantryTypes = [
 
         // Local patrol around spawn zone
         private _wp = _grp addWaypoint [_spawnPos, 35];
-        _wp setWaypointType "PATROL";
+        _wp setWaypointType "LOITER";
         _wp setWaypointLoiterRadius 35;
 
         DYN_ground_enemyGroups pushBack _grp;
@@ -1059,7 +1059,7 @@ if (units _outerPatrolGrp isEqualTo []) then {
     _outerPatrolGrp setSpeedMode "NORMAL";
 
     private _wp = _outerPatrolGrp addWaypoint [_fobCenter, 90];
-    _wp setWaypointType "PATROL";
+    _wp setWaypointType "LOITER";
     _wp setWaypointLoiterRadius 90;
 
     DYN_ground_enemyGroups pushBack _outerPatrolGrp;
