@@ -74,6 +74,8 @@ DYN_shopVehicles = [
     ["CUP_B_AAV_USMC", "AAV-7 Amtrac", 22, "Armor"],
     ["CUP_B_M1126_ICV_M2_US_Army", "Stryker ICV M2", 20, "Armor"],
     ["CUP_B_M1126_ICV_MK19_US_Army", "Stryker ICV MK19", 22, "Armor"],
+    ["CUP_B_M1126_ICV_M2_Desert", "Stryker ICV M2 (Desert)", 20, "Armor"],
+    ["CUP_B_M1126_ICV_MK19_Desert", "Stryker ICV MK19 (Desert)", 22, "Armor"],
     ["CUP_B_M1128_MGS_US_Army", "Stryker MGS", 30, "Armor"],
     ["CUP_B_M1135_ATGMV_US_Army", "Stryker ATGM", 28, "Armor"],
     ["CUP_B_M2Bradley_USA_W", "M2A2 Bradley", 35, "Armor"],
