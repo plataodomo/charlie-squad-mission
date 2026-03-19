@@ -4,11 +4,11 @@
 
     Players are tasked with infiltrating a heavily defended enemy FOB and
     destroying all four supply asset types:
-        - B_Slingload_01_Repair_F   (+8 rep)
-        - B_Slingload_01_Ammo_F     (+8 rep)
-        - B_Slingload_01_Fuel_F     (+8 rep)
-        - Box_EAF_AmmoVeh_F x2      (+5 rep each = +10 rep)
-    Total possible: 34 reputation
+        - B_Slingload_01_Repair_F   (+5 rep)
+        - B_Slingload_01_Ammo_F     (+5 rep)
+        - B_Slingload_01_Fuel_F     (+5 rep)
+        - Box_EAF_AmmoVeh_F x2      (+3 rep each = +6 rep)
+    Total possible: 21 reputation
 
     The FOB is located at a fixed position on the map. A garrison of OPFOR
     infantry defends the compound. All assets must be destroyed within the
@@ -27,9 +27,9 @@ private _searchRadius = 200;               // Radius for target object search
 private _timeout      = 7200;             // 2 hours
 private _cleanupDelay = 120;              // Seconds before entity despawn after mission end
 
-// Reputation per destroyed asset (total 34 if all destroyed)
-private _repPerSlingload = 8;   // x3 = 24
-private _repPerAmmoBox   = 5;   // x2 = 10
+// Reputation per destroyed asset (total 21 if all destroyed)
+private _repPerSlingload = 5;   // x3 = 15
+private _repPerAmmoBox   = 3;   // x2 = 6
 
 // =====================================================
 // 2. SPAWN THE FOB BUILDING
