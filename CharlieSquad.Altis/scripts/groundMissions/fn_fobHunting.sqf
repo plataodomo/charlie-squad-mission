@@ -21,7 +21,7 @@ diag_log "[GROUND-FOB] Setting up FOB Hunting mission...";
 // =====================================================
 // 1. SETTINGS
 // =====================================================
-private _hardcodedCenter = [7395, 6412, 0];  // Centre of the FOB composition (may be in water)
+private _hardcodedCenter = [207396, 6411, 0];  // Centre of the FOB composition (editor export origin)
 private _fobCenter       = _hardcodedCenter; // Updated to a valid land position below
 private _searchRadius = 200;               // Radius for target object search
 private _timeout      = 7200;             // 2 hours
@@ -36,40 +36,25 @@ private _repPerAmmoBox   = 5;   // x2 = 10
 // =====================================================
 diag_log "[GROUND-FOB] Creating FOB building objects...";
 // ---- inlined FOB building composition ----
-private _layerWhiteList = [];
-private _layerBlacklist = [];
-private _allWhitelisted = _layerWhiteList isEqualTo [];
-private _layerRoot = (_allWhitelisted || {true in _layerWhiteList}) && {!(true in _layerBlackList)};
-private _layer136 = (_allWhitelisted || {"fob_10" in _layerWhiteList}) && {!("fob_10" in _layerBlackList)};
-private _layer135 = (_allWhitelisted || {"fob_9" in _layerWhiteList}) && {!("fob_9" in _layerBlackList)};
-private _layer134 = (_allWhitelisted || {"fob_8" in _layerWhiteList}) && {!("fob_8" in _layerBlackList)};
-private _layer133 = (_allWhitelisted || {"fob_7" in _layerWhiteList}) && {!("fob_7" in _layerBlackList)};
-private _layer6 = (_allWhitelisted || {"fob_5" in _layerWhiteList}) && {!("fob_5" in _layerBlackList)};
-private _layer5 = (_allWhitelisted || {"fob_4" in _layerWhiteList}) && {!("fob_4" in _layerBlackList)};
-private _layer802 = (_allWhitelisted || {"walled fob v2" in _layerWhiteList}) && {!("walled fob v2" in _layerBlackList)};
-
 // =====================================================
-// FOB BUILDING COMPOSITION (inlined)
-// Exported from editor, offset applied at spawn time
+// FOB BUILDING COMPOSITION (editor export, Altis ~207396,6411)
+// All positions are offsets from _hardcodedCenter.
 // =====================================================
 _fobBuildingComposition = {
     params ["_fobCenter", "_delta"];
     private _dx = _delta select 0;
     private _dy = _delta select 1;
 
-    private _layerWhiteList = [];
-    private _layerBlacklist = [];
-
-    // item 8
-    private _obj = createVehicle ["Land_BagFence_Round_F", [_fobCenter select 0, _fobCenter select 1, 0], [], 0, "NONE"];
-    _obj setDir -16.094;
-    _obj setPos [(_fobCenter select 0) + _dx + 0.0, (_fobCenter select 1) + _dy + 0.0, 0.0];
+    // item 1
+    private _obj = createVehicle ["HBarrier_Big_F", [_fobCenter select 0, _fobCenter select 1, 0], [], 0, "NONE"];
+    _obj setDir 155.599;
+    _obj setPos [(_fobCenter select 0) + _dx + 53.625, (_fobCenter select 1) + _dy - 20.61, 0];
     DYN_ground_objects pushBack _obj;
 
-    // item 9
-    _obj = createVehicle ["Land_BagFence_Round_F", [_fobCenter select 0, _fobCenter select 1, 0], [], 0, "NONE"];
-    _obj setDir 163.9;
-    _obj setPos [(_fobCenter select 0) + _dx + 12.0, (_fobCenter select 1) + _dy + 0.0, 0.0];
+    // item 2
+    _obj = createVehicle ["HBarrier_Big_F", [_fobCenter select 0, _fobCenter select 1, 0], [], 0, "NONE"];
+    _obj setDir 246.409;
+    _obj setPos [(_fobCenter select 0) + _dx + 54.5, (_fobCenter select 1) + _dy - 14.311, 0];
     DYN_ground_objects pushBack _obj;
 
     // item 10
