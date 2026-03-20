@@ -80,7 +80,6 @@ private _fn_ejectDead = {
     {
         private _dead = !alive _x;
         if (!_dead) then {
-            if (_x getVariable ["ACE_isUnconscious",false]) then {_dead=true};
             if (_x getVariable ["ace_medical_iDead",false]) then {_dead=true};
             if (_x getVariable ["ace_medical_status_isDead",false]) then {_dead=true};
         };
@@ -1029,7 +1028,7 @@ _zsuGrp setBehaviour "SAFE"; _zsuGrp setCombatMode "RED"; _zsuGrp setSpeedMode "
         private _enemies = +DYN_ground_enemies;
         { private _unit = _x; if (isNull _unit) then {continue};
             private _isDead = !alive _unit;
-            if (!_isDead) then { if (_unit getVariable ["ACE_isUnconscious",false]) then {_isDead=true};
+            if (!_isDead) then {
                 if (_unit getVariable ["ace_medical_iDead",false]) then {_isDead=true};
                 if (_unit getVariable ["ace_medical_status_isDead",false]) then {_isDead=true} };
             if (_isDead) then { private _tracked = false;
