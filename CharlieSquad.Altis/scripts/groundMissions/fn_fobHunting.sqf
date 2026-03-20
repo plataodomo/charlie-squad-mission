@@ -744,9 +744,12 @@ private _objects = +DYN_ground_objects;
 //  may be in the ocean on Altis)
 { if (!isNull _x) then { _x hideObjectGlobal true } } forEach _objects;
 
-// Track buildings where garrison will spawn
+// Track buildings where garrison will spawn (towers, cargo buildings, open tents)
 private _spawnBuildings = _objects select {
-    typeOf _x in ["Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F"]
+    typeOf _x in [
+        "Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F",
+        "Land_MedicalTent_01_NATO_generic_open_F"
+    ]
 };
 
 // =====================================================
@@ -817,6 +820,19 @@ sleep 2;
 // Re-enable damage on target objects now that relocation is done
 { if (!isNull _x && {typeOf _x in _targetTypes}) then { _x allowDamage true } } forEach _objects;
 
+// Heal targets to full HP after 10 s — relocation/terrain settling can cause
+// phantom damage (~11 %) which risks accidental destruction during the mission.
+private _healTargets = _objects select { !isNull _x && {typeOf _x in _targetTypes} };
+_healTargets spawn {
+    sleep 10;
+    {
+        if (!isNull _x) then {
+            _x setDamage [0, true];  // true = global (all clients)
+            diag_log format ["[GROUND-FOB] Healed %1 to full HP after spawn settle.", typeOf _x];
+        };
+    } forEach _this;
+};
+
 // Disable damage on military walls so they can't be destroyed
 private _wallTypes = ["Land_Mil_WallBig_4m_F", "Land_Mil_WallBig_Corner_F", "Land_HBarrierWall_corridor_F"];
 { if (!isNull _x && {typeOf _x in _wallTypes}) then { _x allowDamage false } } forEach _objects;
@@ -831,7 +847,8 @@ diag_log format ["[GROUND-FOB] Building SQF created %1 objects.", count _fobObje
 private _simKeepTypes = [
     "B_Slingload_01_Repair_F", "B_Slingload_01_Ammo_F", "B_Slingload_01_Fuel_F",
     "Box_EAF_AmmoVeh_F",
-    "Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F"
+    "Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F",
+    "Land_MedicalTent_01_NATO_generic_open_F"
 ];
 {
     if (!isNull _x && {!(typeOf _x in _simKeepTypes)}) then {
@@ -899,8 +916,12 @@ private _garrisonUnits = [];
     private _bldgPos = getPosATL _bldg;
     private _bldgType = typeOf _bldg;
 
-    // Towers get 3 units, cargo houses get 5-6
-    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 3 } else { 5 + floor random 2 };
+    // Towers get 3, tents get 3-4, cargo buildings get 5-6
+    private _grpSize = switch (true) do {
+        case (_bldgType == "Land_HBarrierTower_F"):                         { 3 };
+        case (_bldgType == "Land_MedicalTent_01_NATO_generic_open_F"):      { 3 + floor random 2 };
+        default                                                             { 5 + floor random 2 };
+    };
     private _grp = createGroup east;
 
     // Get building positions; fall back to building centre
