@@ -4,11 +4,11 @@
 
     Players are tasked with infiltrating a heavily defended enemy FOB and
     destroying all four supply asset types:
-        - B_Slingload_01_Repair_F   (+5 rep)
-        - B_Slingload_01_Ammo_F     (+5 rep)
-        - B_Slingload_01_Fuel_F     (+5 rep)
-        - Box_EAF_AmmoVeh_F x2      (+3 rep each = +6 rep)
-    Total possible: 21 reputation
+        - B_Slingload_01_Repair_F
+        - B_Slingload_01_Ammo_F
+        - B_Slingload_01_Fuel_F
+        - Box_EAF_AmmoVeh_F x2
+    Reputation reward: 15-21 (random on mission start)
 
     The FOB is located at a fixed position on the map. A garrison of OPFOR
     infantry defends the compound. All assets must be destroyed within the
@@ -29,9 +29,10 @@ private _zoneRadius   = 300;               // Marker zone radius
 private _timeout      = 7200;             // 2 hours
 private _cleanupDelay = 120;              // Seconds before entity despawn after mission end
 
-// Reputation per destroyed asset (total 21 if all destroyed)
-private _repPerSlingload = 5;   // x3 = 15
-private _repPerAmmoBox   = 3;   // x2 = 6
+// Reputation awarded on full destruction (15-21 random)
+private _repPerSlingload = 5;   // used for target tracking only
+private _repPerAmmoBox   = 3;   // used for target tracking only
+private _repReward = 15 + floor (random 7);  // 15-21 rep
 
 // =====================================================
 // 2. SPAWN THE FOB BUILDING
@@ -1057,13 +1058,13 @@ private _localMarkers  = +DYN_ground_markers;
 [
     _taskId, _timeout, _cleanupDelay,
     _repairPod, _ammoPod, _fuelPod, _ammoBoxes,
-    _repPerSlingload, _repPerAmmoBox,
+    _repPerSlingload, _repPerAmmoBox, _repReward,
     _localEnemies, _localGroups, _localObjects, _localMarkers
 ] spawn {
     params [
         "_tid", "_tOut", "_despawnDelay",
         "_repairPod", "_ammoPod", "_fuelPod", "_ammoBoxes",
-        "_repPerSlingload", "_repPerAmmoBox",
+        "_repPerSlingload", "_repPerAmmoBox", "_repReward",
         "_localEnemies", "_localGroups", "_localObjects", "_localMarkers"
     ];
 
@@ -1113,14 +1114,13 @@ private _localMarkers  = +DYN_ground_markers;
     private _allDone = _repairDone && _ammoDone && _fuelDone && _ammoBoxDone;
 
     if (_allDone) then {
-        private _totalRep = (_repPerSlingload * 3) + (_repPerAmmoBox * count _ammoBoxes);
-        [_totalRep, "FOB Destroyed"] call DYN_fnc_changeReputation;
+        [_repReward, "FOB Destroyed"] call DYN_fnc_changeReputation;
         [_tid, "SUCCEEDED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskSucceeded", [
             "FOB Hunting complete! All enemy supply assets have been destroyed.",
             "FOB Hunting"
         ]] remoteExecCall ["BIS_fnc_showNotification", 0];
-        diag_log format ["[GROUND-FOB] SUCCESS - all targets destroyed. +%1 rep.", _totalRep];
+        diag_log format ["[GROUND-FOB] SUCCESS - all targets destroyed. +%1 rep.", _repReward];
     } else {
         [_tid, "FAILED", false] remoteExec ["BIS_fnc_taskSetState", 0, _tid];
         ["TaskFailed", [
