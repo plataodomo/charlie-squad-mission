@@ -890,6 +890,9 @@ private _infantryTypes = [
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn"
 ];
 
+// Garrison units that start locked in place — unlocked when players breach the FOB
+private _garrisonUnits = [];
+
 // --- Building garrison: place units inside each spawn building ---
 {
     private _bldg = _x;
@@ -931,8 +934,13 @@ private _infantryTypes = [
             _unit setSkill ["spotDistance",   0.70 + random 0.30];
             _unit setSkill ["spotTime",       0.65 + random 0.30];
             _unit setSkill ["courage",        0.75 + random 0.25];
+            // Lock in place until players breach the FOB (re-enabled by monitor loop)
+            _unit disableAI "MOVE";
             _unit disableAI "PATH";
+            _unit disableAI "AUTOCOMBAT";
             DYN_ground_enemies pushBack _unit;
+            // Tower units stay locked on their platform; only cargo-house units unlock on breach
+            if (!_useTowerOverride) then { _garrisonUnits pushBack _unit };
         };
     };
 
@@ -994,7 +1002,12 @@ for "_i" from 1 to _helipadSquadSize do {
         _unit setSkill ["spotDistance",   0.75 + random 0.25];
         _unit setSkill ["spotTime",       0.65 + random 0.30];
         _unit setSkill ["courage",        0.85 + random 0.15];
+        // Lock in place until breach
+        _unit disableAI "MOVE";
+        _unit disableAI "PATH";
+        _unit disableAI "AUTOCOMBAT";
         DYN_ground_enemies pushBack _unit;
+        _garrisonUnits pushBack _unit;
     };
 };
 
@@ -1201,26 +1214,49 @@ private _localMarkers  = +DYN_ground_markers;
     _taskId, _timeout, _cleanupDelay,
     _repairPod, _ammoPod, _fuelPod, _ammoBoxes,
     _repPerSlingload, _repPerAmmoBox, _repReward,
-    _localEnemies, _localGroups, _localObjects, _localMarkers
+    _localEnemies, _localGroups, _localObjects, _localMarkers,
+    _garrisonUnits, _fobCenter
 ] spawn {
     params [
         "_tid", "_tOut", "_despawnDelay",
         "_repairPod", "_ammoPod", "_fuelPod", "_ammoBoxes",
         "_repPerSlingload", "_repPerAmmoBox", "_repReward",
-        "_localEnemies", "_localGroups", "_localObjects", "_localMarkers"
+        "_localEnemies", "_localGroups", "_localObjects", "_localMarkers",
+        "_garrisonUnits", "_fobCenter"
     ];
 
-    private _startTime   = diag_tickTime;
-    private _repairDone  = false;
-    private _ammoDone    = false;
-    private _fuelDone    = false;
-    private _ammoBoxDone = false;
+    private _startTime    = diag_tickTime;
+    private _repairDone   = false;
+    private _ammoDone     = false;
+    private _fuelDone     = false;
+    private _ammoBoxDone  = false;
+    private _breachFired  = false;  // garrison unlock trigger
 
     // Helper - vehicle considered destroyed at 90 % damage or when no longer alive
     private _isDead = { (damage _this >= 0.9) || { !alive _this } || { isNull _this } };
 
     waitUntil {
         sleep 5;
+
+        // ---- Breach trigger: unlock garrison when a player enters the FOB perimeter ----
+        if (!_breachFired && count _garrisonUnits > 0) then {
+            private _playersNear = { alive _x && _x distance2D _fobCenter < 80 } count allPlayers;
+            if (_playersNear > 0) then {
+                _breachFired = true;
+                diag_log "[GROUND-FOB] Breach detected — garrison units unlocked.";
+
+                // Re-enable AI so garrison can leave buildings and push players
+                {
+                    if (alive _x) then {
+                        _x enableAI "MOVE";
+                        _x enableAI "PATH";
+                        _x enableAI "AUTOCOMBAT";
+                    };
+                } forEach _garrisonUnits;
+
+                // Groups are already in COMBAT / RED — they will engage freely now
+            };
+        };
 
         // ---- Track destruction (no per-asset rep, awarded all at once on completion) ----
         if (!_repairDone && (_repairPod call _isDead)) then {
