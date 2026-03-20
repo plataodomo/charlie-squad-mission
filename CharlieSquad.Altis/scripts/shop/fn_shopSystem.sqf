@@ -426,6 +426,7 @@ DYN_fnc_purchaseSupply = {
             _obj setVariable ["ACE_isCarryable", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
+            ["ShopPurchase", [format ["%1 requisitioned for %2 points", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
         };
     } else {
         // "item" type — add directly to buyer's backpack
@@ -434,6 +435,7 @@ DYN_fnc_purchaseSupply = {
         };
         for "_i" from 1 to _qty do { _buyer addItemToBackpack _class; };
         diag_log format ["[SHOP] Gave %1 x%2 to %3 for %4 pts", _name, _qty, _buyerUID, _cost];
+        ["ShopPurchase", [format ["%1 x%2 requisitioned for %3 points", _name, _qty, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
     };
 
     true

@@ -144,13 +144,14 @@ DYN_fnc_purchaseMilitia = {
     _etaMkr setMarkerText  format ["Militia ETA 10 MIN | %1", _direction];
     _etaMkr setMarkerSize  [0.8, 0.8];
 
-    // --- announce ---
+    // --- announce to all players ---
     private _tierLabel = switch (_tier) do {
         case "ROOKIE":  { "Rookie infantry" };
         case "REGULAR": { "Regular infantry + light vehicles" };
         case "ELITE":   { "Elite infantry + heavy armor" };
         default         { "Militia" };
     };
+    ["MilitiaInbound", [format ["%1 inbound from %2 — ETA 10 minutes", _tierLabel, _direction]]] remoteExecCall ["BIS_fnc_showNotification", 0];
 
     // --- countdown + spawn thread ---
     [_direction, _bearing, _aoCenter, _aoRadius, _etaMkr, _vehicleClasses, _cost, _tier, _buyer] spawn {
@@ -343,10 +344,16 @@ DYN_fnc_purchaseMilitia = {
             };
         };
 
-        [_watchUnits, _allVehicles, _timeout, _liveMkr] spawn {
-            params ["_units", "_vehicles", "_timeout", "_mkr"];
+        [_watchUnits, _allVehicles, _timeout, _liveMkr, _grp] spawn {
+            params ["_units", "_vehicles", "_timeout", "_mkr", "_grp"];
             waitUntil {
                 sleep 15;
+
+                // Track the group leader's position on the map
+                if (!isNull _grp && {alive leader _grp}) then {
+                    _mkr setMarkerPos (getPos leader _grp);
+                };
+
                 ({ alive _x } count _units) == 0
                 || diag_tickTime > _timeout
                 || !DYN_AO_active
