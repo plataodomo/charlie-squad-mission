@@ -739,6 +739,11 @@ _o = ["Box_EAF_AmmoVeh_F",[7381.93,6378.24,0],[0.916362,0.40035,0],[0,0,1]] call
 // Snapshot all created objects for relocation and cleanup
 private _objects = +DYN_ground_objects;
 
+// Hide objects at their hardcoded position until relocation is done
+// (prevents the FOB briefly appearing at the editor-export origin, which
+//  may be in the ocean on Altis)
+{ if (!isNull _x) then { _x hideObjectGlobal true } } forEach _objects;
+
 // Track buildings where garrison will spawn
 private _spawnBuildings = _objects select {
     typeOf _x in ["Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F"]
@@ -776,9 +781,15 @@ if (surfaceIsWater _zoneCenter) exitWith {
     DYN_ground_active = false;
 };
 
-// Step 2: offset the FOB randomly within the zone
-_fobCenter = [_zoneCenter, 30 + random (_zoneRadius - 80), random 360] call DYN_fnc_posOffset;
-if (surfaceIsWater _fobCenter) then { _fobCenter = _zoneCenter };
+// Step 2: offset the FOB randomly within the zone (retry up to 20 times to avoid water)
+_fobCenter = _zoneCenter;
+for "_fobAttempt" from 1 to 20 do {
+    private _candidate = [_zoneCenter, 30 + random (_zoneRadius - 80), random 360] call DYN_fnc_posOffset;
+    if (surfaceIsWater _candidate) then { continue };
+    if (getTerrainHeightASL _candidate < 1) then { continue };
+    _fobCenter = _candidate;
+    break;
+};
 diag_log format ["[GROUND-FOB] Zone centre: %1  FOB offset to: %2", _zoneCenter, _fobCenter];
 
 // Protect target objects from spawn-relocation damage
@@ -799,6 +810,9 @@ diag_log format ["[GROUND-FOB] FOB relocated to %1", _fobCenter];
 
 // Allow object initialisation to settle
 sleep 2;
+
+// Unhide objects now that they are at the correct position
+{ if (!isNull _x) then { _x hideObjectGlobal false } } forEach _objects;
 
 // Re-enable damage on target objects now that relocation is done
 { if (!isNull _x && {typeOf _x in _targetTypes}) then { _x allowDamage true } } forEach _objects;
@@ -880,8 +894,8 @@ private _infantryTypes = [
     private _bldgPos = getPosATL _bldg;
     private _bldgType = typeOf _bldg;
 
-    // Towers get 2 units, cargo houses get 3-4
-    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 2 } else { 3 + floor random 2 };
+    // Towers get 3 units, cargo houses get 4-5
+    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 3 } else { 4 + floor random 2 };
     private _grp = createGroup east;
 
     // Get building positions; fall back to building centre
