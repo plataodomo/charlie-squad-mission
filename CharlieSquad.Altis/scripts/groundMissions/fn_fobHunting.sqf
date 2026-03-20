@@ -22,8 +22,10 @@ diag_log "[GROUND-FOB] Setting up FOB Hunting mission...";
 // 1. SETTINGS
 // =====================================================
 private _hardcodedCenter = [7396, 6411, 0];  // Centre of the FOB composition (editor export origin)
-private _fobCenter       = _hardcodedCenter; // Updated to a valid land position below
+private _zoneCenter      = [0, 0, 0];       // Zone centre (marker/task position)
+private _fobCenter       = _hardcodedCenter; // Actual FOB position (offset inside zone)
 private _searchRadius = 200;               // Radius for target object search
+private _zoneRadius   = 300;               // Marker zone radius
 private _timeout      = 7200;             // 2 hours
 private _cleanupDelay = 120;              // Seconds before entity despawn after mission end
 
@@ -742,11 +744,12 @@ private _spawnBuildings = _objects select {
 };
 
 // =====================================================
-// DYNAMIC POSITIONING — relocate FOB to valid land
+// DYNAMIC POSITIONING — find zone centre, then offset FOB inside
 // =====================================================
 private _basePos  = getMarkerPos "respawn_west";
 private _aoCenter = missionNamespace getVariable ["DYN_AO_center", [0,0,0]];
 
+// Step 1: find a valid zone centre (same as other ground missions)
 for "_attempt" from 1 to 150 do {
     private _testPos = [_basePos, 2500 + random 10000, random 360] call DYN_fnc_posOffset;
 
@@ -762,17 +765,26 @@ for "_attempt" from 1 to 150 do {
     };
     if ((selectMax _heights) - (selectMin _heights) > 10) then { continue };
 
-    _fobCenter = _testPos;
+    _zoneCenter = _testPos;
     break;
 };
 
-if (surfaceIsWater _fobCenter) exitWith {
+if (surfaceIsWater _zoneCenter) exitWith {
     diag_log "[GROUND-FOB] ERROR: No valid land position found. Aborting.";
     { if (!isNull _x) then { deleteVehicle _x } } forEach _objects;
     DYN_ground_active = false;
 };
 
-// Shift every building object from its hardcoded position to the chosen land centre
+// Step 2: offset the FOB randomly within the zone
+_fobCenter = [_zoneCenter, 30 + random (_zoneRadius - 80), random 360] call DYN_fnc_posOffset;
+if (surfaceIsWater _fobCenter) then { _fobCenter = _zoneCenter };
+diag_log format ["[GROUND-FOB] Zone centre: %1  FOB offset to: %2", _zoneCenter, _fobCenter];
+
+// Protect target objects from spawn-relocation damage
+private _targetTypes = ["B_Slingload_01_Repair_F", "B_Slingload_01_Ammo_F", "B_Slingload_01_Fuel_F", "Box_EAF_AmmoVeh_F"];
+{ if (!isNull _x && {typeOf _x in _targetTypes}) then { _x allowDamage false } } forEach _objects;
+
+// Shift every building object from its hardcoded position to the FOB position
 private _delta = [
     (_fobCenter select 0) - (_hardcodedCenter select 0),
     (_fobCenter select 1) - (_hardcodedCenter select 1),
@@ -786,6 +798,9 @@ diag_log format ["[GROUND-FOB] FOB relocated to %1", _fobCenter];
 
 // Allow object initialisation to settle
 sleep 2;
+
+// Re-enable damage on target objects now that relocation is done
+{ if (!isNull _x && {typeOf _x in _targetTypes}) then { _x allowDamage true } } forEach _objects;
 
 // Collect all FOB building objects for cleanup at mission end
 private _fobObjects = [];
@@ -1002,13 +1017,10 @@ diag_log format [
 // =====================================================
 private _taskId = format ["ground_fob_%1", round (diag_tickTime * 1000)];
 
-// Offset marker from actual FOB position so players have to search
-private _mkrPos = [_fobCenter, 80 + random 120, random 360] call DYN_fnc_posOffset;
-
 private _mkr = format ["ground_mkr_fob_%1", round (diag_tickTime * 1000)];
-createMarker [_mkr, _mkrPos];
+createMarker [_mkr, _zoneCenter];
 _mkr setMarkerShape "ELLIPSE";
-_mkr setMarkerSize [_searchRadius * 0.6, _searchRadius * 0.6];
+_mkr setMarkerSize [_zoneRadius, _zoneRadius];
 _mkr setMarkerColor "ColorRed";
 _mkr setMarkerBrush "FDiagonal";
 _mkr setMarkerAlpha 0.4;
@@ -1023,7 +1035,7 @@ DYN_ground_markers pushBack _mkr;
         "FOB Hunting",
         ""
     ],
-    _fobCenter,
+    _zoneCenter,
     "CREATED",
     3,
     true,
@@ -1032,7 +1044,7 @@ DYN_ground_markers pushBack _mkr;
 
 DYN_ground_tasks pushBack _taskId;
 
-diag_log format ["[GROUND-FOB] Mission active. FOB centre: %1", _fobCenter];
+diag_log format ["[GROUND-FOB] Mission active. Zone: %1  FOB: %2", _zoneCenter, _fobCenter];
 
 // =====================================================
 // 6. COMPLETION MONITOR
