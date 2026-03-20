@@ -803,6 +803,10 @@ sleep 2;
 // Re-enable damage on target objects now that relocation is done
 { if (!isNull _x && {typeOf _x in _targetTypes}) then { _x allowDamage true } } forEach _objects;
 
+// Disable damage on military walls so they can't be destroyed
+private _wallTypes = ["Land_Mil_WallBig_4m_F", "Land_Mil_WallBig_Corner_F", "Land_HBarrierWall_corridor_F"];
+{ if (!isNull _x && {typeOf _x in _wallTypes}) then { _x allowDamage false } } forEach _objects;
+
 // Collect all FOB building objects for cleanup at mission end
 private _fobObjects = [];
 { if (!isNull _x) then { _fobObjects pushBack _x } } forEach _objects;
@@ -914,10 +918,12 @@ private _infantryTypes = [
     };
 } forEach _spawnBuildings;
 
-// --- Two static MG posts near the FOB perimeter walls ---
+// --- Four static MG posts near the FOB perimeter walls ---
 private _mgPosts = [
     [60,  15],
-    [65, 195]
+    [65, 195],
+    [55, 105],
+    [60, 285]
 ];
 
 {
@@ -943,7 +949,7 @@ private _mgPosts = [
 
 // --- Inner compound patrol ---
 private _innerPatrolGrp = createGroup east;
-private _innerPatrolSize = 4 + floor random 3;
+private _innerPatrolSize = 5 + floor random 3;
 
 for "_i" from 1 to _innerPatrolSize do {
     private _unitPos = [_fobCenter, 10 + random 30, random 360] call DYN_fnc_posOffset;
@@ -976,9 +982,9 @@ if (units _innerPatrolGrp isEqualTo []) then {
     DYN_ground_enemyGroups pushBack _innerPatrolGrp;
 };
 
-// --- Outer roving patrol - 1 group circling outside the walls ---
+// --- Outer roving patrol - 2 groups circling outside the walls ---
 private _outerPatrolGrp = createGroup east;
-private _outerPatrolSize = 4 + floor random 3;
+private _outerPatrolSize = 5 + floor random 3;
 
 for "_i" from 1 to _outerPatrolSize do {
     private _unitPos = [_fobCenter, 80 + random 30, random 360] call DYN_fnc_posOffset;
@@ -1004,6 +1010,36 @@ if (units _outerPatrolGrp isEqualTo []) then {
     _wp setWaypointLoiterRadius 90;
 
     DYN_ground_enemyGroups pushBack _outerPatrolGrp;
+};
+
+// --- Second outer patrol covering the opposite arc ---
+private _outerPatrolGrp2 = createGroup east;
+private _outerPatrolSize2 = 4 + floor random 3;
+
+for "_i" from 1 to _outerPatrolSize2 do {
+    private _unitPos = [_fobCenter, 90 + random 30, random 360] call DYN_fnc_posOffset;
+    if (surfaceIsWater _unitPos) then { _unitPos = _fobCenter };
+
+    private _unit = _outerPatrolGrp2 createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
+    if (!isNull _unit) then {
+        _unit allowFleeing 0.2;
+        _unit setSkill 0.6;
+        DYN_ground_enemies pushBack _unit;
+    };
+};
+
+if (units _outerPatrolGrp2 isEqualTo []) then {
+    deleteGroup _outerPatrolGrp2;
+} else {
+    _outerPatrolGrp2 setBehaviourStrong "AWARE";
+    _outerPatrolGrp2 setCombatMode "RED";
+    _outerPatrolGrp2 setSpeedMode "NORMAL";
+
+    private _wp = _outerPatrolGrp2 addWaypoint [_fobCenter, 100];
+    _wp setWaypointType "LOITER";
+    _wp setWaypointLoiterRadius 100;
+
+    DYN_ground_enemyGroups pushBack _outerPatrolGrp2;
 };
 
 diag_log format [
