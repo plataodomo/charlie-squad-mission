@@ -402,14 +402,23 @@ if (count _routePoints < 2) then { _routePoints = [_startRoadPos, _endRoadPos] }
 
 // =====================================================
 // ROUTE MARKERS — 50% chance signals intel reveals the route
-// Places 5 arrow markers evenly along the route (yellow = unknown side)
-// Cleaned up at mission end via the monitoring spawn block.
+// Places arrow markers along the route, one per ~400 m of road distance
+// (yellow = unknown side).  Cleaned up at mission end via the monitoring spawn block.
 // =====================================================
 private _routeMarkers = [];
 if (random 1 < 0.5 && { count _routePoints > 4 }) then {
+    // Compute total route length so we can scale marker count
+    private _routeLen = 0;
+    for "_ri" from 1 to (count _routePoints - 1) do {
+        _routeLen = _routeLen + ((_routePoints select (_ri - 1)) distance2D (_routePoints select _ri));
+    };
+
+    // One marker every ~400 m, minimum 5, maximum 40
+    private _markerCount = ((round (_routeLen / 400)) max 5) min 40;
     private _total = count _routePoints;
-    for "_mi" from 0 to 4 do {
-        private _idx = (round (_mi * (_total - 1) / 4)) min (_total - 1);
+
+    for "_mi" from 0 to (_markerCount - 1) do {
+        private _idx = (round (_mi * (_total - 1) / (_markerCount - 1))) min (_total - 1);
         private _p = _routePoints select _idx;
         // For the final point there is no "next" — use incoming direction instead
         private _dir = if (_idx < _total - 1) then {
@@ -427,7 +436,7 @@ if (random 1 < 0.5 && { count _routePoints > 4 }) then {
         _routeMarkers pushBack _mkName;
     };
     _taskDescription = _taskDescription + "<br/><br/><t color='#FFCC00'>Signals intelligence</t> has traced the convoy's approximate route. Arrow markers have been plotted on your map.";
-    diag_log format ["[GROUND-CONVOY] Route markers spawned (%1 arrows, %2->%3)", count _routeMarkers, _startName, _endName];
+    diag_log format ["[GROUND-CONVOY] Route markers spawned (%1 arrows over %2 m, %3->%4)", count _routeMarkers, round _routeLen, _startName, _endName];
 } else {
     _taskDescription = _taskDescription + "<br/><br/>Route information is unavailable. Locate the convoy through road patrols and map knowledge.";
     diag_log "[GROUND-CONVOY] No route markers this mission (50% miss or too few route points).";
