@@ -736,6 +736,11 @@ _o = ["Box_EAF_AmmoVeh_F",[7381.93,6378.24,0],[0.916362,0.40035,0],[0,0,1]] call
 // Snapshot all created objects for relocation and cleanup
 private _objects = +DYN_ground_objects;
 
+// Track buildings where garrison will spawn
+private _spawnBuildings = _objects select {
+    typeOf _x in ["Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F"]
+};
+
 // =====================================================
 // DYNAMIC POSITIONING — relocate FOB to valid land
 // =====================================================
@@ -788,6 +793,19 @@ private _fobObjects = [];
 
 diag_log format ["[GROUND-FOB] Building SQF created %1 objects.", count _fobObjects];
 
+// Disable simulation on static props that don't need physics
+private _simKeepTypes = [
+    "B_Slingload_01_Repair_F", "B_Slingload_01_Ammo_F", "B_Slingload_01_Fuel_F",
+    "Box_EAF_AmmoVeh_F",
+    "Land_HBarrierTower_F", "Land_Cargo_Patrol_V3_F", "Land_Cargo_House_V3_F"
+];
+{
+    if (!isNull _x && {!(typeOf _x in _simKeepTypes)}) then {
+        _x enableSimulationGlobal false;
+    };
+} forEach _fobObjects;
+diag_log format ["[GROUND-FOB] Simulation disabled on %1 static props.", count _fobObjects - count (_fobObjects select { typeOf _x in _simKeepTypes })];
+
 // =====================================================
 // 3. LOCATE TARGET OBJECTS
 // =====================================================
@@ -825,15 +843,8 @@ diag_log format [
 // =====================================================
 // 4. SPAWN ENEMY GARRISON
 // =====================================================
-// Six infantry groups spread around the compound interior and perimeter
-private _spawnZones = [
-    [30,  10],   // Near gate - north approach
-    [45,  80],   // East inner wall
-    [45, 160],   // South courtyard
-    [45, 250],   // West inner wall
-    [20,  40],   // Deep interior NE (near slingloads)
-    [25, 220]    // Deep interior SW (near ammo boxes)
-];
+// Garrison spawns inside spawn buildings (towers, patrol posts, cargo houses)
+// plus an inner patrol, an outer patrol, and static MG posts.
 
 private _infantryTypes = [
     "CUP_O_RU_Soldier_Ratnik_Autumn",
@@ -843,19 +854,29 @@ private _infantryTypes = [
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn"
 ];
 
+// --- Building garrison: place units inside each spawn building ---
 {
-    private _dist = _x select 0;
-    private _dir  = _x select 1;
-    private _spawnPos = [_fobCenter, _dist, _dir] call DYN_fnc_posOffset;
-    private _grpSize  = 4 + floor random 5;  // 4-8 per group
+    private _bldg = _x;
+    private _bldgPos = getPosATL _bldg;
+    private _bldgType = typeOf _bldg;
+
+    // Towers get 2 units, cargo houses get 3-4
+    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 2 } else { 3 + floor random 2 };
     private _grp = createGroup east;
 
+    // Get building positions; fall back to building centre
+    private _bldgPositions = _bldg buildingPos -1;
+
     for "_i" from 1 to _grpSize do {
-        private _unitPos = [_spawnPos, random 8, random 360] call DYN_fnc_posOffset;
-        if (surfaceIsWater _unitPos) then { _unitPos = _spawnPos };
+        private _unitPos = if (count _bldgPositions > 0) then {
+            _bldgPositions select (_i mod count _bldgPositions)
+        } else {
+            [_bldgPos, 1 + random 2, random 360] call DYN_fnc_posOffset
+        };
 
         private _unit = _grp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
         if (!isNull _unit) then {
+            _unit setPosATL _unitPos;
             _unit allowFleeing 0.1;
             _unit setSkill ["aimingAccuracy", 0.40 + random 0.35];
             _unit setSkill ["aimingShake",    0.45 + random 0.30];
@@ -863,6 +884,7 @@ private _infantryTypes = [
             _unit setSkill ["spotDistance",   0.70 + random 0.30];
             _unit setSkill ["spotTime",       0.65 + random 0.30];
             _unit setSkill ["courage",        0.75 + random 0.25];
+            _unit disableAI "PATH";
             DYN_ground_enemies pushBack _unit;
         };
     };
@@ -870,20 +892,13 @@ private _infantryTypes = [
     if (units _grp isEqualTo []) then {
         deleteGroup _grp;
     } else {
-        _grp setBehaviourStrong "AWARE";
+        _grp setBehaviourStrong "COMBAT";
         _grp setCombatMode "RED";
-        _grp setSpeedMode "NORMAL";
-
-        // Local patrol around spawn zone
-        private _wp = _grp addWaypoint [_spawnPos, 35];
-        _wp setWaypointType "LOITER";
-        _wp setWaypointLoiterRadius 35;
-
         DYN_ground_enemyGroups pushBack _grp;
     };
-} forEach _spawnZones;
+} forEach _spawnBuildings;
 
-// Two static MG posts near the FOB perimeter walls
+// --- Two static MG posts near the FOB perimeter walls ---
 private _mgPosts = [
     [60,  15],
     [65, 195]
@@ -910,7 +925,42 @@ private _mgPosts = [
     };
 } forEach _mgPosts;
 
-// Outer roving patrol - 1 group circling outside the walls
+// --- Inner compound patrol ---
+private _innerPatrolGrp = createGroup east;
+private _innerPatrolSize = 4 + floor random 3;
+
+for "_i" from 1 to _innerPatrolSize do {
+    private _unitPos = [_fobCenter, 10 + random 30, random 360] call DYN_fnc_posOffset;
+    if (surfaceIsWater _unitPos) then { _unitPos = _fobCenter };
+
+    private _unit = _innerPatrolGrp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
+    if (!isNull _unit) then {
+        _unit allowFleeing 0.15;
+        _unit setSkill ["aimingAccuracy", 0.45 + random 0.30];
+        _unit setSkill ["aimingShake",    0.45 + random 0.30];
+        _unit setSkill ["aimingSpeed",    0.50 + random 0.25];
+        _unit setSkill ["spotDistance",   0.70 + random 0.25];
+        _unit setSkill ["spotTime",       0.65 + random 0.30];
+        _unit setSkill ["courage",        0.80 + random 0.20];
+        DYN_ground_enemies pushBack _unit;
+    };
+};
+
+if (units _innerPatrolGrp isEqualTo []) then {
+    deleteGroup _innerPatrolGrp;
+} else {
+    _innerPatrolGrp setBehaviourStrong "AWARE";
+    _innerPatrolGrp setCombatMode "RED";
+    _innerPatrolGrp setSpeedMode "LIMITED";
+
+    private _wp = _innerPatrolGrp addWaypoint [_fobCenter, 35];
+    _wp setWaypointType "LOITER";
+    _wp setWaypointLoiterRadius 35;
+
+    DYN_ground_enemyGroups pushBack _innerPatrolGrp;
+};
+
+// --- Outer roving patrol - 1 group circling outside the walls ---
 private _outerPatrolGrp = createGroup east;
 private _outerPatrolSize = 4 + floor random 3;
 
@@ -952,8 +1002,11 @@ diag_log format [
 // =====================================================
 private _taskId = format ["ground_fob_%1", round (diag_tickTime * 1000)];
 
+// Offset marker from actual FOB position so players have to search
+private _mkrPos = [_fobCenter, 80 + random 120, random 360] call DYN_fnc_posOffset;
+
 private _mkr = format ["ground_mkr_fob_%1", round (diag_tickTime * 1000)];
-createMarker [_mkr, _fobCenter];
+createMarker [_mkr, _mkrPos];
 _mkr setMarkerShape "ELLIPSE";
 _mkr setMarkerSize [_searchRadius * 0.6, _searchRadius * 0.6];
 _mkr setMarkerColor "ColorRed";
