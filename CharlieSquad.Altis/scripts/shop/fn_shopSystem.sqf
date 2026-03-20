@@ -423,8 +423,9 @@ DYN_fnc_purchaseSupply = {
             // Lock so only ACE carry can move it (prevents vanilla drag/climb-in)
             _obj lock 2;
             // Override mass so ACE drag/carry always works regardless of contents
-            _obj setVariable ["ace_dragging_canDrag", [true, [0, 1.5, 0]], true];
-            _obj setVariable ["ace_dragging_canCarry", [true, [0, 1.5, 0]], true];
+            _obj setVariable ["ace_dragging_canDrag",      true, true];
+            _obj setVariable ["ace_dragging_canCarry",     true, true];
+            _obj setVariable ["ace_dragging_ignoreWeight", true, true];
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
             ["ShopPurchase", [format ["%1 requisitioned for %2 points", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
