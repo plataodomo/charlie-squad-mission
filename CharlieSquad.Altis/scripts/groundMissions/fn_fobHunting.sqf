@@ -885,8 +885,13 @@ private _infantryTypes = [
     "CUP_O_RU_Soldier_SL_Ratnik_Autumn",
     "CUP_O_RU_Soldier_AR_Ratnik_Autumn",
     "CUP_O_RU_Soldier_MG_Ratnik_Autumn",
+    "CUP_O_RU_Soldier_GL_Ratnik_Autumn",
+    "CUP_O_RU_Soldier_Marksman_Ratnik_Autumn",
     "CUP_O_RU_Soldier_LAT_Ratnik_Autumn"
 ];
+
+// Garrison units that start locked in place — unlocked when players breach the FOB
+private _garrisonUnits = [];
 
 // --- Building garrison: place units inside each spawn building ---
 {
@@ -894,18 +899,29 @@ private _infantryTypes = [
     private _bldgPos = getPosATL _bldg;
     private _bldgType = typeOf _bldg;
 
-    // Towers get 3 units, cargo houses get 4-5
-    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 3 } else { 4 + floor random 2 };
+    // Towers get 3 units, cargo houses get 5-6
+    private _grpSize = if (_bldgType == "Land_HBarrierTower_F") then { 3 } else { 5 + floor random 2 };
     private _grp = createGroup east;
 
     // Get building positions; fall back to building centre
     private _bldgPositions = _bldg buildingPos -1;
 
+    // For HBarrier towers, buildingPos returns ground-level interior slots.
+    // Override with the observation-platform height (~6.5 m ATL) so units
+    // actually stand on the planks instead of clipping inside the base.
+    private _useTowerOverride = (_bldgType == "Land_HBarrierTower_F");
+
     for "_i" from 1 to _grpSize do {
-        private _unitPos = if (count _bldgPositions > 0) then {
-            _bldgPositions select (_i mod count _bldgPositions)
+        private _unitPos = if (_useTowerOverride) then {
+            // Spread units around the tower centre on the platform
+            private _off = [_bldgPos, 1 + random 1.5, _i * (360 / _grpSize)] call DYN_fnc_posOffset;
+            [_off select 0, _off select 1, 6.5]
         } else {
-            [_bldgPos, 1 + random 2, random 360] call DYN_fnc_posOffset
+            if (count _bldgPositions > 0) then {
+                _bldgPositions select (_i mod count _bldgPositions)
+            } else {
+                [_bldgPos, 1 + random 2, random 360] call DYN_fnc_posOffset
+            }
         };
 
         private _unit = _grp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
@@ -918,8 +934,13 @@ private _infantryTypes = [
             _unit setSkill ["spotDistance",   0.70 + random 0.30];
             _unit setSkill ["spotTime",       0.65 + random 0.30];
             _unit setSkill ["courage",        0.75 + random 0.25];
+            // Lock in place until players breach the FOB (re-enabled by monitor loop)
+            _unit disableAI "MOVE";
             _unit disableAI "PATH";
+            _unit disableAI "AUTOCOMBAT";
             DYN_ground_enemies pushBack _unit;
+            // Tower units stay locked on their platform; only cargo-house units unlock on breach
+            if (!_useTowerOverride) then { _garrisonUnits pushBack _unit };
         };
     };
 
@@ -961,9 +982,46 @@ private _mgPosts = [
     };
 } forEach _mgPosts;
 
-// --- Inner compound patrol ---
+// --- Helipad defence squad (static near the helipad) ---
+// The helipad was placed at hardcoded [7430.23,6400.22]; compute its
+// relocated position via the same delta that shifted the rest of the FOB.
+private _helipadRelPos = [7430.23 + (_delta select 0), 6400.22 + (_delta select 1), 0];
+private _helipadGrp = createGroup east;
+private _helipadSquadSize = 6 + floor random 3; // 6-8 units
+
+for "_i" from 1 to _helipadSquadSize do {
+    private _unitPos = [_helipadRelPos, 3 + random 12, random 360] call DYN_fnc_posOffset;
+    if (surfaceIsWater _unitPos) then { _unitPos = _helipadRelPos };
+
+    private _unit = _helipadGrp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
+    if (!isNull _unit) then {
+        _unit allowFleeing 0;
+        _unit setSkill ["aimingAccuracy", 0.50 + random 0.30];
+        _unit setSkill ["aimingShake",    0.40 + random 0.30];
+        _unit setSkill ["aimingSpeed",    0.50 + random 0.25];
+        _unit setSkill ["spotDistance",   0.75 + random 0.25];
+        _unit setSkill ["spotTime",       0.65 + random 0.30];
+        _unit setSkill ["courage",        0.85 + random 0.15];
+        // Lock in place until breach
+        _unit disableAI "MOVE";
+        _unit disableAI "PATH";
+        _unit disableAI "AUTOCOMBAT";
+        DYN_ground_enemies pushBack _unit;
+        _garrisonUnits pushBack _unit;
+    };
+};
+
+if (units _helipadGrp isEqualTo []) then {
+    deleteGroup _helipadGrp;
+} else {
+    _helipadGrp setBehaviourStrong "COMBAT";
+    _helipadGrp setCombatMode "RED";
+    DYN_ground_enemyGroups pushBack _helipadGrp;
+};
+
+// --- Inner compound patrol (2 groups covering the interior) ---
 private _innerPatrolGrp = createGroup east;
-private _innerPatrolSize = 5 + floor random 3;
+private _innerPatrolSize = 6 + floor random 3; // 6-8
 
 for "_i" from 1 to _innerPatrolSize do {
     private _unitPos = [_fobCenter, 10 + random 30, random 360] call DYN_fnc_posOffset;
@@ -989,72 +1047,119 @@ if (units _innerPatrolGrp isEqualTo []) then {
     _innerPatrolGrp setCombatMode "RED";
     _innerPatrolGrp setSpeedMode "LIMITED";
 
-    private _wp = _innerPatrolGrp addWaypoint [_fobCenter, 35];
-    _wp setWaypointType "LOITER";
-    _wp setWaypointLoiterRadius 35;
+    for "_w" from 1 to 4 do {
+        private _wPos = [_fobCenter, 10 + random 30, _w * 90] call DYN_fnc_posOffset;
+        if (surfaceIsWater _wPos) then { _wPos = _fobCenter };
+        private _wp = _innerPatrolGrp addWaypoint [_wPos, 10];
+        _wp setWaypointType "MOVE";
+        _wp setWaypointBehaviour "AWARE";
+        _wp setWaypointCombatMode "RED";
+        _wp setWaypointSpeed "LIMITED";
+    };
+    (_innerPatrolGrp addWaypoint [_fobCenter, 10]) setWaypointType "CYCLE";
 
     DYN_ground_enemyGroups pushBack _innerPatrolGrp;
 };
 
-// --- Outer roving patrol - 2 groups circling outside the walls ---
-private _outerPatrolGrp = createGroup east;
-private _outerPatrolSize = 5 + floor random 3;
+// Second inner patrol covering opposite arc
+private _innerPatrolGrp2 = createGroup east;
+private _innerPatrolSize2 = 5 + floor random 3; // 5-7
 
-for "_i" from 1 to _outerPatrolSize do {
-    private _unitPos = [_fobCenter, 80 + random 30, random 360] call DYN_fnc_posOffset;
+for "_i" from 1 to _innerPatrolSize2 do {
+    private _unitPos = [_fobCenter, 10 + random 25, random 360] call DYN_fnc_posOffset;
     if (surfaceIsWater _unitPos) then { _unitPos = _fobCenter };
 
-    private _unit = _outerPatrolGrp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
+    private _unit = _innerPatrolGrp2 createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
     if (!isNull _unit) then {
-        _unit allowFleeing 0.2;
-        _unit setSkill 0.6;
+        _unit allowFleeing 0.15;
+        _unit setSkill ["aimingAccuracy", 0.45 + random 0.30];
+        _unit setSkill ["aimingShake",    0.45 + random 0.30];
+        _unit setSkill ["aimingSpeed",    0.50 + random 0.25];
+        _unit setSkill ["spotDistance",   0.70 + random 0.25];
+        _unit setSkill ["spotTime",       0.65 + random 0.30];
+        _unit setSkill ["courage",        0.80 + random 0.20];
         DYN_ground_enemies pushBack _unit;
     };
 };
 
-if (units _outerPatrolGrp isEqualTo []) then {
-    deleteGroup _outerPatrolGrp;
+if (units _innerPatrolGrp2 isEqualTo []) then {
+    deleteGroup _innerPatrolGrp2;
 } else {
-    _outerPatrolGrp setBehaviourStrong "AWARE";
-    _outerPatrolGrp setCombatMode "RED";
-    _outerPatrolGrp setSpeedMode "NORMAL";
+    _innerPatrolGrp2 setBehaviourStrong "AWARE";
+    _innerPatrolGrp2 setCombatMode "RED";
+    _innerPatrolGrp2 setSpeedMode "LIMITED";
 
-    private _wp = _outerPatrolGrp addWaypoint [_fobCenter, 90];
-    _wp setWaypointType "LOITER";
-    _wp setWaypointLoiterRadius 90;
+    for "_w" from 1 to 4 do {
+        private _wPos = [_fobCenter, 15 + random 25, (_w * 90) + 45] call DYN_fnc_posOffset;
+        if (surfaceIsWater _wPos) then { _wPos = _fobCenter };
+        private _wp = _innerPatrolGrp2 addWaypoint [_wPos, 10];
+        _wp setWaypointType "MOVE";
+        _wp setWaypointBehaviour "AWARE";
+        _wp setWaypointCombatMode "RED";
+        _wp setWaypointSpeed "LIMITED";
+    };
+    (_innerPatrolGrp2 addWaypoint [_fobCenter, 10]) setWaypointType "CYCLE";
 
-    DYN_ground_enemyGroups pushBack _outerPatrolGrp;
+    DYN_ground_enemyGroups pushBack _innerPatrolGrp2;
 };
 
-// --- Second outer patrol covering the opposite arc ---
-private _outerPatrolGrp2 = createGroup east;
-private _outerPatrolSize2 = 4 + floor random 3;
+// --- Outer roving patrols — 3 groups circling outside the walls ---
+// Uses CYCLE waypoints like hostage-rescue / arms-dealer missions.
 
-for "_i" from 1 to _outerPatrolSize2 do {
-    private _unitPos = [_fobCenter, 90 + random 30, random 360] call DYN_fnc_posOffset;
-    if (surfaceIsWater _unitPos) then { _unitPos = _fobCenter };
+// Helper to spawn one outer patrol group
+private _fnSpawnOuterPatrol = {
+    params ["_center", "_radius", "_size", "_startAngle"];
+    private _grp = createGroup east;
 
-    private _unit = _outerPatrolGrp2 createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
-    if (!isNull _unit) then {
-        _unit allowFleeing 0.2;
-        _unit setSkill 0.6;
-        DYN_ground_enemies pushBack _unit;
+    for "_i" from 1 to _size do {
+        private _unitPos = [_center, _radius + random 30, random 360] call DYN_fnc_posOffset;
+        if (surfaceIsWater _unitPos) then { _unitPos = _center };
+
+        private _unit = _grp createUnit [selectRandom _infantryTypes, _unitPos, [], 0, "NONE"];
+        if (!isNull _unit) then {
+            _unit allowFleeing 0.2;
+            _unit setSkill ["aimingAccuracy", 0.45 + random 0.30];
+            _unit setSkill ["aimingShake",    0.45 + random 0.25];
+            _unit setSkill ["aimingSpeed",    0.50 + random 0.25];
+            _unit setSkill ["spotDistance",   0.70 + random 0.25];
+            _unit setSkill ["spotTime",       0.65 + random 0.25];
+            _unit setSkill ["courage",        0.75 + random 0.25];
+            DYN_ground_enemies pushBack _unit;
+        };
+    };
+
+    if (units _grp isEqualTo []) then {
+        deleteGroup _grp;
+    } else {
+        _grp setBehaviourStrong "AWARE";
+        _grp setCombatMode "RED";
+        _grp setSpeedMode "NORMAL";
+
+        // 4-waypoint CYCLE loop around the FOB perimeter
+        for "_w" from 1 to 4 do {
+            private _wPos = [_center, _radius + random 30, _startAngle + (_w * 90)] call DYN_fnc_posOffset;
+            if (surfaceIsWater _wPos) then { _wPos = _center };
+            private _wp = _grp addWaypoint [_wPos, 15];
+            _wp setWaypointType "MOVE";
+            _wp setWaypointBehaviour "AWARE";
+            _wp setWaypointCombatMode "RED";
+            _wp setWaypointSpeed "NORMAL";
+            _wp setWaypointCompletionRadius 15;
+        };
+        (_grp addWaypoint [_center, _radius]) setWaypointType "CYCLE";
+
+        DYN_ground_enemyGroups pushBack _grp;
     };
 };
 
-if (units _outerPatrolGrp2 isEqualTo []) then {
-    deleteGroup _outerPatrolGrp2;
-} else {
-    _outerPatrolGrp2 setBehaviourStrong "AWARE";
-    _outerPatrolGrp2 setCombatMode "RED";
-    _outerPatrolGrp2 setSpeedMode "NORMAL";
+// Outer patrol 1 — close perimeter (80-110 m)
+[_fobCenter, 80, 6 + floor random 3, 0] call _fnSpawnOuterPatrol;      // 6-8
 
-    private _wp = _outerPatrolGrp2 addWaypoint [_fobCenter, 100];
-    _wp setWaypointType "LOITER";
-    _wp setWaypointLoiterRadius 100;
+// Outer patrol 2 — medium ring, offset 45 deg (100-130 m)
+[_fobCenter, 100, 6 + floor random 3, 45] call _fnSpawnOuterPatrol;     // 6-8
 
-    DYN_ground_enemyGroups pushBack _outerPatrolGrp2;
-};
+// Outer patrol 3 — wide sweep (130-160 m)
+[_fobCenter, 130, 5 + floor random 3, 20] call _fnSpawnOuterPatrol;     // 5-7
 
 diag_log format [
     "[GROUND-FOB] Garrison spawned: %1 groups, %2 infantry total.",
@@ -1109,26 +1214,49 @@ private _localMarkers  = +DYN_ground_markers;
     _taskId, _timeout, _cleanupDelay,
     _repairPod, _ammoPod, _fuelPod, _ammoBoxes,
     _repPerSlingload, _repPerAmmoBox, _repReward,
-    _localEnemies, _localGroups, _localObjects, _localMarkers
+    _localEnemies, _localGroups, _localObjects, _localMarkers,
+    _garrisonUnits, _fobCenter
 ] spawn {
     params [
         "_tid", "_tOut", "_despawnDelay",
         "_repairPod", "_ammoPod", "_fuelPod", "_ammoBoxes",
         "_repPerSlingload", "_repPerAmmoBox", "_repReward",
-        "_localEnemies", "_localGroups", "_localObjects", "_localMarkers"
+        "_localEnemies", "_localGroups", "_localObjects", "_localMarkers",
+        "_garrisonUnits", "_fobCenter"
     ];
 
-    private _startTime   = diag_tickTime;
-    private _repairDone  = false;
-    private _ammoDone    = false;
-    private _fuelDone    = false;
-    private _ammoBoxDone = false;
+    private _startTime    = diag_tickTime;
+    private _repairDone   = false;
+    private _ammoDone     = false;
+    private _fuelDone     = false;
+    private _ammoBoxDone  = false;
+    private _breachFired  = false;  // garrison unlock trigger
 
     // Helper - vehicle considered destroyed at 90 % damage or when no longer alive
     private _isDead = { (damage _this >= 0.9) || { !alive _this } || { isNull _this } };
 
     waitUntil {
         sleep 5;
+
+        // ---- Breach trigger: unlock garrison when a player enters the FOB perimeter ----
+        if (!_breachFired && count _garrisonUnits > 0) then {
+            private _playersNear = { alive _x && _x distance2D _fobCenter < 80 } count allPlayers;
+            if (_playersNear > 0) then {
+                _breachFired = true;
+                diag_log "[GROUND-FOB] Breach detected — garrison units unlocked.";
+
+                // Re-enable AI so garrison can leave buildings and push players
+                {
+                    if (alive _x) then {
+                        _x enableAI "MOVE";
+                        _x enableAI "PATH";
+                        _x enableAI "AUTOCOMBAT";
+                    };
+                } forEach _garrisonUnits;
+
+                // Groups are already in COMBAT / RED — they will engage freely now
+            };
+        };
 
         // ---- Track destruction (no per-asset rep, awarded all at once on completion) ----
         if (!_repairDone && (_repairPod call _isDead)) then {
