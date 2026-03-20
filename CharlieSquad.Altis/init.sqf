@@ -33,7 +33,11 @@ MED_fnc_startHealing = {
             sleep 5;
             hintSilent "";
         } else {
-            [_unit] call ace_medical_treatment_fnc_fullHealLocal;
+            if (!isNil "ace_medical_treatment_fnc_fullHealLocal") then {
+                [_unit] call ace_medical_treatment_fnc_fullHealLocal;
+            } else {
+                _unit setDamage 0;
+            };
             hintSilent "You have been fully healed!";
             sleep 5;
             hintSilent "";
