@@ -54,6 +54,7 @@ if (isNil "DYN_ground_markers")     then { DYN_ground_markers = [] };
 private _cv = {
     params ["_t","_p","_d","_u"];
     private _o = createVehicle [_t,_p,[],0,"CAN_COLLIDE"];
+    _o setPosATL [_p select 0, _p select 1, 0];
     _o setVectorDirAndUp [_d,_u];
     DYN_ground_objects pushBack _o;
     _o
@@ -772,7 +773,10 @@ private _delta = [
     (_fobCenter select 1) - (_hardcodedCenter select 1),
     0
 ];
-{ if (!isNull _x) then { _x setPos (getPos _x vectorAdd _delta) } } forEach _objects;
+{ if (!isNull _x) then {
+    private _p = getPosATL _x vectorAdd _delta;
+    _x setPosATL [_p select 0, _p select 1, 0];
+} } forEach _objects;
 diag_log format ["[GROUND-FOB] FOB relocated to %1", _fobCenter];
 
 // Allow object initialisation to settle
