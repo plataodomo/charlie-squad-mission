@@ -425,6 +425,8 @@ DYN_fnc_purchaseSupply = {
             // Enable ACE drag & carry, ignore weight so full crates are always movable
             [_obj, true, [0, 1.5, 0], 0, true, true] call ace_dragging_fnc_setDraggable;
             [_obj, true, [0, 1, 1],   0, true, true] call ace_dragging_fnc_setCarryable;
+            // Enable ACE cargo so players can load/unload from vehicles
+            [_obj, 1] call ace_cargo_fnc_setSize;
             [_obj] spawn { params ["_o"]; sleep 600; if (!isNull _o) then { deleteVehicle _o; }; };
             diag_log format ["[SHOP] Spawned %1 at %2 for %3 pts", _name, _dropPos, _cost];
             ["ShopPurchase", [format ["%1 requisitioned for %2 points", _name, _cost]]] remoteExec ["BIS_fnc_showNotification", 0];
